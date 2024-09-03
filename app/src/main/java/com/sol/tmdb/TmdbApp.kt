@@ -1,8 +1,7 @@
 package com.sol.tmdb
 
 import android.app.Application
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 
-@AndroidEntryPoint
-class TmdbApp:Application(){
-}
+@HiltAndroidApp
+class TmdbApp:Application()

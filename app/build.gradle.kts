@@ -1,8 +1,10 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.dagger.hilt)
 }
 
 android {
@@ -20,6 +22,18 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val keyFile = project.rootProject.file("apikey.properties")
+        val properties = Properties()
+        properties.load(keyFile.inputStream())
+
+        val apikey = properties.getProperty("TMDB_API_KEY") ?: ""
+
+        buildConfigField(
+            type = "String",
+            name = "TMDB_API_KEY",
+            value = apikey
+        )
     }
 
     buildTypes {
@@ -39,6 +53,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     composeOptions {
@@ -71,10 +86,10 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-    implementation (libs.androidx.hilt.navigation.compose)
-    implementation (libs.okhttp)
-    implementation (libs.material3)
-    implementation (libs.androidx.navigation.compose.v270)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.okhttp)
+    implementation(libs.material3)
+    implementation(libs.androidx.navigation.compose.v270)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
