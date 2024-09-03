@@ -74,7 +74,7 @@ fun ItemMovie(movie: MovieResult) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.align(Alignment.TopStart)) {
-                val image = "https://image.tmdb.org/t/p/w500" + movie.poster_path
+                val image = "https://image.tmdb.org/t/p/w500" + movie.posterPath
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier.fillMaxWidth(),
@@ -87,7 +87,7 @@ fun ItemMovie(movie: MovieResult) {
                     modifier = Modifier.padding(top = 8.dp, start = 8.dp)
                 )
                 Text(
-                    text = movie.release_date,
+                    text = movie.releaseDate,
                     modifier = Modifier.padding(top = 4.dp, start = 16.dp)
                 )
             }
@@ -104,15 +104,19 @@ fun ItemMovie(movie: MovieResult) {
 
                     // Dibuja el arco que representa el porcentaje
                     drawArc(
-                        color = Color(0xFF0F9D58),
+                        color = when {
+                            ((movie.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                            ((movie.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                            else -> Color(0xFF0F9D58)
+                        },
                         startAngle = -90f,
-                        sweepAngle = (movie.vote_average * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
+                        sweepAngle = (movie.voteAverage * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
                         useCenter = false,
                         style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
                     )
                 }
                 Text(
-                    text = "${(movie.vote_average * 10).toInt()}%",
+                    text = "${(movie.voteAverage * 10).toInt()}%",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)

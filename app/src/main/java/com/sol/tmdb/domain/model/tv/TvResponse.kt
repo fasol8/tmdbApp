@@ -1,8 +1,10 @@
 package com.sol.tmdb.domain.model.tv
 
+import com.google.gson.annotations.SerializedName
+
 data class TvResponse(
     val page: Int,
     val results: List<TvResult>,
-    val total_pages: Int,
-    val total_results: Int
+    @SerializedName("total_pages") val totalPages: Int,
+    @SerializedName("total_results") val totalResult: Int
 )

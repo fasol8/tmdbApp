@@ -71,7 +71,7 @@ fun ItemTv(tv: TvResult) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.align(Alignment.TopStart)) {
-                val image = "https://image.tmdb.org/t/p/w500" + tv.poster_path
+                val image = "https://image.tmdb.org/t/p/w500" + tv.posterPath
                 AsyncImage(
                     model = image,
                     contentDescription = "poster TV",
@@ -85,7 +85,7 @@ fun ItemTv(tv: TvResult) {
                     modifier = Modifier.padding(top = 8.dp, start = 8.dp)
                 )
                 Text(
-                    text = tv.first_air_date,
+                    text = tv.firstAirDate,
                     modifier = Modifier.padding(top = 4.dp, start = 16.dp)
                 )
             }
@@ -100,15 +100,19 @@ fun ItemTv(tv: TvResult) {
                     drawCircle(color = Color(0xFFEEEEEE))
 
                     drawArc(
-                        color = Color(0xFF0F9D58),
+                        color = when {
+                            ((tv.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                            ((tv.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                            else -> Color(0xFF0F9D58)
+                        },
                         startAngle = -90f,
-                        sweepAngle = (tv.vote_average * 36).toFloat(),
+                        sweepAngle = (tv.voteAverage * 36).toFloat(),
                         useCenter = false,
                         style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
                     )
                 }
                 Text(
-                    text = "${(tv.vote_average * 10).toInt()}",
+                    text = "${(tv.voteAverage * 10).toInt()}",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(
