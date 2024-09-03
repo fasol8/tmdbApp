@@ -89,7 +89,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.okhttp)
     implementation(libs.material3)
-    implementation(libs.androidx.navigation.compose.v270)
+//    implementation(libs.androidx.navigation.compose.v270)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

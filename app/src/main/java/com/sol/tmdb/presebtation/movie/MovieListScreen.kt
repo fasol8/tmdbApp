@@ -40,14 +40,14 @@ fun MoviesScreen(viewModel: MovieViewModel = hiltViewModel()) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp)
+            .padding(8.dp, top = 88.dp)
     ) {
         Column {
-            Text(
-                text = "Discover Movie",
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 36.sp
-            )
+//            Text(
+//                text = "Discover Movie",
+//                style = MaterialTheme.typography.titleLarge,
+//                fontSize = 36.sp
+//            )
             Spacer(modifier = Modifier.height(8.dp))
             LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                 items(movies.size) { index ->

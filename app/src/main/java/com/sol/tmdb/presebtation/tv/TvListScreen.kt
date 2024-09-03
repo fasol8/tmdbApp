@@ -40,10 +40,9 @@ fun TvScreen(viewModel: TvViewModel = hiltViewModel()) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp)
+            .padding(8.dp, top = 88.dp)
     ) {
         Column {
-            Text(text = "Popular TV", style = MaterialTheme.typography.titleLarge, fontSize = 36.sp)
             Spacer(modifier = Modifier.height(8.dp))
             LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                 items(tvs.size) { index ->
