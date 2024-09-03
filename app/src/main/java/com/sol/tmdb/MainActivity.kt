@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.sol.tmdb.presebtation.movie.MoviesScreen
+import com.sol.tmdb.presebtation.tv.TvScreen
 import com.sol.tmdb.ui.theme.TmdbTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -15,7 +16,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TmdbTheme {
-                MoviesScreen()
+//                MoviesScreen()
+                TvScreen()
             }
         }
     }
