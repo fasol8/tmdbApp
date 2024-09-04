@@ -1,9 +1,10 @@
-package com.sol.tmdb.presebtation.tv
+package com.sol.tmdb.presentation.tv
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +16,9 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
 
     private val _tvs = MutableLiveData<List<TvResult>>()
     val tvs: LiveData<List<TvResult>> = _tvs
+
+    private val _tvById = MutableLiveData<TvDetail?>()
+    val tvById: LiveData<TvDetail?> = _tvById
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -38,6 +42,18 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
                     _errorMessage.value = "NO more tv shows"
                 }
             } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchTvById(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTvDetail(id)
+                _tvById.value = response
+            } catch (e: Exception) {
+                _tvById.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

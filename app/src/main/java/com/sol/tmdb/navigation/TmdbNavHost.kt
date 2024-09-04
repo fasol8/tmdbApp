@@ -6,10 +6,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.sol.tmdb.presebtation.movie.MovieDetail
-import com.sol.tmdb.presebtation.movie.MoviesScreen
-import com.sol.tmdb.presebtation.person.PersonScreen
-import com.sol.tmdb.presebtation.tv.TvScreen
+import com.sol.tmdb.presentation.movie.MovieDetail
+import com.sol.tmdb.presentation.movie.MoviesScreen
+import com.sol.tmdb.presentation.person.PersonScreen
+import com.sol.tmdb.presentation.tv.TvDetail
+import com.sol.tmdb.presentation.tv.TvScreen
 
 @Composable
 fun TmdbNavHost(navController: NavHostController) {
@@ -22,7 +23,14 @@ fun TmdbNavHost(navController: NavHostController) {
             val movieId = navBackStackEntry.arguments?.getInt("movieId") ?: return@composable
             MovieDetail(movieId = movieId)
         }
-        composable(TmdbScreen.Tv.route) { TvScreen() }
+        composable(TmdbScreen.Tv.route) { TvScreen(navController) }
+        composable(
+            route = TmdbScreen.TvDetail.route + "/{tvId}",
+            arguments = listOf(navArgument("tvId") { type = NavType.IntType })
+        ) { navBackStackEntry ->
+            val tvId = navBackStackEntry.arguments?.getInt("tvId") ?: return@composable
+            TvDetail(tvId)
+        }
         composable(TmdbScreen.Person.route) { PersonScreen() }
     }
 }
