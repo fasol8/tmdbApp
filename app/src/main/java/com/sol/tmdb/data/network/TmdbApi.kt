@@ -3,6 +3,7 @@ package com.sol.tmdb.data.network
 import com.sol.tmdb.BuildConfig
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieResponse
+import com.sol.tmdb.domain.model.person.PersonResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
 import dagger.Module
 import dagger.Provides
@@ -34,4 +35,10 @@ interface TmdbApi {
         @Query("page") page: Int = 1,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
+
+    @GET("person/popular")
+    suspend fun getPopularPerson(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): PersonResponse
 }

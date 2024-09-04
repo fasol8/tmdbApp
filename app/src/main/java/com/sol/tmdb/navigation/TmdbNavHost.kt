@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.sol.tmdb.presebtation.movie.MovieDetail
 import com.sol.tmdb.presebtation.movie.MoviesScreen
+import com.sol.tmdb.presebtation.person.PersonScreen
 import com.sol.tmdb.presebtation.tv.TvScreen
 
 @Composable
@@ -22,5 +23,6 @@ fun TmdbNavHost(navController: NavHostController) {
             MovieDetail(movieId = movieId)
         }
         composable(TmdbScreen.Tv.route) { TvScreen() }
+        composable(TmdbScreen.Person.route) { PersonScreen() }
     }
 }

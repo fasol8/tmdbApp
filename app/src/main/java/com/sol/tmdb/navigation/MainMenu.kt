@@ -49,12 +49,14 @@ fun MainMenu() {
 
     val items = listOf(
         TmdbScreen.Movie to R.drawable.ic_movie,
-        TmdbScreen.Tv to R.drawable.ic_tv
+        TmdbScreen.Tv to R.drawable.ic_tv,
+        TmdbScreen.Person to R.drawable.ic_person
     )
 
     val titles = mapOf(
         TmdbScreen.Movie.route to "Movie",
-        TmdbScreen.Tv.route to "TV"
+        TmdbScreen.Tv.route to "TV",
+        TmdbScreen.Person.route to "Person"
     )
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
@@ -80,7 +82,6 @@ fun MainMenu() {
                     HorizontalDivider(thickness = 2.dp, modifier = Modifier.width(200.dp))
                     items.forEach { (screen, icon) ->
                         Row(modifier = Modifier
-//                            .fillMaxWidth()
                             .padding(24.dp)
                             .clickable {
                                 navController.navigate(screen.route) {
