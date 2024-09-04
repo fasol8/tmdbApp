@@ -1,9 +1,11 @@
 package com.sol.tmdb.presebtation.movie
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.domain.useCase.GetMovieUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +19,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     //                          MutableStateFlow()
     private val _movies = MutableLiveData<List<MovieResult>>()
     val movies: LiveData<List<MovieResult>> = _movies
+
+    private val _movieById = MutableLiveData<MovieDetail?>()
+    val movieById: LiveData<MovieDetail?> = _movieById
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -41,6 +46,21 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchMovieById(id: Int) {
+        viewModelScope.launch {
+            try {
+                Log.i("VM", "try")
+                val response = getMovieUseCase.getMovieDetail(id)
+                Log.i("VM", response.toString())
+                _movieById.value = response
+            } catch (e: Exception) {
+                _movieById.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+                Log.i("VM", _errorMessage.value.toString())
             }
         }
     }

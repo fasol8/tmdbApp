@@ -30,11 +30,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.domain.model.movie.MovieResult
+import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
-fun MoviesScreen(viewModel: MovieViewModel = hiltViewModel()) {
+fun MoviesScreen(navController: NavController, viewModel: MovieViewModel = hiltViewModel()) {
     val movies by viewModel.movies.observeAsState(emptyList())
 
     Box(
@@ -43,16 +45,14 @@ fun MoviesScreen(viewModel: MovieViewModel = hiltViewModel()) {
             .padding(8.dp, top = 88.dp)
     ) {
         Column {
-//            Text(
-//                text = "Discover Movie",
-//                style = MaterialTheme.typography.titleLarge,
-//                fontSize = 36.sp
-//            )
             Spacer(modifier = Modifier.height(8.dp))
             LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                 items(movies.size) { index ->
                     val movie = movies[index]
-                    ItemMovie(movie)
+                    ItemMovie(movie) {
+                        navController.navigate(TmdbScreen.MovieDetail.route + "/${movie.id}")
+                    }
+
                     if (index == movies.size - 1) {
                         LaunchedEffect(key1 = Unit) {
                             viewModel.loadMovies()
@@ -65,11 +65,12 @@ fun MoviesScreen(viewModel: MovieViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun ItemMovie(movie: MovieResult) {
+fun ItemMovie(movie: MovieResult, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
+        onClick = { onClick() },
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
