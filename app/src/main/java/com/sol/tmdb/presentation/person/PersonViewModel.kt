@@ -1,4 +1,4 @@
-package com.sol.tmdb.presebtation.person
+package com.sol.tmdb.presentation.person
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

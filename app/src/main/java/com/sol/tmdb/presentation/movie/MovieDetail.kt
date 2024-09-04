@@ -1,6 +1,5 @@
-package com.sol.tmdb.presebtation.movie
+package com.sol.tmdb.presentation.movie
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,8 +47,8 @@ fun MovieDetail(movieId: Int, viewModel: MovieViewModel = hiltViewModel()) {
 
     LaunchedEffect(movieId) {
         viewModel.searchMovieById(movieId)
-        Log.i("MovieDetail", "viewmodel call")
     }
+
     LaunchedEffect(movie) {
         if (movie != null)
             isLoading.value = true
@@ -102,7 +101,7 @@ fun MovieCard(movie: MovieDetail?) {
             Box(
                 modifier = Modifier
                     .padding(top = 96.dp)
-                    .offset(y =18.dp) // Desplaza la imagen hacia abajo, superponiéndola sobre la tarjeta
+                    .offset(y = 18.dp) // Desplaza la imagen hacia abajo, superponiéndola sobre la tarjeta
                     .zIndex(1f) // Asegura que la imagen esté sobre la tarjeta
             ) {
                 AsyncImage(

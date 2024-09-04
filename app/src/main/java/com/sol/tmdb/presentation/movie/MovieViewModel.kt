@@ -1,6 +1,5 @@
-package com.sol.tmdb.presebtation.movie
+package com.sol.tmdb.presentation.movie
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -53,14 +52,11 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     fun searchMovieById(id: Int) {
         viewModelScope.launch {
             try {
-                Log.i("VM", "try")
                 val response = getMovieUseCase.getMovieDetail(id)
-                Log.i("VM", response.toString())
                 _movieById.value = response
             } catch (e: Exception) {
                 _movieById.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
-                Log.i("VM", _errorMessage.value.toString())
             }
         }
     }

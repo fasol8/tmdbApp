@@ -1,4 +1,4 @@
-package com.sol.tmdb.presebtation.movie
+package com.sol.tmdb.presentation.movie
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
