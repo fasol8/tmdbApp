@@ -1,5 +1,6 @@
 package com.sol.tmdb.presentation.movie
 
+import android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -36,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieGenre
 
 @Composable
 fun MovieDetail(movieId: Int, viewModel: MovieViewModel = hiltViewModel()) {
@@ -126,7 +129,13 @@ fun MovieCard(movie: MovieDetail?) {
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp
                     )
-                    Text(text = "Genres: ${movie.genres.size}")
+                    val genreNames = movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.name }
+                    Text(
+                        text = genreNames.joinToString(", ").replace("_", " "),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Light,
+                        modifier = Modifier.padding(2.dp)
+                    )
                     Text(text = movie.tagline, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
