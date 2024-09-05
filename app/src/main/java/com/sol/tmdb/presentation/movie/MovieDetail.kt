@@ -1,6 +1,5 @@
 package com.sol.tmdb.presentation.movie
 
-import android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,21 +38,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.sol.tmdb.domain.model.movie.Cast
+import com.sol.tmdb.domain.model.movie.Crew
+import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieGenre
+import com.sol.tmdb.navigation.TmdbScreen
+
 
 @Composable
-fun MovieDetail(movieId: Int, viewModel: MovieViewModel = hiltViewModel()) {
+fun MovieDetail(
+    movieId: Int,
+    navController: NavController,
+    viewModel: MovieViewModel = hiltViewModel()
+) {
     val movie by viewModel.movieById.observeAsState()
+    val movieCredits by viewModel.movieCredits.observeAsState()
+
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     val isLoading = remember { mutableStateOf(true) }
 
-
     LaunchedEffect(movieId) {
         viewModel.searchMovieById(movieId)
+        viewModel.searchMovieCredits(movieId)
     }
 
     LaunchedEffect(movie) {
@@ -59,7 +74,13 @@ fun MovieDetail(movieId: Int, viewModel: MovieViewModel = hiltViewModel()) {
 
     when {
         movie != null -> {
-            MovieCard(movie!!)
+            if (movieCredits != null) {
+                LazyColumn {
+                    item {
+                        MovieCard(movie, movieCredits!!, navController)
+                    }
+                }
+            }
         }
 
         isLoading.value -> {
@@ -76,9 +97,11 @@ fun MovieDetail(movieId: Int, viewModel: MovieViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun MovieCard(movie: MovieDetail?) {
+fun MovieCard(movie: MovieDetail?, movieCredits: MovieCredits?, navController: NavController) {
     val imageBackground = "https://image.tmdb.org/t/p/w500" + movie!!.backdropPath
     val imagePoster = "https://image.tmdb.org/t/p/w500" + movie.posterPath
+    val movieCast = movieCredits!!.cast
+    val movieCrew = movieCredits.crew
 
     Box(
         modifier = Modifier
@@ -103,7 +126,7 @@ fun MovieCard(movie: MovieDetail?) {
         ) {
             Box(
                 modifier = Modifier
-                    .padding(top = 96.dp)
+                    .padding(top = 96.dp, bottom = 16.dp)
                     .offset(y = 18.dp) // Desplaza la imagen hacia abajo, superponiéndola sobre la tarjeta
                     .zIndex(1f) // Asegura que la imagen esté sobre la tarjeta
             ) {
@@ -136,10 +159,94 @@ fun MovieCard(movie: MovieDetail?) {
                         fontWeight = FontWeight.Light,
                         modifier = Modifier.padding(2.dp)
                     )
-                    Text(text = movie.tagline, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Cast:")
+                    LazyRow {
+                        items(movieCast.size) { index ->
+                            val cast = movieCast[index]
+                            ItemCast(cast) {
+                                navController.navigate(TmdbScreen.PersonDetail.route + "/${cast.id}")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Crew:")
+                    LazyRow {
+                        items(movieCrew.size) { index ->
+                            val crew = movieCrew[index]
+                            ItemCrew(crew) {
+                                navController.navigate(TmdbScreen.PersonDetail.route + "/${crew.id}")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCast(cast: Cast, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + cast.profilePath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier.width(120.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Text(
+                    text = cast.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = cast.character,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCrew(crew: Crew, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(100.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + crew.profilePath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier.width(100.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Text(
+                    text = crew.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = crew.department,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
             }
         }
     }

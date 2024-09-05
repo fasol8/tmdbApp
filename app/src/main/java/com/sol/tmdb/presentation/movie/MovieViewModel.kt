@@ -1,9 +1,11 @@
 package com.sol.tmdb.presentation.movie
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.domain.useCase.GetMovieUseCase
@@ -21,6 +23,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
 
     private val _movieById = MutableLiveData<MovieDetail?>()
     val movieById: LiveData<MovieDetail?> = _movieById
+
+    private val _movieCredits = MutableLiveData<MovieCredits?>()
+    val movieCredits: LiveData<MovieCredits?> = _movieCredits
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -56,6 +61,19 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
                 _movieById.value = response
             } catch (e: Exception) {
                 _movieById.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchMovieCredits(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getMovieUseCase.getMovieCredits(id)
+                Log.i("VM", response.toString())
+                _movieCredits.value = response
+            } catch (e: Exception) {
+                _movieCredits.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

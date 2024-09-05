@@ -22,7 +22,7 @@ fun TmdbNavHost(navController: NavHostController) {
             arguments = listOf(navArgument("movieId") { type = NavType.IntType })
         ) { navBackStackEntry ->
             val movieId = navBackStackEntry.arguments?.getInt("movieId") ?: return@composable
-            MovieDetail(movieId = movieId)
+            MovieDetail(movieId = movieId, navController = navController)
         }
         composable(TmdbScreen.Tv.route) { TvScreen(navController) }
         composable(
