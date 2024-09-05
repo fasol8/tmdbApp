@@ -129,9 +129,9 @@ fun MovieCard(movie: MovieDetail?) {
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp
                     )
-                    val genreNames = movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.name }
+                    val genreNames = movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
                     Text(
-                        text = genreNames.joinToString(", ").replace("_", " "),
+                        text = genreNames.joinToString(", "),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Light,
                         modifier = Modifier.padding(2.dp)

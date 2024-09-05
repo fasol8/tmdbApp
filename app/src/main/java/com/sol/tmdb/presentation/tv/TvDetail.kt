@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -36,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.domain.model.tv.TvDetail
+import com.sol.tmdb.domain.model.tv.TvGenre
 
 @Composable
 fun TvDetail(tvId: Int, viewModel: TvViewModel = hiltViewModel()) {
@@ -125,7 +127,13 @@ fun TvCard(tv: TvDetail) {
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp
                     )
-                    Text(text = "Genres: ${tv.genres.size}")
+                    val genreNames = tv.genres.mapNotNull { TvGenre.fromId(it.id)?.genreName }
+                    Text(
+                        text = genreNames.joinToString(", "),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Light,
+                        modifier = Modifier.padding(2.dp)
+                    )
                     Text(text = tv.tagline, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = tv.overview, style = MaterialTheme.typography.bodyMedium)
