@@ -22,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.domain.model.person.PersonResult
+import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
-fun PersonScreen(viewModel: PersonViewModel = hiltViewModel()) {
+fun PersonScreen(navController: NavController, viewModel: PersonViewModel = hiltViewModel()) {
     val persons by viewModel.persons.observeAsState(emptyList())
 
     Box(
@@ -39,7 +41,9 @@ fun PersonScreen(viewModel: PersonViewModel = hiltViewModel()) {
             LazyVerticalGrid(columns = GridCells.Fixed(2)) {
                 items(persons.size) { index ->
                     val person = persons[index]
-                    ItemPerson(person)
+                    ItemPerson(person) {
+                        navController.navigate(TmdbScreen.PersonDetail.route + "/${person.id}")
+                    }
 
                     if (index == persons.size - 1) {
                         LaunchedEffect(key1 = Unit) {
@@ -54,11 +58,12 @@ fun PersonScreen(viewModel: PersonViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun ItemPerson(person: PersonResult) {
+fun ItemPerson(person: PersonResult, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
+        onClick = { onClick() },
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.PersonResult
 import com.sol.tmdb.domain.useCase.GetPersonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,9 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
     private val _persons = MutableLiveData<List<PersonResult>>()
     val persons: LiveData<List<PersonResult>> = _persons
 
+    private val _personById = MutableLiveData<PersonDetail?>()
+    val personById: LiveData<PersonDetail?> = _personById
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
@@ -26,7 +30,7 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         loadPerson()
     }
 
-     fun loadPerson() {
+    fun loadPerson() {
         viewModelScope.launch {
             try {
                 val response = getPersonUseCase(currentPage)
@@ -41,6 +45,18 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
             } catch (e: Exception) {
                 _errorMessage.value = "An error occurred: ${e.message}"
 
+            }
+        }
+    }
+
+    fun searchPersonById(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getPersonUseCase.getPersonDetail(id)
+                _personById.value = response
+            } catch (e: Exception) {
+                _personById.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
             }
         }
     }

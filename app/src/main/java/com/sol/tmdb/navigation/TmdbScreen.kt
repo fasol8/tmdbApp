@@ -6,4 +6,5 @@ sealed class TmdbScreen(val route: String, val title: String) {
     object Tv : TmdbScreen("tvs", "Tvs")
     object TvDetail : TmdbScreen("tvDetail", "TvDetail")
     object Person : TmdbScreen("persons", "Persons")
+    object PersonDetail : TmdbScreen("personDetail", "PersonDetail")
 }

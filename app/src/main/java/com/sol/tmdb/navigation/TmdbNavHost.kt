@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.sol.tmdb.presentation.movie.MovieDetail
 import com.sol.tmdb.presentation.movie.MoviesScreen
+import com.sol.tmdb.presentation.person.PersonDetail
 import com.sol.tmdb.presentation.person.PersonScreen
 import com.sol.tmdb.presentation.tv.TvDetail
 import com.sol.tmdb.presentation.tv.TvScreen
@@ -29,8 +30,15 @@ fun TmdbNavHost(navController: NavHostController) {
             arguments = listOf(navArgument("tvId") { type = NavType.IntType })
         ) { navBackStackEntry ->
             val tvId = navBackStackEntry.arguments?.getInt("tvId") ?: return@composable
-            TvDetail(tvId)
+            TvDetail(tvId = tvId)
         }
-        composable(TmdbScreen.Person.route) { PersonScreen() }
+        composable(TmdbScreen.Person.route) { PersonScreen(navController) }
+        composable(
+            TmdbScreen.PersonDetail.route + "/{personId}",
+            arguments = listOf(navArgument("personId") { type = NavType.IntType })
+        ) { navBackStackEntry ->
+            val personId = navBackStackEntry.arguments?.getInt("personId") ?: return@composable
+            PersonDetail(personId = personId)
+        }
     }
 }
