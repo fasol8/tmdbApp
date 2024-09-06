@@ -3,6 +3,7 @@ package com.sol.tmdb.presentation.movie
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -46,6 +46,7 @@ import com.sol.tmdb.domain.model.movie.Crew
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieGenre
+import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.navigation.TmdbScreen
 
 
@@ -57,6 +58,7 @@ fun MovieDetail(
 ) {
     val movie by viewModel.movieById.observeAsState()
     val movieCredits by viewModel.movieCredits.observeAsState()
+    val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
@@ -65,6 +67,7 @@ fun MovieDetail(
     LaunchedEffect(movieId) {
         viewModel.searchMovieById(movieId)
         viewModel.searchMovieCredits(movieId)
+        viewModel.searchMovieSimilar(movieId)
     }
 
     LaunchedEffect(movie) {
@@ -77,7 +80,7 @@ fun MovieDetail(
             if (movieCredits != null) {
                 LazyColumn {
                     item {
-                        MovieCard(movie, movieCredits!!, navController)
+                        MovieCard(movie, movieCredits!!, movieSimilar, navController)
                     }
                 }
             }
@@ -97,7 +100,12 @@ fun MovieDetail(
 }
 
 @Composable
-fun MovieCard(movie: MovieDetail?, movieCredits: MovieCredits?, navController: NavController) {
+fun MovieCard(
+    movie: MovieDetail?,
+    movieCredits: MovieCredits?,
+    movieSimilar: List<MovieSimilarResult?>,
+    navController: NavController
+) {
     val imageBackground = "https://image.tmdb.org/t/p/w500" + movie!!.backdropPath
     val imagePoster = "https://image.tmdb.org/t/p/w500" + movie.posterPath
     val movieCast = movieCredits!!.cast
@@ -181,7 +189,17 @@ fun MovieCard(movie: MovieDetail?, movieCredits: MovieCredits?, navController: N
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Movie Similar:")
+                    LazyRow {
+                        items(movieSimilar.size) { index ->
+                            val movieSim = movieSimilar[index]
+                            ItemMovieSimilar(movieSim) {
+                                navController.navigate(TmdbScreen.MovieDetail.route + "/${movieSim?.id}")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(64.dp))
                 }
             }
         }
@@ -247,6 +265,43 @@ fun ItemCrew(crew: Crew, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemMovieSimilar(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(200.dp)
+            .height(150.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + movieSim!!.posterPath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier.width(200.dp).height(130.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)) {
+                    Text(
+                        text = movieSim.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier
+                            .weight(1f)
+                            .align(Alignment.CenterVertically)
+                    )
+                    Text(
+                        text ="${(movieSim.voteAverage * 10).toInt()}%",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                }
             }
         }
     }

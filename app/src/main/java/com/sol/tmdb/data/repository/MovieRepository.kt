@@ -4,6 +4,7 @@ import com.sol.tmdb.data.network.TmdbApi
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieResponse
+import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
 import javax.inject.Inject
 
 class MovieRepository @Inject constructor(private val api: TmdbApi) {
@@ -18,5 +19,9 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {
         return api.getMovieCredits(movieId)
+    }
+
+    suspend fun getMovieSimilar(movieId: Int): MovieSimilarResponse {
+        return api.getMovieSimilar(movieId)
     }
 }
