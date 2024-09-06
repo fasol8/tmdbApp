@@ -1,6 +1,7 @@
 package com.sol.tmdb.domain.useCase
 
 import com.sol.tmdb.data.repository.MovieRepository
+import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
@@ -20,6 +21,14 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {
         return repository.getMovieCredits(movieId)
+    }
+
+    suspend fun getProvidersForMxAndUsUseCase(movieId: Int): Map<String, CountryResult?> {
+        val providers = repository.getProvidersForMxAndUs(movieId)
+        return mapOf(
+            "MX" to providers["MX"],
+            "US" to providers["US"]
+        )
     }
 
     suspend fun getMovieSimilar(movieId: Int): MovieSimilarResponse {

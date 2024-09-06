@@ -1,8 +1,10 @@
 package com.sol.tmdb.data.repository
 
 import com.sol.tmdb.data.network.TmdbApi
+import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
@@ -20,6 +22,11 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {
         return api.getMovieCredits(movieId)
+    }
+
+    suspend fun getProvidersForMxAndUs(movieId: Int): Map<String, CountryResult> {
+        val response = api.getMovieProviders(movieId)
+        return response.results
     }
 
     suspend fun getMovieSimilar(movieId: Int): MovieSimilarResponse {

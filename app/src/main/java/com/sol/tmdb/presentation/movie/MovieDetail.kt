@@ -42,6 +42,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.domain.model.movie.Cast
+import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.Crew
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
@@ -59,6 +60,7 @@ fun MovieDetail(
 ) {
     val movie by viewModel.movieById.observeAsState()
     val movieCredits by viewModel.movieCredits.observeAsState()
+    val movieProvider by viewModel.movieProviders.observeAsState()
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
     val movieRecommendation by viewModel.movieRecommendation.observeAsState(emptyList())
 
@@ -69,6 +71,7 @@ fun MovieDetail(
     LaunchedEffect(movieId) {
         viewModel.searchMovieById(movieId)
         viewModel.searchMovieCredits(movieId)
+        viewModel.searchProvidersForMxAndUs(movieId)
         viewModel.searchMovieSimilar(movieId)
         viewModel.searchMovieRecommendation(movieId)
     }
@@ -86,6 +89,7 @@ fun MovieDetail(
                         MovieCard(
                             movie,
                             movieCredits!!,
+                            movieProvider,
                             movieSimilar,
                             movieRecommendation,
                             navController
@@ -112,6 +116,7 @@ fun MovieDetail(
 fun MovieCard(
     movie: MovieDetail?,
     movieCredits: MovieCredits?,
+    movieProvider: Map<String, CountryResult?>?,
     movieSimilar: List<MovieSimilarResult?>,
     movieRecommendation: List<MovieRecommendationResult?>,
     navController: NavController
@@ -197,6 +202,32 @@ fun MovieCard(
                             ItemCrew(crew) {
                                 navController.navigate(TmdbScreen.PersonDetail.route + "/${crew.id}")
                             }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    when {
+                        movieProvider != null -> {
+                            val mxProviders = movieProvider["MX"]
+                            val usProviders = movieProvider["US"]
+
+                            Row {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = "Providers in MX:")
+                                    mxProviders?.flatrate?.forEach { provider ->
+                                        Text(text = "-${provider.providerName}")
+                                    } ?: Text(text = "No providers available for MX")
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(text = "Providers in US:")
+                                    usProviders?.flatrate?.forEach { provider ->
+                                        Text(text = "-${provider.providerName}")
+4                                    } ?: Text(text = "No providers available for US")
+                                }
+                            }
+                        }
+
+                        else -> {
+                            CircularProgressIndicator()
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))

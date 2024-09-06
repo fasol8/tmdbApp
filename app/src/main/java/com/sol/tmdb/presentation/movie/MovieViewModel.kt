@@ -1,10 +1,10 @@
 package com.sol.tmdb.presentation.movie
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
@@ -28,6 +28,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
 
     private val _movieCredits = MutableLiveData<MovieCredits?>()
     val movieCredits: LiveData<MovieCredits?> = _movieCredits
+
+    private val _movieProviders = MutableLiveData<Map<String, CountryResult?>>()
+    val movieProviders: LiveData<Map<String, CountryResult?>> = _movieProviders
 
     private val _movieSimilar = MutableLiveData<List<MovieSimilarResult?>>()
     val movieSimilar: LiveData<List<MovieSimilarResult?>> = _movieSimilar
@@ -82,6 +85,17 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
             } catch (e: Exception) {
                 _movieCredits.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchProvidersForMxAndUs(movieId: Int) {
+        viewModelScope.launch {
+            try {
+                val result = getMovieUseCase.getProvidersForMxAndUsUseCase(movieId)
+                _movieProviders.value = result
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading providers"
             }
         }
     }
