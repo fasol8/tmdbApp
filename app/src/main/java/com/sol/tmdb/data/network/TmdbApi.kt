@@ -3,6 +3,7 @@ package com.sol.tmdb.data.network
 import com.sol.tmdb.BuildConfig
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
@@ -38,6 +39,12 @@ interface TmdbApi {
         @Path("movie_id") movieId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieSimilarResponse
+
+    @GET("movie/{movie_id}/recommendations")
+    suspend fun getMovieRecommendation(
+        @Path("movie_id") movieId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieRecommendationResponse
 
     @GET("tv/popular")
     suspend fun getPopularTv(

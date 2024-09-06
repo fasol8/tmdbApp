@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.domain.useCase.GetMovieUseCase
@@ -30,6 +31,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
 
     private val _movieSimilar = MutableLiveData<List<MovieSimilarResult?>>()
     val movieSimilar: LiveData<List<MovieSimilarResult?>> = _movieSimilar
+
+    private val _movieRecommendation = MutableLiveData<List<MovieRecommendationResult?>>()
+    val movieRecommendation: LiveData<List<MovieRecommendationResult?>> = _movieRecommendation
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -89,6 +93,18 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
                 _movieSimilar.value = response.results
             } catch (e: Exception) {
                 _movieSimilar.value = emptyList()
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchMovieRecommendation(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getMovieUseCase.getMovieRecommendation(id)
+                _movieRecommendation.value = response.results
+            } catch (e: Exception) {
+                _movieRecommendation.value = emptyList()
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

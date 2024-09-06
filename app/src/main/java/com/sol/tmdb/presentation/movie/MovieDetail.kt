@@ -46,6 +46,7 @@ import com.sol.tmdb.domain.model.movie.Crew
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieGenre
+import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.navigation.TmdbScreen
 
@@ -59,6 +60,7 @@ fun MovieDetail(
     val movie by viewModel.movieById.observeAsState()
     val movieCredits by viewModel.movieCredits.observeAsState()
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
+    val movieRecommendation by viewModel.movieRecommendation.observeAsState(emptyList())
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
@@ -68,6 +70,7 @@ fun MovieDetail(
         viewModel.searchMovieById(movieId)
         viewModel.searchMovieCredits(movieId)
         viewModel.searchMovieSimilar(movieId)
+        viewModel.searchMovieRecommendation(movieId)
     }
 
     LaunchedEffect(movie) {
@@ -80,7 +83,13 @@ fun MovieDetail(
             if (movieCredits != null) {
                 LazyColumn {
                     item {
-                        MovieCard(movie, movieCredits!!, movieSimilar, navController)
+                        MovieCard(
+                            movie,
+                            movieCredits!!,
+                            movieSimilar,
+                            movieRecommendation,
+                            navController
+                        )
                     }
                 }
             }
@@ -104,6 +113,7 @@ fun MovieCard(
     movie: MovieDetail?,
     movieCredits: MovieCredits?,
     movieSimilar: List<MovieSimilarResult?>,
+    movieRecommendation: List<MovieRecommendationResult?>,
     navController: NavController
 ) {
     val imageBackground = "https://image.tmdb.org/t/p/w500" + movie!!.backdropPath
@@ -199,6 +209,16 @@ fun MovieCard(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Movie Recommendation:")
+                    LazyRow {
+                        items(movieRecommendation.size) { index ->
+                            val movieRec = movieRecommendation[index]
+                            ItemMovieRecommendation(movieRec) {
+                                navController.navigate(TmdbScreen.MovieDetail.route + "/${movieRec?.id}")
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(64.dp))
                 }
             }
@@ -285,10 +305,16 @@ fun ItemMovieSimilar(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
                 val image = ("https://image.tmdb.org/t/p/w500" + movieSim!!.posterPath) ?: ""
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
-                    modifier = Modifier.width(200.dp).height(130.dp),
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(130.dp),
                     contentScale = ContentScale.Crop
                 )
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                ) {
                     Text(
                         text = movieSim.title,
                         style = MaterialTheme.typography.titleSmall,
@@ -297,7 +323,50 @@ fun ItemMovieSimilar(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
                             .align(Alignment.CenterVertically)
                     )
                     Text(
-                        text ="${(movieSim.voteAverage * 10).toInt()}%",
+                        text = "${(movieSim.voteAverage * 10).toInt()}%",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemMovieRecommendation(movieRec: MovieRecommendationResult?, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(200.dp)
+            .height(150.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + movieRec!!.posterPath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(130.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = movieRec.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier
+                            .weight(1f)
+                            .align(Alignment.CenterVertically)
+                    )
+                    Text(
+                        text = "${(movieRec.voteAverage * 10).toInt()}%",
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
