@@ -5,6 +5,7 @@ import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
+import com.sol.tmdb.domain.model.movie.MovieRelease
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
@@ -28,6 +29,12 @@ interface TmdbApi {
         @Path("movie_id") movieId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieDetail
+
+    @GET("movie/{movie_id}/release_dates")
+    suspend fun getMovieRelease(
+        @Path("movie_id") movieId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieRelease
 
     @GET("movie/{movie_id}/credits")
     suspend fun getMovieCredits(

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
@@ -25,6 +26,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
 
     private val _movieById = MutableLiveData<MovieDetail?>()
     val movieById: LiveData<MovieDetail?> = _movieById
+
+    private val _movieCertifications = MutableLiveData<Map<String?, Certification?>?>()
+    val movieCertifications: LiveData<Map<String?, Certification?>?> = _movieCertifications
 
     private val _movieCredits = MutableLiveData<MovieCredits?>()
     val movieCredits: LiveData<MovieCredits?> = _movieCredits
@@ -72,6 +76,18 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
                 _movieById.value = response
             } catch (e: Exception) {
                 _movieById.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchMovieCertification(movieId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getMovieUseCase.getMovieReleaseWithCertification(movieId)
+                _movieCertifications.value = response
+            } catch (e: Exception) {
+                _movieCertifications.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

@@ -1,6 +1,7 @@
 package com.sol.tmdb.presentation.movie
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.domain.model.movie.Cast
+import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.Crew
 import com.sol.tmdb.domain.model.movie.MovieCredits
@@ -59,6 +61,7 @@ fun MovieDetail(
     viewModel: MovieViewModel = hiltViewModel()
 ) {
     val movie by viewModel.movieById.observeAsState()
+    val movieCertification by viewModel.movieCertifications.observeAsState()
     val movieCredits by viewModel.movieCredits.observeAsState()
     val movieProvider by viewModel.movieProviders.observeAsState()
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
@@ -70,6 +73,7 @@ fun MovieDetail(
 
     LaunchedEffect(movieId) {
         viewModel.searchMovieById(movieId)
+        viewModel.searchMovieCertification(movieId)
         viewModel.searchMovieCredits(movieId)
         viewModel.searchProvidersForMxAndUs(movieId)
         viewModel.searchMovieSimilar(movieId)
@@ -88,6 +92,7 @@ fun MovieDetail(
                     item {
                         MovieCard(
                             movie,
+                            movieCertification,
                             movieCredits!!,
                             movieProvider,
                             movieSimilar,
@@ -115,6 +120,7 @@ fun MovieDetail(
 @Composable
 fun MovieCard(
     movie: MovieDetail?,
+    movieCertification: Map<String?, Certification?>?,
     movieCredits: MovieCredits?,
     movieProvider: Map<String, CountryResult?>?,
     movieSimilar: List<MovieSimilarResult?>,
@@ -175,13 +181,28 @@ fun MovieCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp
                     )
-                    val genreNames = movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
-                    Text(
-                        text = genreNames.joinToString(", "),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Light,
-                        modifier = Modifier.padding(2.dp)
-                    )
+                    Row {
+                        movieCertification?.let { certs ->
+                            certs.forEach { (country, certification) ->
+                                if (country == "MX" && certification?.certification != null) {
+                                    Text(
+                                        text = certification.certification ?: "",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.border(2.dp, Color.Black).padding(2.dp)
+                                    )
+                                }
+                            }
+                        }
+                        val genreNames =
+                            movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
+                        Text(
+                            text = genreNames.joinToString(", "),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Light,
+                            modifier = Modifier.padding(2.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -221,7 +242,7 @@ fun MovieCard(
                                     Text(text = "Providers in US:")
                                     usProviders?.flatrate?.forEach { provider ->
                                         Text(text = "-${provider.providerName}")
-4                                    } ?: Text(text = "No providers available for US")
+                                    } ?: Text(text = "No providers available for US")
                                 }
                             }
                         }
