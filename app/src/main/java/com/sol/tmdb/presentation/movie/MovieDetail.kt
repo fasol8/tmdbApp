@@ -1,5 +1,6 @@
 package com.sol.tmdb.presentation.movie
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,6 +35,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -189,7 +193,9 @@ fun MovieCard(
                                         text = certification.certification ?: "",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.border(2.dp, Color.Black).padding(2.dp)
+                                        modifier = Modifier
+                                            .border(2.dp, Color.Black)
+                                            .padding(2.dp)
                                     )
                                 }
                             }
@@ -274,6 +280,35 @@ fun MovieCard(
                     Spacer(modifier = Modifier.height(64.dp))
                 }
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .align(Alignment.CenterEnd)
+                .offset(x = (-28).dp, y = (-420).dp),
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(color = Color(0xFFEEEEEE))
+
+                drawArc(
+                    color = when {
+                        ((movie.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                        ((movie.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                        else -> Color(0xFF0F9D58)
+                    },
+                    startAngle = -90f,
+                    sweepAngle = (movie.voteAverage * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
+                    useCenter = false,
+                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
+            Text(
+                text = "${(movie.voteAverage * 10).toInt()}%",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
     }
 }
