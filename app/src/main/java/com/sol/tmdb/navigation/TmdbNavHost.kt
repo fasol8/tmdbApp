@@ -1,5 +1,7 @@
 package com.sol.tmdb.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,6 +15,7 @@ import com.sol.tmdb.presentation.person.PersonScreen
 import com.sol.tmdb.presentation.tv.TvDetail
 import com.sol.tmdb.presentation.tv.TvScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TmdbNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = TmdbScreen.Movie.route) {
@@ -38,7 +41,7 @@ fun TmdbNavHost(navController: NavHostController) {
             arguments = listOf(navArgument("personId") { type = NavType.IntType })
         ) { navBackStackEntry ->
             val personId = navBackStackEntry.arguments?.getInt("personId") ?: return@composable
-            PersonDetail(personId = personId)
+            PersonDetail(personId = personId, navController)
         }
     }
 }

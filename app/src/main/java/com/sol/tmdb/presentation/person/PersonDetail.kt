@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,22 +34,33 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.sol.tmdb.domain.model.person.Cast
 import com.sol.tmdb.domain.model.person.Gender
+import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
+import com.sol.tmdb.navigation.TmdbScreen
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun PersonDetail(personId: Int, viewModel: PersonViewModel = hiltViewModel()) {
+fun PersonDetail(
+    personId: Int,
+    navController: NavController,
+    viewModel: PersonViewModel = hiltViewModel()
+) {
     val person by viewModel.personById.observeAsState()
+    val creditsMovies by viewModel.creditsMovies.observeAsState()
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     val isLoading = remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = personId) {
         viewModel.searchPersonById(personId)
+        viewModel.searchCreditsMovies(personId)
     }
 
     LaunchedEffect(key1 = person) {
@@ -60,7 +73,7 @@ fun PersonDetail(personId: Int, viewModel: PersonViewModel = hiltViewModel()) {
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn {
                     item {
-                        PersonCard(person!!)
+                        PersonCard(person!!, creditsMovies, navController)
                     }
                 }
             }
@@ -79,8 +92,16 @@ fun PersonDetail(personId: Int, viewModel: PersonViewModel = hiltViewModel()) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun PersonCard(person: PersonDetail) {
+fun PersonCard(
+    person: PersonDetail,
+    personCredits: MovieCreditsResponse?,
+    navController: NavController
+) {
+    val credits = personCredits?.cast ?: emptyList()
+    credits.plus(personCredits?.crew) // Solo se utiliza el poster
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -103,14 +124,16 @@ fun PersonCard(person: PersonDetail) {
                         modifier = Modifier.padding(top = 8.dp, start = 8.dp)
                     )
                     Row {
-                        Text(
-                            text = "(${calculateAge(person.birthday)} years old) " + person.birthday + if (person.deathDay != null) "-${person.deathDay}" else "",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Light,
-                            modifier = Modifier
-                                .padding(2.dp)
-                                .weight(1f)
-                        )
+                        if (person.birthday != null) {
+                            Text(
+                                text = "(${calculateAge(person.birthday)} years old) " + person.birthday + if (person.deathDay != null) "-${person.deathDay}" else "",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Light,
+                                modifier = Modifier
+                                    .padding(2.dp)
+                                    .weight(1f)
+                            )
+                        }
                         Text(
                             text = Gender.fromValue(person.gender).name.replace("_", "  "),
                             style = MaterialTheme.typography.bodySmall,
@@ -137,6 +160,16 @@ fun PersonCard(person: PersonDetail) {
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     BiographyText(person.biography)
+                    Text(text = "Known For")
+                    Text(text = "-Movie")
+                    LazyRow {
+                        items(credits.size) { index ->
+                            val credit = credits[index]
+                            ItemCast(credit) {
+                                navController.navigate(TmdbScreen.MovieDetail.route + "/${credit.id}")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -170,5 +203,28 @@ fun BiographyText(biography: String) {
             }
         }
 
+    }
+}
+
+@Composable
+fun ItemCast(cast: Cast, onClick: () -> Unit) { // Solo se utiliza el poster
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = cast.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                AsyncImage(
+                    model = image,
+                    contentDescription = "poster movie",
+                    modifier = Modifier.width(120.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
     }
 }

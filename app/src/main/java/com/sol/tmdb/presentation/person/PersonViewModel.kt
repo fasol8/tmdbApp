@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.PersonResult
 import com.sol.tmdb.domain.useCase.GetPersonUseCase
@@ -20,6 +21,9 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
 
     private val _personById = MutableLiveData<PersonDetail?>()
     val personById: LiveData<PersonDetail?> = _personById
+
+    private val _creditsMovies = MutableLiveData<MovieCreditsResponse?>()
+    val creditsMovies: LiveData<MovieCreditsResponse?> = _creditsMovies
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -56,6 +60,18 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
                 _personById.value = response
             } catch (e: Exception) {
                 _personById.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchCreditsMovies(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getPersonUseCase.getCreditsMovies(id)
+                _creditsMovies.value = response
+            } catch (e: Exception) {
+                _creditsMovies.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }
