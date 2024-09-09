@@ -1,12 +1,12 @@
 package com.sol.tmdb.presentation.tv
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,19 +44,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCast
+import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvDetail
-import com.sol.tmdb.domain.model.tv.TvGenre
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
 fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
     val tv by viewModel.tvById.observeAsState()
+    val tvRatings by viewModel.tvRatings.observeAsState()
     val credits by viewModel.tvCredits.observeAsState()
     val tvProviders by viewModel.tvProviders.observeAsState()
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
@@ -68,10 +70,11 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 
     LaunchedEffect(tvId) {
         viewModel.searchTvById(tvId)
+        viewModel.searchTvRatings(tvId)
         viewModel.searchTvCredits(tvId)
         viewModel.searchTvSimilar(tvId)
         viewModel.searchTvRecommendation(tvId)
-        viewModel.serachTvProvidersForMXAndUs(tvId)
+        viewModel.searchTvProvidersForMXAndUs(tvId)
     }
 
     LaunchedEffect(tv) {
@@ -86,6 +89,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
                     item {
                         TvCard(
                             tv!!,
+                            tvRatings,
                             credits,
                             tvProviders,
                             tvSimilar,
@@ -113,6 +117,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 @Composable
 fun TvCard(
     tv: TvDetail,
+    tvRatings: Map<String, TvCertification?>?,
     credits: CreditsResponse?,
     tvProviders: Map<String, CountryResult?>?,
     tvSimilar: List<SimilarResult?>,
@@ -173,13 +178,31 @@ fun TvCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp
                     )
-                    val genreNames = tv.genres.mapNotNull { TvGenre.fromId(it.id)?.genreName }
-                    Text(
-                        text = genreNames.joinToString(", "),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Light,
-                        modifier = Modifier.padding(2.dp)
-                    )
+                    Row {
+
+                        tvRatings?.let { rati ->
+                            rati.forEach { (country, rating) ->
+                                if (country == "MX" && rating?.certification != null) {
+                                    Text(
+                                        text = rating?.certification ?: "",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier
+                                            .border(2.dp, Color.Black)
+                                            .padding(2.dp)
+                                    )
+                                }
+                            }
+                        }
+                        val genreNames =
+                            tv.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
+                        Text(
+                            text = genreNames.joinToString(", "),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Light,
+                            modifier = Modifier.padding(2.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = tv.overview, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))

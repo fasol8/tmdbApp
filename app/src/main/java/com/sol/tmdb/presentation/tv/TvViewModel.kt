@@ -1,5 +1,6 @@
 package com.sol.tmdb.presentation.tv
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -7,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
+import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.domain.model.tv.TvResult
@@ -23,6 +25,9 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
 
     private val _tvById = MutableLiveData<TvDetail?>()
     val tvById: LiveData<TvDetail?> = _tvById
+
+    private val _tvRatings = MutableLiveData<Map<String, TvCertification?>?>()
+    val tvRatings: LiveData<Map<String, TvCertification?>?> = _tvRatings
 
     private val _tvCredits = MutableLiveData<CreditsResponse?>()
     val tvCredits: LiveData<CreditsResponse?> = _tvCredits
@@ -75,6 +80,19 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
+    fun searchTvRatings(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTcRatingsByCountry(id)
+                _tvRatings.value = response
+                Log.i("VM",response.toString())
+            } catch (e: Exception) {
+                _tvRatings.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
     fun searchTvCredits(id: Int) {
         viewModelScope.launch {
             try {
@@ -99,7 +117,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun serachTvProvidersForMXAndUs(id: Int) {
+    fun searchTvProvidersForMXAndUs(id: Int) {
         viewModelScope.launch {
             try {
                 val result = getTvUseCase.getTvProvidersForMxAndUsUseCase(id)

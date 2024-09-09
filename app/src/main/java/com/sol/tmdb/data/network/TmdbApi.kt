@@ -17,6 +17,7 @@ import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvProviderResponse
+import com.sol.tmdb.domain.model.tv.TvRatingsResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
 import retrofit2.http.GET
@@ -78,6 +79,12 @@ interface TmdbApi {
         @Path("tv_id") tvId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvDetail
+
+    @GET("tv/{tv_id}/content_ratings")
+    suspend fun getTvRatings(
+        @Path("tv_id") tvId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvRatingsResponse
 
     @GET("tv/{tv_id}/credits")
     suspend fun getTvCredits(
