@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sol.tmdb.domain.model.tv.CreditsResponse
+import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.domain.useCase.GetTvUseCase
@@ -23,6 +24,9 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
 
     private val _tvCredits = MutableLiveData<CreditsResponse?>()
     val tvCredits: LiveData<CreditsResponse?> = _tvCredits
+
+    private val _tvSimilar = MutableLiveData<List<SimilarResult?>>()
+    val tvSimilar: LiveData<List<SimilarResult?>> = _tvSimilar
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -66,10 +70,22 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     fun searchTvCredits(id: Int) {
         viewModelScope.launch {
             try {
-                val response=getTvUseCase.getTvCredits(id)
-                _tvCredits.value=response
-            }catch (e:Exception){
-                _tvCredits.value=null
+                val response = getTvUseCase.getTvCredits(id)
+                _tvCredits.value = response
+            } catch (e: Exception) {
+                _tvCredits.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchTvSimilar(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTVSimilar(id)
+                _tvSimilar.value = response.results
+            } catch (e: Exception) {
+                _tvSimilar.value = emptyList()
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

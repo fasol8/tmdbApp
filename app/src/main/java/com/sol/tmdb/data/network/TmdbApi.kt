@@ -14,6 +14,7 @@ import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.PersonResponse
 import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import com.sol.tmdb.domain.model.tv.CreditsResponse
+import com.sol.tmdb.domain.model.tv.SimilarResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvResponse
 import retrofit2.http.GET
@@ -81,6 +82,12 @@ interface TmdbApi {
         @Path("tv_id") tvId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): CreditsResponse
+
+    @GET("tv/{tv_id}/similar")
+    suspend fun getTvSimilar(
+        @Path("tv_id") tvId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): SimilarResponse
 
     @GET("person/popular")
     suspend fun getPopularPerson(

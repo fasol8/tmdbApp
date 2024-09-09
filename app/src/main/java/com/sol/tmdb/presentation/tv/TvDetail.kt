@@ -1,6 +1,5 @@
 package com.sol.tmdb.presentation.tv
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.domain.model.tv.CreditsResponse
+import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvDetail
@@ -52,6 +52,8 @@ import com.sol.tmdb.navigation.TmdbScreen
 fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
     val tv by viewModel.tvById.observeAsState()
     val credits by viewModel.tvCredits.observeAsState()
+    val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
+
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     val isLoading = remember { mutableStateOf(true) }
@@ -59,6 +61,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
     LaunchedEffect(tvId) {
         viewModel.searchTvById(tvId)
         viewModel.searchTvCredits(tvId)
+        viewModel.searchTvSimilar(tvId)
     }
 
     LaunchedEffect(tv) {
@@ -68,10 +71,10 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 
     when {
         tv != null -> {
-            if (credits != null) {
+            if (credits != null && tvSimilar!=null) {
                 LazyColumn {
                     item {
-                        TvCard(tv!!, credits, navController)
+                        TvCard(tv!!, credits, tvSimilar, navController)
                     }
                 }
             }
@@ -91,7 +94,12 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 }
 
 @Composable
-fun TvCard(tv: TvDetail, credits: CreditsResponse?, navController: NavController) {
+fun TvCard(
+    tv: TvDetail,
+    credits: CreditsResponse?,
+    tvSimilar: List<SimilarResult?>,
+    navController: NavController
+) {
     val imageBackground = "https://image.tmdb.org/t/p/w500" + tv.backdropPath
     val imagePoster = "https://image.tmdb.org/t/p/w500" + tv.posterPath
     val cast = credits?.cast ?: emptyList()
@@ -175,7 +183,18 @@ fun TvCard(tv: TvDetail, credits: CreditsResponse?, navController: NavController
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Similar:")
+                    LazyRow {
+                        items(tvSimilar.size) { index ->
+                            val oneSimilar = tvSimilar[index]
+                            ItemTvSimilar(oneSimilar) {
+                                navController.navigate(TmdbScreen.TvDetail.route + "/${oneSimilar?.id}")
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
+
                 }
             }
         }
@@ -217,7 +236,7 @@ fun ItemCast(cast: TvCast, onClick: () -> Unit) {
 }
 
 @Composable
-fun ItemCrew( crew: TvCrew, onClick: () -> Unit) {
+fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -230,7 +249,9 @@ fun ItemCrew( crew: TvCrew, onClick: () -> Unit) {
                 val image = ("https://image.tmdb.org/t/p/w500" + crew.profilePath) ?: ""
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
-                    modifier = Modifier.width(100.dp).height(100.dp),
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(100.dp),
                     contentScale = ContentScale.Crop
                 )
                 Text(
@@ -242,6 +263,30 @@ fun ItemCrew( crew: TvCrew, onClick: () -> Unit) {
                     text = crew.department,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemTvSimilar(similar: SimilarResult?, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + similar?.posterPath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(170.dp),
+                    contentScale = ContentScale.Crop
                 )
             }
         }

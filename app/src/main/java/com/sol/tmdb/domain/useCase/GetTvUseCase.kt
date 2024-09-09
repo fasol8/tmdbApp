@@ -2,6 +2,7 @@ package com.sol.tmdb.domain.useCase
 
 import com.sol.tmdb.data.repository.TvRepository
 import com.sol.tmdb.domain.model.tv.CreditsResponse
+import com.sol.tmdb.domain.model.tv.SimilarResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvResponse
 import javax.inject.Inject
@@ -18,5 +19,9 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
 
     suspend fun getTvCredits(tvId: Int): CreditsResponse {
         return repository.getTvCredits(tvId)
+    }
+
+    suspend fun getTVSimilar(tvId: Int): SimilarResponse {
+        return repository.getTvSimilar(tvId)
     }
 }
