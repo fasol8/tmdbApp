@@ -38,6 +38,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.domain.model.person.MovieCast
 import com.sol.tmdb.domain.model.person.Gender
+import com.sol.tmdb.domain.model.person.ImagesProfile
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.TvCast
@@ -57,6 +58,7 @@ fun PersonDetail(
     val person by viewModel.personById.observeAsState()
     val creditsMovies by viewModel.creditsMovies.observeAsState()
     val creditsTvs by viewModel.creditsTv.observeAsState()
+    val imagesProfile by viewModel.personImages.observeAsState(emptyList())
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     val isLoading = remember { mutableStateOf(true) }
@@ -65,6 +67,7 @@ fun PersonDetail(
         viewModel.searchPersonById(personId)
         viewModel.searchCreditsMovies(personId)
         viewModel.searchCreditsTv(personId)
+        viewModel.searchImagesProfile(personId)
     }
 
     LaunchedEffect(key1 = person) {
@@ -77,7 +80,13 @@ fun PersonDetail(
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn {
                     item {
-                        PersonCard(person!!, creditsMovies, creditsTvs, navController)
+                        PersonCard(
+                            person!!,
+                            creditsMovies,
+                            creditsTvs,
+                            imagesProfile,
+                            navController
+                        )
                     }
                 }
             }
@@ -102,6 +111,7 @@ fun PersonCard(
     person: PersonDetail,
     personMovieCredits: MovieCreditsResponse?,
     personCreditsTvs: TvCreditsResponse?,
+    imagesProfile: List<ImagesProfile?>,
     navController: NavController
 ) {
     val movieCredits = personMovieCredits?.cast ?: emptyList()
@@ -186,6 +196,14 @@ fun PersonCard(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Gallery")
+                    LazyRow {
+                        items(imagesProfile.size) { index ->
+                            val imageProfile = imagesProfile[index]
+                            ItemImage(imageProfile)
+                        }
+                    }
                 }
             }
         }
@@ -265,5 +283,20 @@ fun ItemCreditTv(tv: TvCast, onClick: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ItemImage(imageProfile: ImagesProfile?) {
+    Card(modifier = Modifier
+        .size(200.dp)
+        .padding(horizontal = 8.dp)) {
+        val image = imageProfile?.filePath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+        AsyncImage(
+            model = image,
+            contentDescription = "profile image",
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = ContentScale.Crop
+        )
     }
 }
