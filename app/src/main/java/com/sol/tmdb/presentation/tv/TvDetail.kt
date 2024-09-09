@@ -46,6 +46,7 @@ import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvGenre
+import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
@@ -53,6 +54,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
     val tv by viewModel.tvById.observeAsState()
     val credits by viewModel.tvCredits.observeAsState()
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
+    val tvRecommendations by viewModel.tvRecommendations.observeAsState(emptyList())
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
@@ -62,6 +64,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
         viewModel.searchTvById(tvId)
         viewModel.searchTvCredits(tvId)
         viewModel.searchTvSimilar(tvId)
+        viewModel.searchTvRecommendation(tvId)
     }
 
     LaunchedEffect(tv) {
@@ -71,10 +74,10 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 
     when {
         tv != null -> {
-            if (credits != null && tvSimilar!=null) {
+            if (credits != null) {
                 LazyColumn {
                     item {
-                        TvCard(tv!!, credits, tvSimilar, navController)
+                        TvCard(tv!!, credits, tvSimilar,tvRecommendations, navController)
                     }
                 }
             }
@@ -98,6 +101,7 @@ fun TvCard(
     tv: TvDetail,
     credits: CreditsResponse?,
     tvSimilar: List<SimilarResult?>,
+    tvRecommendations: List<TvRecommendationsResult?>,
     navController: NavController
 ) {
     val imageBackground = "https://image.tmdb.org/t/p/w500" + tv.backdropPath
@@ -193,6 +197,16 @@ fun TvCard(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Recommendation:")
+                    LazyRow {
+                        items(tvRecommendations.size) { index ->
+                            val tvRecommendation = tvRecommendations[index]
+                            ItemTvRecommendation(tvRecommendation) {
+                                navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecommendation?.id}")
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
 
                 }
@@ -281,6 +295,30 @@ fun ItemTvSimilar(similar: SimilarResult?, onClick: () -> Unit) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
                 val image = ("https://image.tmdb.org/t/p/w500" + similar?.posterPath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(170.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick:  () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + recommendation?.posterPath) ?: ""
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
