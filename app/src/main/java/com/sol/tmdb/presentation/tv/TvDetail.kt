@@ -1,17 +1,21 @@
 package com.sol.tmdb.presentation.tv
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,6 +27,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +40,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,6 +53,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryResult
+import com.sol.tmdb.domain.model.tv.CreatedBy
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCast
@@ -179,12 +187,11 @@ fun TvCard(
                         fontSize = 24.sp
                     )
                     Row {
-
                         tvRatings?.let { rati ->
                             rati.forEach { (country, rating) ->
                                 if (country == "MX" && rating?.certification != null) {
                                     Text(
-                                        text = rating?.certification ?: "",
+                                        text = rating.certification,
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier
@@ -205,6 +212,89 @@ fun TvCard(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = tv.overview, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    if (tv.createdBy.isNotEmpty()) {
+                        Text(
+                            text = "Created by:",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Row {
+                            tv.createdBy.forEach { creator ->
+                                Text(
+                                    text = creator.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Blue,  // Puedes agregarle color para que parezca un enlace
+                                    modifier = Modifier
+                                        .clickable {
+                                            navController.navigate(TmdbScreen.PersonDetail.route + "/${creator.id}")
+                                        }
+                                        .weight(1f)
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Facts",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    Row {
+                        Text(
+                            text = "Status \n" + tv.status,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .weight(.8f)
+                        )
+                        Column(Modifier.weight(1.2f)) {
+                            Text(
+                                text = "Total season: " + tv.numberOfSeasons,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(2.dp)
+                            )
+                            Text(
+                                text = "Total episodes: " + tv.numberOfEpisodes,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(2.dp)
+                            )
+                            Text(
+                                text = "Origin country: " + tv.originCountry,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .padding(2.dp)
+                            )
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(text = "Networks", style = MaterialTheme.typography.bodySmall)
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.height(60.dp)
+                            ) {
+                                items(tv.networks.size) { index ->
+                                    val network = tv.networks[index]
+                                    network.let {
+                                        val image =
+                                            ("https://image.tmdb.org/t/p/w500" + it.logoPath)
+                                                ?: ""
+                                        AsyncImage(
+                                            model = image,
+                                            contentDescription = "logo provider",
+                                            modifier = Modifier
+                                                .width(50.dp)
+                                                .height(50.dp)
+                                                .padding(4.dp),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "Cast:")
                     LazyRow {
@@ -243,7 +333,7 @@ fun TvCard(
                                             modifier = Modifier.height(90.dp)
                                         ) {
                                             items(mxProviders.flatrate.size) { index ->
-                                                val provide = mxProviders.flatrate.get(index)
+                                                val provide = mxProviders.flatrate[index]
                                                 provide.let {
                                                     val image =
                                                         ("https://image.tmdb.org/t/p/w500" + it.logoPath)
@@ -318,6 +408,37 @@ fun TvCard(
 
                 }
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(50.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = (-28).dp, y = (370).dp)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawCircle(color = Color(0xFFEEEEEE))
+
+                drawArc(
+                    color = when {
+                        ((tv.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                        ((tv.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                        else -> Color(0xFF0F9D58)
+                    },
+                    startAngle = -90f,
+                    sweepAngle = (tv.voteAverage * 36).toFloat(),
+                    useCenter = false,
+                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
+            Text(
+                text = "${(tv.voteAverage * 10).toInt()}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(
+                    Alignment.Center
+                )
+            )
         }
     }
 }
