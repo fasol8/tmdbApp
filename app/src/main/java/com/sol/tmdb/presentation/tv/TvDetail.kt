@@ -3,8 +3,10 @@ package com.sol.tmdb.presentation.tv
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCast
@@ -53,6 +58,7 @@ import com.sol.tmdb.navigation.TmdbScreen
 fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
     val tv by viewModel.tvById.observeAsState()
     val credits by viewModel.tvCredits.observeAsState()
+    val tvProviders by viewModel.tvProviders.observeAsState()
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
     val tvRecommendations by viewModel.tvRecommendations.observeAsState(emptyList())
 
@@ -65,6 +71,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
         viewModel.searchTvCredits(tvId)
         viewModel.searchTvSimilar(tvId)
         viewModel.searchTvRecommendation(tvId)
+        viewModel.serachTvProvidersForMXAndUs(tvId)
     }
 
     LaunchedEffect(tv) {
@@ -77,7 +84,14 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
             if (credits != null) {
                 LazyColumn {
                     item {
-                        TvCard(tv!!, credits, tvSimilar,tvRecommendations, navController)
+                        TvCard(
+                            tv!!,
+                            credits,
+                            tvProviders,
+                            tvSimilar,
+                            tvRecommendations,
+                            navController
+                        )
                     }
                 }
             }
@@ -100,6 +114,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 fun TvCard(
     tv: TvDetail,
     credits: CreditsResponse?,
+    tvProviders: Map<String, CountryResult?>?,
     tvSimilar: List<SimilarResult?>,
     tvRecommendations: List<TvRecommendationsResult?>,
     navController: NavController
@@ -185,6 +200,75 @@ fun TvCard(
                             ItemCrew(oneCrew) {
                                 navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCrew.id}")
                             }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    when {
+                        tvProviders != null -> {
+                            val mxProviders = tvProviders["MX"]
+                            val usProviders = tvProviders["US"]
+
+                            Row {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                ) {
+                                    if (mxProviders != null) {
+                                        Text(text = "Providers in MX:")
+                                        LazyVerticalGrid(
+                                            columns = GridCells.Fixed(3),
+                                            modifier = Modifier.height(90.dp)
+                                        ) {
+                                            items(mxProviders.flatrate.size) { index ->
+                                                val provide = mxProviders.flatrate.get(index)
+                                                provide.let {
+                                                    val image =
+                                                        ("https://image.tmdb.org/t/p/w500" + it.logoPath)
+                                                            ?: ""
+                                                    AsyncImage(
+                                                        model = image,
+                                                        contentDescription = "logo provider",
+                                                        modifier = Modifier
+                                                            .width(40.dp)
+                                                            .height(40.dp)
+                                                            .padding(4.dp),
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else Text(text = "No providers available for MX")
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    if (usProviders != null) {
+                                        Text(text = "Providers in US:")
+                                        LazyVerticalGrid(
+                                            columns = GridCells.Fixed(3),
+                                            modifier = Modifier.height(90.dp)
+                                        ) {
+                                            items(usProviders.flatrate.size) { index ->
+                                                val provide = usProviders.flatrate.get(index)
+                                                provide.let {
+                                                    val image =
+                                                        ("https://image.tmdb.org/t/p/w500" + it.logoPath)
+                                                            ?: ""
+                                                    AsyncImage(
+                                                        model = image,
+                                                        contentDescription = "logo provider",
+                                                        modifier = Modifier
+                                                            .width(38.dp)
+                                                            .height(38.dp)
+                                                            .padding(4.dp),
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else Text(text = "No providers available for US")
+                                }
+                            }
+                        }
+
+                        else -> {
+                            CircularProgressIndicator()
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -308,7 +392,7 @@ fun ItemTvSimilar(similar: SimilarResult?, onClick: () -> Unit) {
 }
 
 @Composable
-fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick:  () -> Unit) {
+fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)

@@ -1,6 +1,7 @@
 package com.sol.tmdb.data.repository
 
 import com.sol.tmdb.data.network.TmdbApi
+import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
@@ -20,6 +21,11 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getTvCredits(tvId: Int): CreditsResponse {
         return api.getTvCredits(tvId)
+    }
+
+    suspend fun getTvProvidersForMxAndUs(tvId: Int): Map<String, CountryResult> {
+        val response = api.getTvProviders(tvId)
+        return response.results
     }
 
     suspend fun getTvSimilar(tvId: Int): SimilarResponse {

@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvDetail
@@ -25,6 +26,9 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
 
     private val _tvCredits = MutableLiveData<CreditsResponse?>()
     val tvCredits: LiveData<CreditsResponse?> = _tvCredits
+
+    private val _tvProviders = MutableLiveData<Map<String, CountryResult?>>()
+    val tvProviders: LiveData<Map<String, CountryResult?>> = _tvProviders
 
     private val _tvSimilar = MutableLiveData<List<SimilarResult?>>()
     val tvSimilar: LiveData<List<SimilarResult?>> = _tvSimilar
@@ -91,6 +95,18 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
             } catch (e: Exception) {
                 _tvSimilar.value = emptyList()
                 _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun serachTvProvidersForMXAndUs(id: Int) {
+        viewModelScope.launch {
+            try {
+                val result = getTvUseCase.getTvProvidersForMxAndUsUseCase(id)
+                _tvProviders.value = result
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading providers"
+
             }
         }
     }

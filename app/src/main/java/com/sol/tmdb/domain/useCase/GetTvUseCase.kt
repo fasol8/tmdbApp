@@ -1,6 +1,7 @@
 package com.sol.tmdb.domain.useCase
 
 import com.sol.tmdb.data.repository.TvRepository
+import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
@@ -20,6 +21,14 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
 
     suspend fun getTvCredits(tvId: Int): CreditsResponse {
         return repository.getTvCredits(tvId)
+    }
+
+    suspend fun getTvProvidersForMxAndUsUseCase(tvId: Int): Map<String, CountryResult?> {
+        val providers = repository.getTvProvidersForMxAndUs(tvId)
+        return mapOf(
+            "MX" to providers["MX"],
+            "US" to providers["US"]
+        )
     }
 
     suspend fun getTVSimilar(tvId: Int): SimilarResponse {
