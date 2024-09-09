@@ -1,5 +1,6 @@
 package com.sol.tmdb.presentation.tv
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,20 +38,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.sol.tmdb.domain.model.tv.CreditsResponse
+import com.sol.tmdb.domain.model.tv.TvCast
+import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvGenre
+import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
-fun TvDetail(tvId: Int, viewModel: TvViewModel = hiltViewModel()) {
+fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
     val tv by viewModel.tvById.observeAsState()
+    val credits by viewModel.tvCredits.observeAsState()
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     val isLoading = remember { mutableStateOf(true) }
 
     LaunchedEffect(tvId) {
         viewModel.searchTvById(tvId)
+        viewModel.searchTvCredits(tvId)
     }
 
     LaunchedEffect(tv) {
@@ -57,7 +68,13 @@ fun TvDetail(tvId: Int, viewModel: TvViewModel = hiltViewModel()) {
 
     when {
         tv != null -> {
-            TvCard(tv!!)
+            if (credits != null) {
+                LazyColumn {
+                    item {
+                        TvCard(tv!!, credits, navController)
+                    }
+                }
+            }
         }
 
         isLoading.value -> {
@@ -74,9 +91,11 @@ fun TvDetail(tvId: Int, viewModel: TvViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun TvCard(tv: TvDetail) {
+fun TvCard(tv: TvDetail, credits: CreditsResponse?, navController: NavController) {
     val imageBackground = "https://image.tmdb.org/t/p/w500" + tv.backdropPath
     val imagePoster = "https://image.tmdb.org/t/p/w500" + tv.posterPath
+    val cast = credits?.cast ?: emptyList()
+    val crew = credits?.crew ?: emptyList()
 
     Box(
         modifier = Modifier
@@ -134,10 +153,96 @@ fun TvCard(tv: TvDetail) {
                         fontWeight = FontWeight.Light,
                         modifier = Modifier.padding(2.dp)
                     )
-                    Text(text = tv.tagline, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = tv.overview, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Cast:")
+                    LazyRow {
+                        items(cast.size) { index ->
+                            val oneCast = cast[index]
+                            ItemCast(oneCast) {
+                                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCast.id}")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(text = "Crew:")
+                    LazyRow {
+                        items(crew.size) { index ->
+                            val oneCrew = crew[index]
+                            ItemCrew(oneCrew) {
+                                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCrew.id}")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCast(cast: TvCast, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + cast.profilePath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Text(
+                    text = cast.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = cast.character,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCrew( crew: TvCrew, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(100.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = ("https://image.tmdb.org/t/p/w500" + crew.profilePath) ?: ""
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier.width(100.dp).height(100.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Text(
+                    text = crew.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = crew.department,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
             }
         }
     }
