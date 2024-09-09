@@ -4,6 +4,7 @@ import com.sol.tmdb.data.network.TmdbApi
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.PersonResponse
+import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import javax.inject.Inject
 
 class PersonRepository @Inject constructor(private val api: TmdbApi) {
@@ -18,5 +19,9 @@ class PersonRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getCreditsMovies(personId: Int): MovieCreditsResponse {
         return api.getCreditsMovies(personId)
+    }
+
+    suspend fun getCreditsTv(personId: Int): TvCreditsResponse {
+        return api.getCreditsTv(personId)
     }
 }

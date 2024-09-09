@@ -36,10 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.sol.tmdb.domain.model.person.Cast
+import com.sol.tmdb.domain.model.person.MovieCast
 import com.sol.tmdb.domain.model.person.Gender
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
+import com.sol.tmdb.domain.model.person.TvCast
+import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import com.sol.tmdb.navigation.TmdbScreen
 import java.time.LocalDate
 import java.time.Period
@@ -54,6 +56,7 @@ fun PersonDetail(
 ) {
     val person by viewModel.personById.observeAsState()
     val creditsMovies by viewModel.creditsMovies.observeAsState()
+    val creditsTvs by viewModel.creditsTv.observeAsState()
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     val isLoading = remember { mutableStateOf(true) }
@@ -61,6 +64,7 @@ fun PersonDetail(
     LaunchedEffect(key1 = personId) {
         viewModel.searchPersonById(personId)
         viewModel.searchCreditsMovies(personId)
+        viewModel.searchCreditsTv(personId)
     }
 
     LaunchedEffect(key1 = person) {
@@ -73,7 +77,7 @@ fun PersonDetail(
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn {
                     item {
-                        PersonCard(person!!, creditsMovies, navController)
+                        PersonCard(person!!, creditsMovies, creditsTvs, navController)
                     }
                 }
             }
@@ -96,11 +100,14 @@ fun PersonDetail(
 @Composable
 fun PersonCard(
     person: PersonDetail,
-    personCredits: MovieCreditsResponse?,
+    personMovieCredits: MovieCreditsResponse?,
+    personCreditsTvs: TvCreditsResponse?,
     navController: NavController
 ) {
-    val credits = personCredits?.cast ?: emptyList()
-    credits.plus(personCredits?.crew) // Solo se utiliza el poster
+    val movieCredits = personMovieCredits?.cast ?: emptyList()
+    movieCredits.plus(personMovieCredits?.crew) // Solo se utiliza el poster
+    val tvCredits = personCreditsTvs?.cast ?: emptyList()
+    tvCredits.plus(personCreditsTvs?.crew)
 
     Card(
         modifier = Modifier
@@ -161,12 +168,21 @@ fun PersonCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     BiographyText(person.biography)
                     Text(text = "Known For")
-                    Text(text = "-Movie")
+                    Text(text = "-> Movie")
                     LazyRow {
-                        items(credits.size) { index ->
-                            val credit = credits[index]
+                        items(movieCredits.size) { index ->
+                            val credit = movieCredits[index]
                             ItemCast(credit) {
                                 navController.navigate(TmdbScreen.MovieDetail.route + "/${credit.id}")
+                            }
+                        }
+                    }
+                    Text(text = "-> Tv Series")
+                    LazyRow {
+                        items(tvCredits.size) { index ->
+                            val tv = tvCredits[index]
+                            ItemCreditTv(tv) {
+                                navController.navigate(TmdbScreen.TvDetail.route + "/${tv.id}")
                             }
                         }
                     }
@@ -207,7 +223,7 @@ fun BiographyText(biography: String) {
 }
 
 @Composable
-fun ItemCast(cast: Cast, onClick: () -> Unit) { // Solo se utiliza el poster
+fun ItemCast(cast: MovieCast, onClick: () -> Unit) { // Solo se utiliza el poster
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -218,6 +234,29 @@ fun ItemCast(cast: Cast, onClick: () -> Unit) { // Solo se utiliza el poster
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
                 val image = cast.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                AsyncImage(
+                    model = image,
+                    contentDescription = "poster movie",
+                    modifier = Modifier.width(120.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCreditTv(tv: TvCast, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = tv.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
                 AsyncImage(
                     model = image,
                     contentDescription = "poster movie",

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.PersonResult
+import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import com.sol.tmdb.domain.useCase.GetPersonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -24,6 +25,9 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
 
     private val _creditsMovies = MutableLiveData<MovieCreditsResponse?>()
     val creditsMovies: LiveData<MovieCreditsResponse?> = _creditsMovies
+
+    private val _creditsTv = MutableLiveData<TvCreditsResponse?>()
+    val creditsTv: LiveData<TvCreditsResponse?> = _creditsTv
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -72,6 +76,18 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
                 _creditsMovies.value = response
             } catch (e: Exception) {
                 _creditsMovies.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchCreditsTv(id: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getPersonUseCase.getCreditsTv(id)
+                _creditsTv.value = response
+            } catch (e: Exception) {
+                _creditsTv.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

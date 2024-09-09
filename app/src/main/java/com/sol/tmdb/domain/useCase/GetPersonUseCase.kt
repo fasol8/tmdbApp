@@ -4,6 +4,7 @@ import com.sol.tmdb.data.repository.PersonRepository
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.PersonResponse
+import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import javax.inject.Inject
 
 class GetPersonUseCase @Inject constructor(private val repository: PersonRepository) {
@@ -18,5 +19,9 @@ class GetPersonUseCase @Inject constructor(private val repository: PersonReposit
 
     suspend fun getCreditsMovies(personId: Int): MovieCreditsResponse {
         return repository.getCreditsMovies(personId)
+    }
+
+    suspend fun getCreditsTv(personId: Int): TvCreditsResponse {
+        return repository.getCreditsTv(personId)
     }
 }
