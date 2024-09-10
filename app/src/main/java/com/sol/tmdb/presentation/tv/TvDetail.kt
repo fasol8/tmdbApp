@@ -1,7 +1,6 @@
 package com.sol.tmdb.presentation.tv
 
 import android.os.Build
-import android.widget.Space
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -30,6 +29,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -246,154 +248,10 @@ fun TvCard(
                         }
                     }
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Facts",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                    Row {
-                        Text(
-                            text = "Status \n" + tv.status,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier
-                                .padding(2.dp)
-                                .weight(.8f)
-                        )
-                        Column(Modifier.weight(1.2f)) {
-                            Text(
-                                text = "Total season: " + tv.numberOfSeasons,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier
-                                    .padding(2.dp)
-                            )
-                            Text(
-                                text = "Total episodes: " + tv.numberOfEpisodes,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier
-                                    .padding(2.dp)
-                            )
-                            Text(
-                                text = "Origin country: " + tv.originCountry,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier
-                                    .padding(2.dp)
-                            )
-                        }
-                        Column(Modifier.weight(1f)) {
-                            Text(text = "Networks", style = MaterialTheme.typography.bodySmall)
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier.height(60.dp)
-                            ) {
-                                items(tv.networks.size) { index ->
-                                    val network = tv.networks[index]
-                                    network.let {
-                                        val image =
-                                            ("https://image.tmdb.org/t/p/w500" + it.logoPath)
-                                                ?: ""
-                                        AsyncImage(
-                                            model = image,
-                                            contentDescription = "logo provider",
-                                            modifier = Modifier
-                                                .width(50.dp)
-                                                .height(50.dp)
-                                                .padding(4.dp),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    InfoTabs(tv, tvProviders)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Cast:")
-                    LazyRow {
-                        items(cast.size) { index ->
-                            val oneCast = cast[index]
-                            ItemCast(oneCast) {
-                                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCast.id}")
-                            }
-                        }
-                    }
+                    CastAndCrewTabs(cast, crew, navController)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Crew:")
-                    LazyRow {
-                        items(crew.size) { index ->
-                            val oneCrew = crew[index]
-                            ItemCrew(oneCrew) {
-                                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCrew.id}")
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    when {
-                        tvProviders != null -> {
-                            val mxProviders = tvProviders["MX"]
-                            val usProviders = tvProviders["US"]
-
-                            Row {
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                ) {
-                                    if (mxProviders != null) {
-                                        Text(text = "Providers in MX:")
-                                        LazyVerticalGrid(
-                                            columns = GridCells.Fixed(3),
-                                            modifier = Modifier.height(90.dp)
-                                        ) {
-                                            items(mxProviders.flatrate.size) { index ->
-                                                val provide = mxProviders.flatrate[index]
-                                                provide.let {
-                                                    val image =
-                                                        ("https://image.tmdb.org/t/p/w500" + it.logoPath)
-                                                            ?: ""
-                                                    AsyncImage(
-                                                        model = image,
-                                                        contentDescription = "logo provider",
-                                                        modifier = Modifier
-                                                            .width(40.dp)
-                                                            .height(40.dp)
-                                                            .padding(4.dp),
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    } else Text(text = "No providers available for MX")
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    if (usProviders != null) {
-                                        Text(text = "Providers in US:")
-                                        LazyVerticalGrid(
-                                            columns = GridCells.Fixed(3),
-                                            modifier = Modifier.height(90.dp)
-                                        ) {
-                                            items(usProviders.flatrate.size) { index ->
-                                                val provide = usProviders.flatrate.get(index)
-                                                provide.let {
-                                                    val image =
-                                                        ("https://image.tmdb.org/t/p/w500" + it.logoPath)
-                                                            ?: ""
-                                                    AsyncImage(
-                                                        model = image,
-                                                        contentDescription = "logo provider",
-                                                        modifier = Modifier
-                                                            .width(38.dp)
-                                                            .height(38.dp)
-                                                            .padding(4.dp),
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    } else Text(text = "No providers available for US")
-                                }
-                            }
-                        }
-
-                        else -> {
-                            CircularProgressIndicator()
-                        }
-                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "Last Season")
                     LastSeason(tv.seasons.last(), tv.lastEpisodeToAir)
@@ -405,27 +263,8 @@ fun TvCard(
 //                                navController.navigate(TmdbScreen.PersonDetail.route + "/${creator.id}")
                             })
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Similar:")
-                    LazyRow {
-                        items(tvSimilar.size) { index ->
-                            val oneSimilar = tvSimilar[index]
-                            ItemTvSimilar(oneSimilar) {
-                                navController.navigate(TmdbScreen.TvDetail.route + "/${oneSimilar?.id}")
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Recommendation:")
-                    LazyRow {
-                        items(tvRecommendations.size) { index ->
-                            val tvRecommendation = tvRecommendations[index]
-                            ItemTvRecommendation(tvRecommendation) {
-                                navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecommendation?.id}")
-                            }
-                        }
-                    }
+                    RecommendationAndSimilarTabs(tvRecommendations, tvSimilar, navController)
                     Spacer(modifier = Modifier.height(24.dp))
-
                 }
             }
         }
@@ -463,6 +302,263 @@ fun TvCard(
     }
 }
 
+@Composable
+fun InfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Facts", "Providers")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> FactsTab(tv = tv)
+
+            1 -> ProviderTab(tvProviders = tvProviders)
+        }
+    }
+}
+
+@Composable
+fun ProviderTab(tvProviders: Map<String, CountryResult?>?) {
+    when {
+        tvProviders != null -> {
+            val mxProviders = tvProviders["MX"]
+            val usProviders = tvProviders["US"]
+
+            Column {
+                if (mxProviders != null) {
+                    LazyRow {
+                        items(mxProviders.flatrate.size) { index ->
+                            val provide = mxProviders.flatrate[index]
+                            provide.let {
+                                val image =
+                                    ("https://image.tmdb.org/t/p/w500" + it.logoPath)
+                                        ?: ""
+                                AsyncImage(
+                                    model = image,
+                                    contentDescription = "logo provider",
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .height(60.dp)
+                                        .padding(4.dp),
+                                )
+                            }
+                        }
+                    }
+                } else Text(text = "No providers available for MX")
+            }
+        }
+
+        else -> {
+            CircularProgressIndicator()
+        }
+    }
+}
+
+@Composable
+fun FactsTab(tv: TvDetail) {
+    Row {
+        Text(
+            text = "Status \n" + tv.status,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .padding(2.dp)
+                .weight(.8f)
+        )
+        Column(Modifier.weight(1.2f)) {
+            Text(
+                text = "Total season: " + tv.numberOfSeasons,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .padding(2.dp)
+            )
+            Text(
+                text = "Total episodes: " + tv.numberOfEpisodes,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .padding(2.dp)
+            )
+            Text(
+                text = "Origin country: " + tv.originCountry,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .padding(2.dp)
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Text(text = "Networks", style = MaterialTheme.typography.bodySmall)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.height(60.dp)
+            ) {
+                items(tv.networks.size) { index ->
+                    val network = tv.networks[index]
+                    network.let {
+                        val image =
+                            ("https://image.tmdb.org/t/p/w500" + it.logoPath)
+                                ?: ""
+                        AsyncImage(
+                            model = image,
+                            contentDescription = "logo provider",
+                            modifier = Modifier
+                                .width(50.dp)
+                                .height(50.dp)
+                                .padding(4.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendationAndSimilarTabs(
+    tvRecommendations: List<TvRecommendationsResult?>,
+    tvSimilar: List<SimilarResult?>,
+    navController: NavController
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Recommendation", "Similar")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> RecommendationTab(
+                recommendation = tvRecommendations,
+                navController = navController
+            )
+
+            1 -> SimilarTab(tvSimilar = tvSimilar, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun SimilarTab(tvSimilar: List<SimilarResult?>, navController: NavController) {
+    LazyRow {
+        items(tvSimilar.size) { index ->
+            val oneSimilar = tvSimilar[index]
+            ItemTvSimilar(oneSimilar) {
+                navController.navigate(TmdbScreen.TvDetail.route + "/${oneSimilar?.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendationTab(
+    recommendation: List<TvRecommendationsResult?>,
+    navController: NavController
+) {
+    LazyRow {
+        items(recommendation.size) { index ->
+            val tvRecommendation = recommendation[index]
+            ItemTvRecommendation(tvRecommendation) {
+                navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecommendation?.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun CastAndCrewTabs(
+    cast: List<TvCast>,
+    crew: List<TvCrew>,
+    navController: NavController
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Cast", "Crew")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> CastTab(cast = cast, navController = navController)
+            1 -> CrewTab(crew = crew, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun CrewTab(crew: List<TvCrew>, navController: NavController) {
+    LazyRow {
+        items(crew.size) { index ->
+            val oneCrew = crew[index]
+            ItemCrew(oneCrew) {
+                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCrew.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun CastTab(cast: List<TvCast>, navController: NavController) {
+    LazyRow {
+        items(cast.size) { index ->
+            val oneCast = cast[index]
+            ItemCast(oneCast) {
+                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCast.id}")
+            }
+        }
+    }
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
@@ -475,7 +571,6 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-//                .padding(4.dp)
         ) {
             Row(Modifier.align(Alignment.TopStart)) {
                 val image =
@@ -530,22 +625,22 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = lastEpisodeToAir.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = lastEpisodeToAir.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "(${lastEpisodeToAir.seasonNumber}x${lastEpisodeToAir.episodeNumber})",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        if (lastEpisodeToAir.episodeType == "Season Finale") {
+                        if (lastEpisodeToAir.episodeType == "finale") {
                             Text(
                                 text = "Season Finale",
                                 style = MaterialTheme.typography.bodyMedium,
