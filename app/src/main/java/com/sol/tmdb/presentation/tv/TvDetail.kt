@@ -1,5 +1,8 @@
 package com.sol.tmdb.presentation.tv
 
+import android.os.Build
+import android.widget.Space
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,9 +28,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,7 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -51,11 +56,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryResult
-import com.sol.tmdb.domain.model.tv.CreatedBy
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.LastEpisodeToAir
+import com.sol.tmdb.domain.model.tv.Season
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCertification
@@ -63,6 +69,8 @@ import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.navigation.TmdbScreen
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
@@ -123,6 +131,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TvCard(
     tv: TvDetail,
@@ -157,7 +166,7 @@ fun TvCard(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -177,7 +186,7 @@ fun TvCard(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 4.dp),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
             ) {
                 Column(Modifier.padding(horizontal = 8.dp)) {
@@ -386,7 +395,8 @@ fun TvCard(
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    LastEpisodeToAir(tv.lastEpisodeToAir)
+                    Text(text = "Last Season")
+                    LastSeason(tv.seasons.last(), tv.lastEpisodeToAir)
                     Text(text = "View All Seasons",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Blue,
@@ -453,51 +463,98 @@ fun TvCard(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LastEpisodeToAir(lastEpisodeToAir: LastEpisodeToAir) {
+fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
     Card(
         modifier = Modifier
             .padding(4.dp)
-            .height(180.dp),
+            .height(150.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+//                .padding(4.dp)
+        ) {
             Row(Modifier.align(Alignment.TopStart)) {
                 val image =
-                    lastEpisodeToAir.stillPath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                    last.posterPath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
                 AsyncImage(
                     model = image,
                     contentDescription = "poster Episode",
-                    modifier = Modifier.width(120.dp),
+                    modifier = Modifier
+                        .width(100.dp)
+                        .fillMaxHeight(),
                     contentScale = ContentScale.Crop
                 )
-                Column {
+                Column(Modifier.padding(start = 16.dp, top = 16.dp)) {
                     Text(
-                        text = "Season ${lastEpisodeToAir.seasonNumber}",
-                        style = MaterialTheme.typography.titleMedium
+                        text = last.name,
+                        style = MaterialTheme.typography.titleLarge
                     )
-                    Row {
-                        Text(
-                            text = "${(lastEpisodeToAir.voteAverage * 10).toInt()}%",
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .border(2.dp, Color.Black)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_star),
+                            contentDescription = "Star Icon",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFFFFD700) // Color dorado
                         )
-                        Text(text = lastEpisodeToAir.airDate)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${(last.voteAverage * 10).toInt()}%",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        val year = last.airDate.let {
+                            LocalDate.parse(it, DateTimeFormatter.ISO_DATE).year.toString()
+                        } ?: "N/A"
+                        Text(
+                            text = year,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = " • ${last.episodeCount} Episodes",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = lastEpisodeToAir.overview,
-                        style = MaterialTheme.typography.bodySmall
+                        text = last.overview,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Row {
-                        Text(text = lastEpisodeToAir.name)
-                        Text(text = "(${lastEpisodeToAir.seasonNumber}x${lastEpisodeToAir.episodeNumber})")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = lastEpisodeToAir.episodeType,
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .border(2.dp, Color.Black)
+                            text = lastEpisodeToAir.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "(${lastEpisodeToAir.seasonNumber}x${lastEpisodeToAir.episodeNumber})",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        if (lastEpisodeToAir.episodeType == "Season Finale") {
+                            Text(
+                                text = "Season Finale",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .border(1.dp, MaterialTheme.colorScheme.primary)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -608,7 +665,8 @@ fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick: () -
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + recommendation?.posterPath) ?: ""
+                val image =
+                    ("https://image.tmdb.org/t/p/w500" + recommendation?.posterPath) ?: ""
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
@@ -620,3 +678,4 @@ fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick: () -
         }
     }
 }
+
