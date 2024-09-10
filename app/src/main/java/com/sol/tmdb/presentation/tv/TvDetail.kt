@@ -55,6 +55,7 @@ import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreatedBy
 import com.sol.tmdb.domain.model.tv.CreditsResponse
+import com.sol.tmdb.domain.model.tv.LastEpisodeToAir
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCertification
@@ -385,6 +386,15 @@ fun TvCard(
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
+                    LastEpisodeToAir(tv.lastEpisodeToAir)
+                    Text(text = "View All Seasons",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Blue,
+                        modifier = Modifier
+                            .clickable {
+//                                navController.navigate(TmdbScreen.PersonDetail.route + "/${creator.id}")
+                            })
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "Similar:")
                     LazyRow {
                         items(tvSimilar.size) { index ->
@@ -439,6 +449,58 @@ fun TvCard(
                     Alignment.Center
                 )
             )
+        }
+    }
+}
+
+@Composable
+fun LastEpisodeToAir(lastEpisodeToAir: LastEpisodeToAir) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .height(180.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.align(Alignment.TopStart)) {
+                val image =
+                    lastEpisodeToAir.stillPath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                AsyncImage(
+                    model = image,
+                    contentDescription = "poster Episode",
+                    modifier = Modifier.width(120.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Column {
+                    Text(
+                        text = "Season ${lastEpisodeToAir.seasonNumber}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Row {
+                        Text(
+                            text = "${(lastEpisodeToAir.voteAverage * 10).toInt()}%",
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .border(2.dp, Color.Black)
+                        )
+                        Text(text = lastEpisodeToAir.airDate)
+                    }
+                    Text(
+                        text = lastEpisodeToAir.overview,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Row {
+                        Text(text = lastEpisodeToAir.name)
+                        Text(text = "(${lastEpisodeToAir.seasonNumber}x${lastEpisodeToAir.episodeNumber})")
+                        Text(
+                            text = lastEpisodeToAir.episodeType,
+                            modifier = Modifier
+                                .padding(4.dp)
+                                .border(2.dp, Color.Black)
+                        )
+                    }
+                }
+            }
         }
     }
 }
