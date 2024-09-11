@@ -74,6 +74,7 @@ import com.sol.tmdb.navigation.TmdbScreen
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
     val tv by viewModel.tvById.observeAsState()
@@ -349,9 +350,11 @@ fun ProviderTab(tvProviders: Map<String, CountryResult?>?) {
                         items(mxProviders.flatrate.size) { index ->
                             val provide = mxProviders.flatrate[index]
                             provide.let {
-                                val image =
-                                    ("https://image.tmdb.org/t/p/w500" + it.logoPath)
-                                        ?: ""
+                                val image = if (it.logoPath.isNullOrEmpty()) {
+                                    R.drawable.no_image // Imagen predeterminada si logoPath es nulo o vacío
+                                } else {
+                                    "https://image.tmdb.org/t/p/w500${it.logoPath}" // URL de la imagen del proveedor
+                                }
                                 AsyncImage(
                                     model = image,
                                     contentDescription = "logo provider",
@@ -359,6 +362,8 @@ fun ProviderTab(tvProviders: Map<String, CountryResult?>?) {
                                         .width(60.dp)
                                         .height(60.dp)
                                         .padding(4.dp),
+                                    placeholder = painterResource(id = R.drawable.no_image),
+                                    error = painterResource(id = R.drawable.no_image)
                                 )
                             }
                         }
@@ -412,9 +417,11 @@ fun FactsTab(tv: TvDetail) {
                 items(tv.networks.size) { index ->
                     val network = tv.networks[index]
                     network.let {
-                        val image =
-                            ("https://image.tmdb.org/t/p/w500" + it.logoPath)
-                                ?: ""
+                        val image = if (it.logoPath.isNullOrEmpty()) {
+                            R.drawable.no_image // Imagen predeterminada si logoPath es nulo o vacío
+                        } else {
+                            "https://image.tmdb.org/t/p/w500${it.logoPath}" // URL de la imagen del proveedor
+                        }
                         AsyncImage(
                             model = image,
                             contentDescription = "logo provider",
@@ -422,6 +429,7 @@ fun FactsTab(tv: TvDetail) {
                                 .width(50.dp)
                                 .height(50.dp)
                                 .padding(4.dp),
+//                            TODO
                         )
                     }
                 }
@@ -574,7 +582,8 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
         ) {
             Row(Modifier.align(Alignment.TopStart)) {
                 val image =
-                    last.posterPath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                    last.posterPath.let { "https://image.tmdb.org/t/p/w500$it" }
+                        ?: R.drawable.no_image
                 AsyncImage(
                     model = image,
                     contentDescription = "poster Episode",
@@ -668,13 +677,19 @@ fun ItemCast(cast: TvCast, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + cast.profilePath) ?: ""
+                val image = if (cast.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${cast.profilePath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
                         .width(120.dp)
                         .height(180.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
                     text = cast.name,
@@ -702,13 +717,19 @@ fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + crew.profilePath) ?: ""
+                val image = if (crew.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${crew.profilePath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
                         .width(100.dp)
                         .height(100.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
                     text = crew.name,
@@ -736,13 +757,19 @@ fun ItemTvSimilar(similar: SimilarResult?, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + similar?.posterPath) ?: ""
+                val image = if (similar?.posterPath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${similar?.posterPath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
                         .width(120.dp)
                         .height(170.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
             }
         }
@@ -760,14 +787,19 @@ fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick: () -
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image =
-                    ("https://image.tmdb.org/t/p/w500" + recommendation?.posterPath) ?: ""
+                val image = if (recommendation?.posterPath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${recommendation?.posterPath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
                         .width(120.dp)
                         .height(170.dp),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
             }
         }

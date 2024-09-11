@@ -13,5 +13,5 @@ data class TvCrew(
     val name: String,
     @SerializedName("original_name") val originalName: String,
     val popularity: Double,
-    @SerializedName("profile_path") val profilePath: Any
+    @SerializedName("profile_path") val profilePath: String
 )
