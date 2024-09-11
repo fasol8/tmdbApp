@@ -60,6 +60,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.MovieGenre
+import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.LastEpisodeToAir
@@ -351,9 +352,9 @@ fun ProviderTab(tvProviders: Map<String, CountryResult?>?) {
                             val provide = mxProviders.flatrate[index]
                             provide.let {
                                 val image = if (it.logoPath.isNullOrEmpty()) {
-                                    R.drawable.no_image // Imagen predeterminada si logoPath es nulo o vacío
+                                    R.drawable.no_image
                                 } else {
-                                    "https://image.tmdb.org/t/p/w500${it.logoPath}" // URL de la imagen del proveedor
+                                    "https://image.tmdb.org/t/p/w500${it.logoPath}"
                                 }
                                 AsyncImage(
                                     model = image,
@@ -402,7 +403,9 @@ fun FactsTab(tv: TvDetail) {
                     .padding(2.dp)
             )
             Text(
-                text = "Origin country: " + tv.originCountry,
+                text = "Origin country: " + tv.originCountry.joinToString {
+                    CountryFlag.getFlagByCode(it)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
@@ -418,9 +421,9 @@ fun FactsTab(tv: TvDetail) {
                     val network = tv.networks[index]
                     network.let {
                         val image = if (it.logoPath.isNullOrEmpty()) {
-                            R.drawable.no_image // Imagen predeterminada si logoPath es nulo o vacío
+                            R.drawable.no_image
                         } else {
-                            "https://image.tmdb.org/t/p/w500${it.logoPath}" // URL de la imagen del proveedor
+                            "https://image.tmdb.org/t/p/w500${it.logoPath}"
                         }
                         AsyncImage(
                             model = image,
