@@ -2,9 +2,12 @@ package com.sol.tmdb.presentation.person
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,10 +18,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,15 +36,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.sol.tmdb.domain.model.person.MovieCast
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
+import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.person.Gender
 import com.sol.tmdb.domain.model.person.ImagesProfile
+import com.sol.tmdb.domain.model.person.MovieCast
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
 import com.sol.tmdb.domain.model.person.TvCast
@@ -122,7 +137,7 @@ fun PersonCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 100.dp, start = 12.dp, end = 12.dp, bottom = 28.dp),
+            .padding(top = 100.dp, start = 4.dp, end = 4.dp, bottom = 28.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -133,11 +148,11 @@ fun PersonCard(
                     modifier = Modifier.size(380.dp),
                     contentScale = ContentScale.Crop
                 )
-                Column(modifier = Modifier.padding(horizontal = 8.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 4.dp)) {
                     Text(
                         text = person.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp, start = 8.dp)
                     )
                     Row {
@@ -150,60 +165,57 @@ fun PersonCard(
                                     .padding(2.dp)
                                     .weight(1f)
                             )
+                        } else {
+                            Text(
+                                text = "(?? years old)",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Light,
+                                modifier = Modifier
+                                    .padding(2.dp)
+                                    .weight(1f)
+                            )
                         }
                         Text(
                             text = Gender.fromValue(person.gender).name.replace("_", "  "),
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
-                                .padding(2.dp)
-                                .weight(1f)
+                                .border(1.dp, MaterialTheme.colorScheme.primary)
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
-                    Row {
+                    Row(modifier = Modifier.padding(vertical = 2.dp)) {
                         Text(
                             text = person.placeOfBirth ?: "Unknown",
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier
                                 .padding(2.dp)
-                                .weight(2f)
+                                .weight(1f)
                         )
                         Text(
                             text = person.knownForDepartment,
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier
-                                .padding(2.dp)
-                                .weight(1f)
+                                .border(1.dp, MaterialTheme.colorScheme.secondary)
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     BiographyText(person.biography)
-                    Text(text = "Known For")
-                    Text(text = "-> Movie")
-                    LazyRow {
-                        items(movieCredits.size) { index ->
-                            val credit = movieCredits[index]
-                            ItemCast(credit) {
-                                navController.navigate(TmdbScreen.MovieDetail.route + "/${credit.id}")
-                            }
-                        }
-                    }
-                    Text(text = "-> Tv Series")
-                    LazyRow {
-                        items(tvCredits.size) { index ->
-                            val tv = tvCredits[index]
-                            ItemCreditTv(tv) {
-                                navController.navigate(TmdbScreen.TvDetail.route + "/${tv.id}")
-                            }
-                        }
-                    }
+                    Text(
+                        text = "Known For",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    MovieAndTvTabs(movieCredits, tvCredits, navController)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Gallery")
-                    LazyRow {
-                        items(imagesProfile.size) { index ->
-                            val imageProfile = imagesProfile[index]
-                            ItemImage(imageProfile)
-                        }
-                    }
+                    Text(
+                        text = "Gallery",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    ImageCarousel(imagesProfile)
                 }
             }
         }
@@ -218,30 +230,98 @@ fun calculateAge(birthday: String, format: String = "yyyy-MM-dd"): Int {
     return Period.between(birthLocalDate, currentDate).years
 }
 
+
 @Composable
 fun BiographyText(biography: String) {
     var expand by remember { mutableStateOf(false) }
-    val showReadMore = biography.length > 200
+    val showReadMore = biography.length > 196
 
-    Column(modifier = Modifier) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)) {
         Text(
-            text = if (expand) biography else biography.take(200),
+            text = if (expand) biography else biography.take(196),
+            overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium
         )
-
         if (showReadMore) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd),
+                horizontalArrangement = Arrangement.End
+            ) {
                 TextButton(onClick = { expand = !expand }) {
-                    Text(text = if (expand) "Read less" else "Read more")
+                    Text(
+                        text = if (expand) "< Read less" else "Read more >",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(top = 54.dp)
+                    )
                 }
             }
         }
-
     }
 }
 
 @Composable
-fun ItemCast(cast: MovieCast, onClick: () -> Unit) { // Solo se utiliza el poster
+fun MovieAndTvTabs(
+    movieCredits: List<MovieCast>,
+    tvCredits: List<TvCast>,
+    navController: NavController
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Movie", "Tv Series")
+
+    Column {
+        TabRow(selectedTabIndex = selectedTabIndex, modifier = Modifier.fillMaxWidth()) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    })
+            }
+        }
+        when (selectedTabIndex) {
+            0 -> MovieTab(movie = movieCredits, navController = navController)
+            1 -> TvTab(tvs = tvCredits, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun TvTab(tvs: List<TvCast>, navController: NavController) {
+    LazyRow {
+        items(tvs.size) { index ->
+            val tv = tvs[index]
+            ItemCreditTv(tv) {
+                navController.navigate(TmdbScreen.TvDetail.route + "/${tv.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun MovieTab(movie: List<MovieCast>, navController: NavController) {
+    LazyRow {
+        items(movie.size) { index ->
+            val credit = movie[index]
+            ItemCreditsMovie(credit) {
+                navController.navigate(TmdbScreen.MovieDetail.route + "/${credit.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCreditsMovie(movie: MovieCast, onClick: () -> Unit) { // Solo se utiliza el poster
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -251,12 +331,20 @@ fun ItemCast(cast: MovieCast, onClick: () -> Unit) { // Solo se utiliza el poste
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = cast.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                val image = if (movie.posterPath.isNullOrEmpty()) {
+                    R.drawable.no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${movie.posterPath}"
+                }
                 AsyncImage(
                     model = image,
                     contentDescription = "poster movie",
-                    modifier = Modifier.width(120.dp),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(170.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
             }
         }
@@ -274,28 +362,70 @@ fun ItemCreditTv(tv: TvCast, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = tv.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+                val image = if (tv.posterPath.isNullOrEmpty()) {
+                    R.drawable.no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${tv.posterPath}"
+                }
                 AsyncImage(
                     model = image,
-                    contentDescription = "poster movie",
-                    modifier = Modifier.width(120.dp),
-                    contentScale = ContentScale.Crop
+                    contentDescription = "poster tv",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(170.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
             }
         }
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun ItemImage(imageProfile: ImagesProfile?) {
-    Card(modifier = Modifier
-        .size(200.dp)
-        .padding(horizontal = 8.dp)) {
+fun ImageCarousel(imagesProfile: List<ImagesProfile?>) {
+    val pagerState = rememberPagerState(initialPage = 0)
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(50.dp),
+            count = imagesProfile.size,
+            modifier = Modifier
+                .fillMaxSize()
+        ) { page ->
+            val imageProfile = imagesProfile[page]
+            HeroItemImage(imageProfile = imageProfile, isHero = page == pagerState.currentPage)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalPagerIndicator(
+            pagerState = pagerState,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            activeColor = Color.Black,
+            inactiveColor = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun HeroItemImage(imageProfile: ImagesProfile?, isHero: Boolean) {
+    val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .scale(scale),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
         val image = imageProfile?.filePath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
         AsyncImage(
             model = image,
             contentDescription = "profile image",
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
     }

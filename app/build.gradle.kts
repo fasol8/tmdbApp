@@ -90,6 +90,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.material3)
 //    implementation(libs.androidx.navigation.compose.v270)
+    implementation (libs.accompanist.pager)
+    implementation (libs.accompanist.pager.indicators)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
