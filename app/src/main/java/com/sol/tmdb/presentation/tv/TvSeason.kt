@@ -170,11 +170,14 @@ fun SeasonCard(season: TvSeasonDetailResponse, navController: NavController) {
             }
 
             if (isExpanded) {
+                val heightPerEpisode = 100.dp
+                val totalHeight = (season.episodes.size * heightPerEpisode.value).dp
+                val maxAllowedHeight = 800.dp
                 Column(
                     modifier = Modifier
                         .padding(start = 8.dp, top = 8.dp)
-                        .heightIn(max = 300.dp) // Limitar altura
-                        .verticalScroll(rememberScrollState()) // Hacerla desplazable
+                        .heightIn(min = 100.dp, max = totalHeight.coerceAtMost(maxAllowedHeight))
+                        .verticalScroll(rememberScrollState())
                 ) {
                     season.episodes.forEach { episode ->
                         ItemEpisodes(episode, navController)
@@ -232,7 +235,148 @@ fun ItemEpisodes(episode: TvSeasonDetailEpisode, navController: NavController) {
                         )
                     }
                 }
+                InfoGalleryAndGuestStarsTabs(episode, navController)
                 HorizontalDivider(thickness = 2.dp, modifier = Modifier.fillMaxWidth())
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoGalleryAndGuestStarsTabs(episode: TvSeasonDetailEpisode, navController: NavController) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Crew", "Guest Stars", "Images")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Transparent)
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(selected = selectedTabIndex == index, onClick = { selectedTabIndex = index }) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> EpisodeCrewTab(crew = episode.crew, navController = navController)
+            1 -> EpisodeGuestStarsTab(stars = episode.guestStars, navController)
+            2 -> EpisodeImages(images = episode.stillPath)
+        }
+    }
+}
+
+@Composable
+fun EpisodeImages(images: String) {
+//    TODO: change a list to make a carousel
+}
+
+@Composable
+fun EpisodeGuestStarsTab(stars: List<TvCast>, navController: NavController) {
+    LazyRow {
+        items(stars.size) { index ->
+            val oneCast = stars[index]
+            EpisodeGuestStar(oneCast) {
+                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCast.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun EpisodeGuestStar(cast: TvCast, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = if (cast.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${cast.profilePath}"
+                }
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(100.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
+                )
+                Text(
+                    text = cast.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = cast.character,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EpisodeCrewTab(crew: List<TvCrew>, navController: NavController) {
+    LazyRow {
+        items(crew.size) { index ->
+            val oneCrew = crew[index]
+            EpisodeItemCrew(oneCrew) {
+                navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCrew.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun EpisodeItemCrew(crew: TvCrew, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(100.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = if (crew.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${crew.profilePath}"
+                }
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(100.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
+                )
+                Text(
+                    text = crew.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = crew.department,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
             }
         }
     }
