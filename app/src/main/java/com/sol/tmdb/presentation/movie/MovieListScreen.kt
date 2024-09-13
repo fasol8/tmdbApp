@@ -26,12 +26,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.navigation.TmdbScreen
 
@@ -75,11 +77,17 @@ fun ItemMovie(movie: MovieResult, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.align(Alignment.TopStart)) {
-                val image = "https://image.tmdb.org/t/p/w500" + movie.posterPath
+                val image = if (movie.posterPath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${movie.posterPath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier.fillMaxWidth(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
                 Text(
                     text = movie.title,

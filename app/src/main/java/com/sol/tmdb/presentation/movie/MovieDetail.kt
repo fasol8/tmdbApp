@@ -17,11 +17,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +52,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.Cast
 import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
@@ -55,8 +62,12 @@ import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
+import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.navigation.TmdbScreen
-
+import com.sol.tmdb.presentation.tv.CastTab
+import com.sol.tmdb.presentation.tv.CrewTab
+import com.sol.tmdb.presentation.tv.FactsTab
+import com.sol.tmdb.presentation.tv.ProviderTab
 
 @Composable
 fun MovieDetail(
@@ -155,7 +166,7 @@ fun MovieCard(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally, // Centra el contenido horizontalmente
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 4.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -212,72 +223,16 @@ fun MovieCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Cast:")
-                    LazyRow {
-                        items(movieCast.size) { index ->
-                            val cast = movieCast[index]
-                            ItemCast(cast) {
-                                navController.navigate(TmdbScreen.PersonDetail.route + "/${cast.id}")
-                            }
-                        }
-                    }
+                    InfoAndProvidersTabs(movie, movieProvider)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Crew:")
-                    LazyRow {
-                        items(movieCrew.size) { index ->
-                            val crew = movieCrew[index]
-                            ItemCrew(crew) {
-                                navController.navigate(TmdbScreen.PersonDetail.route + "/${crew.id}")
-                            }
-                        }
-                    }
+                    CastAndCrewMovieTabs(movieCast, movieCrew, navController)
                     Spacer(modifier = Modifier.height(4.dp))
-                    when {
-                        movieProvider != null -> {
-                            val mxProviders = movieProvider["MX"]
-                            val usProviders = movieProvider["US"]
-
-                            Row {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = "Providers in MX:")
-                                    mxProviders?.flatrate?.forEach { provider ->
-                                        Text(text = "-${provider.providerName}")
-                                    } ?: Text(text = "No providers available for MX")
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = "Providers in US:")
-                                    usProviders?.flatrate?.forEach { provider ->
-                                        Text(text = "-${provider.providerName}")
-                                    } ?: Text(text = "No providers available for US")
-                                }
-                            }
-                        }
-
-                        else -> {
-                            CircularProgressIndicator()
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Movie Similar:")
-                    LazyRow {
-                        items(movieSimilar.size) { index ->
-                            val movieSim = movieSimilar[index]
-                            ItemMovieSimilar(movieSim) {
-                                navController.navigate(TmdbScreen.MovieDetail.route + "/${movieSim?.id}")
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Movie Recommendation:")
-                    LazyRow {
-                        items(movieRecommendation.size) { index ->
-                            val movieRec = movieRecommendation[index]
-                            ItemMovieRecommendation(movieRec) {
-                                navController.navigate(TmdbScreen.MovieDetail.route + "/${movieRec?.id}")
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(64.dp))
+                    RecommendationAndSimilarMovieTabs(
+                        tvRecommendations = movieRecommendation,
+                        tvSimilar = movieSimilar,
+                        navController = navController
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
@@ -285,8 +240,8 @@ fun MovieCard(
         Box(
             modifier = Modifier
                 .size(50.dp)
-                .align(Alignment.CenterEnd)
-                .offset(x = (-28).dp, y = (-420).dp),
+                .align(Alignment.TopEnd)
+                .offset(x = (-28).dp, y = (370).dp),
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawCircle(color = Color(0xFFEEEEEE))
@@ -314,6 +269,206 @@ fun MovieCard(
 }
 
 @Composable
+fun InfoAndProvidersTabs(movie: MovieDetail, movieProvider: Map<String, CountryResult?>?) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Facts", "Providers")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> InfoMovieTab(movie = movie)
+
+            1 -> ProvidersMovieTab(movieProvider = movieProvider)
+        }
+    }
+}
+
+@Composable
+fun InfoMovieTab(movie: MovieDetail) {
+    Row {
+        Text(
+            text = "Status \n" + movie.status,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .padding(2.dp)
+                .weight(.8f)
+        )
+        Column(Modifier.weight(1.2f)) {
+            Text(
+                text = "Budget: $" + movie.budget,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .padding(2.dp)
+            )
+            Text(
+                text = "Revenue: $" + movie.revenue,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .padding(2.dp)
+            )
+            Text(
+                text = "Origin country: " + movie.originCountry.joinToString {
+                    CountryFlag.getFlagByCode(it)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier
+                    .padding(2.dp)
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Text(text = "Companies", style = MaterialTheme.typography.bodySmall)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.height(60.dp)
+            ) {
+                items(movie.productionCompanies.size) { index ->
+                    val network = movie.productionCompanies[index]
+                    network.let {
+                        val image = if (it.logoPath.isNullOrEmpty()) {
+                            R.drawable.no_image
+                        } else {
+                            "https://image.tmdb.org/t/p/w500${it.logoPath}"
+                        }
+                        AsyncImage(
+                            model = image,
+                            contentDescription = "logo provider",
+                            modifier = Modifier
+                                .width(50.dp)
+                                .height(50.dp)
+                                .padding(4.dp),
+                            placeholder = painterResource(id = R.drawable.no_image),
+                            error = painterResource(id = R.drawable.no_image)
+//                            TODO
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?) {
+    when {
+        movieProvider != null -> {
+            val mxProviders = movieProvider["MX"]
+            val usProviders = movieProvider["US"]
+
+            Column {
+                if (mxProviders != null) {
+                    LazyRow {
+                        items(mxProviders.flatrate.size) { index ->
+                            val provide = mxProviders.flatrate[index]
+                            provide.let {
+                                val image = if (it.logoPath.isNullOrEmpty()) {
+                                    R.drawable.no_image
+                                } else {
+                                    "https://image.tmdb.org/t/p/w500${it.logoPath}"
+                                }
+                                AsyncImage(
+                                    model = image,
+                                    contentDescription = "logo provider",
+                                    modifier = Modifier
+                                        .width(60.dp)
+                                        .height(60.dp)
+                                        .padding(4.dp),
+                                    placeholder = painterResource(id = R.drawable.no_image),
+                                    error = painterResource(id = R.drawable.no_image)
+                                )
+                            }
+                        }
+                    }
+                } else Text(text = "No providers available for MX")
+            }
+        }
+
+        else -> {
+            CircularProgressIndicator()
+        }
+    }
+}
+
+@Composable
+fun CastAndCrewMovieTabs(
+    movieCast: List<Cast>,
+    movieCrew: List<Crew>,
+    navController: NavController
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Cast", "Crew")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> CastMovieTab(movieCast = movieCast, navController = navController)
+            1 -> CrewMovieTab(movieCrew = movieCrew, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun CrewMovieTab(movieCrew: List<Crew>, navController: NavController) {
+    LazyRow {
+        items(movieCrew.size) { index ->
+            val crew = movieCrew[index]
+            ItemCrew(crew) {
+                navController.navigate(TmdbScreen.PersonDetail.route + "/${crew.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun CastMovieTab(movieCast: List<Cast>, navController: NavController) {
+    LazyRow {
+        items(movieCast.size) { index ->
+            val cast = movieCast[index]
+            ItemCast(cast) {
+                navController.navigate(TmdbScreen.PersonDetail.route + "/${cast.id}")
+            }
+        }
+    }
+}
+
+@Composable
 fun ItemCast(cast: Cast, onClick: () -> Unit) {
     Card(
         modifier = Modifier
@@ -324,11 +479,19 @@ fun ItemCast(cast: Cast, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + cast.profilePath) ?: ""
+                val image = if (cast.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${cast.profilePath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
-                    modifier = Modifier.width(120.dp),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
                     text = cast.name,
@@ -356,11 +519,19 @@ fun ItemCrew(crew: Crew, onClick: () -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + crew.profilePath) ?: ""
+                val image = if (crew.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${crew.profilePath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
-                    modifier = Modifier.width(100.dp),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(100.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
                     text = crew.name,
@@ -378,43 +549,101 @@ fun ItemCrew(crew: Crew, onClick: () -> Unit) {
 }
 
 @Composable
+fun RecommendationAndSimilarMovieTabs(
+    tvRecommendations: List<MovieRecommendationResult?>,
+    tvSimilar: List<MovieSimilarResult?>,
+    navController: NavController
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Recommendation", "Similar")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> RecommendationMovieTab(
+                recommendation = tvRecommendations,
+                navController = navController
+            )
+
+            1 -> SimilarMovieTab(movieSimilar = tvSimilar, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun SimilarMovieTab(
+    movieSimilar: List<MovieSimilarResult?>,
+    navController: NavController
+) {
+    LazyRow {
+        items(movieSimilar.size) { index ->
+            val movieSim = movieSimilar[index]
+            ItemMovieSimilar(movieSim) {
+                navController.navigate(TmdbScreen.MovieDetail.route + "/${movieSim?.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendationMovieTab(
+    recommendation: List<MovieRecommendationResult?>,
+    navController: NavController
+) {
+    LazyRow {
+        items(recommendation.size) { index ->
+            val movie = recommendation[index]
+            ItemMovieRecommendation(movie) {
+                navController.navigate(TmdbScreen.MovieDetail.route + "/${movie?.id}")
+            }
+        }
+    }
+}
+
+@Composable
 fun ItemMovieSimilar(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
-            .width(200.dp)
-            .height(150.dp),
+            .width(120.dp),
         onClick = { onClick() },
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + movieSim!!.posterPath) ?: ""
+                val image = if (movieSim?.posterPath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${movieSim?.posterPath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
-                        .width(200.dp)
-                        .height(130.dp),
-                    contentScale = ContentScale.Crop
+                        .width(120.dp)
+                        .height(170.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = movieSim.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.CenterVertically)
-                    )
-                    Text(
-                        text = "${(movieSim.voteAverage * 10).toInt()}%",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                }
             }
         }
     }
@@ -425,39 +654,26 @@ fun ItemMovieRecommendation(movieRec: MovieRecommendationResult?, onClick: () ->
     Card(
         modifier = Modifier
             .padding(4.dp)
-            .width(200.dp)
-            .height(150.dp),
+            .width(120.dp),
         onClick = { onClick() },
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.align(Alignment.TopStart)) {
-                val image = ("https://image.tmdb.org/t/p/w500" + movieRec!!.posterPath) ?: ""
+                val image = if (movieRec?.posterPath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${movieRec?.posterPath}"
+                }
                 AsyncImage(
                     model = image, contentDescription = "poster movie",
                     modifier = Modifier
-                        .width(200.dp)
-                        .height(130.dp),
-                    contentScale = ContentScale.Crop
+                        .width(120.dp)
+                        .height(170.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = movieRec.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.CenterVertically)
-                    )
-                    Text(
-                        text = "${(movieRec.voteAverage * 10).toInt()}%",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.align(Alignment.CenterVertically)
-                    )
-                }
             }
         }
     }
