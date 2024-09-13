@@ -1,11 +1,14 @@
 package com.sol.tmdb.domain.useCase
 
+import com.google.gson.annotations.SerializedName
 import com.sol.tmdb.data.repository.TvRepository
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
+import com.sol.tmdb.domain.model.tv.TVImagesResponse
 import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvDetail
+import com.sol.tmdb.domain.model.tv.TvImagesStill
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
@@ -54,5 +57,13 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
 
     suspend fun getTvSeasonDetails(tvId: Int, seasonNumber: Int): TvSeasonDetailResponse {
         return repository.getSeasonDetails(tvId, seasonNumber)
+    }
+
+    suspend fun getTvImagesEpisode(
+        tvId: Int,
+        seasonNumber: Int,
+        episodeNumber: Int
+    ): TVImagesResponse {
+        return repository.getImagesEpisode(tvId, seasonNumber, episodeNumber)
     }
 }

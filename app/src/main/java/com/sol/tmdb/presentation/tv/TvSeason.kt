@@ -1,11 +1,15 @@
+@file:OptIn(ExperimentalPagerApi::class)
+
 package com.sol.tmdb.presentation.tv
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -46,12 +52,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCrew
+import com.sol.tmdb.domain.model.tv.TvImagesStill
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailEpisode
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import com.sol.tmdb.navigation.TmdbScreen
+import com.sol.tmdb.presentation.person.HeroItemImage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -69,6 +81,7 @@ fun TvSeason(
     }
 
     val seasonDetails by viewModel.seasonDetails.observeAsState(listOf())
+    val episodeImages by viewModel.episodeImages.observeAsState(mapOf())
     val errorMessage by viewModel.errorMessage.observeAsState("") //TODO: Toast.short
 
     Box(
@@ -80,7 +93,7 @@ fun TvSeason(
             LazyColumn {
                 items(seasonDetails.size) { index ->
                     val season = seasonDetails[index]
-                    SeasonCard(season = season, navController)
+                    SeasonCard(season = season, tvId, episodeImages, viewModel, navController)
                 }
             }
         }
@@ -88,14 +101,25 @@ fun TvSeason(
 }
 
 @Composable
-fun SeasonCard(season: TvSeasonDetailResponse, navController: NavController) {
+fun SeasonCard(
+    season: TvSeasonDetailResponse,
+    tvId: Int,
+    episodeImages: Map<Int, List<TvImagesStill>>,
+    viewModel: TvViewModel,
+    navController: NavController
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp)
-            .clickable { isExpanded = !isExpanded }
+            .clickable {
+                isExpanded = !isExpanded
+                if (isExpanded) {
+                    viewModel.loadEpisodeImages(tvId, season.seasonNumber, season.episodes.size)
+                }
+            }
     ) {
         Column {
             Box(
@@ -180,7 +204,11 @@ fun SeasonCard(season: TvSeasonDetailResponse, navController: NavController) {
                         .verticalScroll(rememberScrollState())
                 ) {
                     season.episodes.forEach { episode ->
-                        ItemEpisodes(episode, navController)
+                        ItemEpisodes(
+                            episode,
+                            navController,
+                            episodeImages[episode.episodeNumber] ?: emptyList()
+                        )
                     }
                 }
             }
@@ -190,7 +218,11 @@ fun SeasonCard(season: TvSeasonDetailResponse, navController: NavController) {
 }
 
 @Composable
-fun ItemEpisodes(episode: TvSeasonDetailEpisode, navController: NavController) {
+fun ItemEpisodes(
+    episode: TvSeasonDetailEpisode,
+    navController: NavController,
+    images: List<TvImagesStill>
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,6 +233,9 @@ fun ItemEpisodes(episode: TvSeasonDetailEpisode, navController: NavController) {
                 .fillMaxWidth()
         ) {
             Column(Modifier.align(Alignment.TopStart)) {
+                Spacer(modifier = Modifier.height(2.dp))
+                HorizontalDivider(thickness = 2.dp, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(2.dp))
                 Row {
                     val image = if (episode.stillPath.isNullOrEmpty()) {
                         R.drawable.no_image
@@ -235,15 +270,19 @@ fun ItemEpisodes(episode: TvSeasonDetailEpisode, navController: NavController) {
                         )
                     }
                 }
-                InfoGalleryAndGuestStarsTabs(episode, navController)
-                HorizontalDivider(thickness = 2.dp, modifier = Modifier.fillMaxWidth())
+                InfoGalleryAndGuestStarsTabs(episode, navController, images)
+                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }
 }
 
 @Composable
-fun InfoGalleryAndGuestStarsTabs(episode: TvSeasonDetailEpisode, navController: NavController) {
+fun InfoGalleryAndGuestStarsTabs(
+    episode: TvSeasonDetailEpisode,
+    navController: NavController,
+    images: List<TvImagesStill>
+) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Crew", "Guest Stars", "Images")
 
@@ -268,14 +307,62 @@ fun InfoGalleryAndGuestStarsTabs(episode: TvSeasonDetailEpisode, navController: 
         when (selectedTabIndex) {
             0 -> EpisodeCrewTab(crew = episode.crew, navController = navController)
             1 -> EpisodeGuestStarsTab(stars = episode.guestStars, navController)
-            2 -> EpisodeImages(images = episode.stillPath)
+            2 -> EpisodeImages(images = images)
         }
     }
 }
 
 @Composable
-fun EpisodeImages(images: String) {
-//    TODO: change a list to make a carousel
+fun EpisodeImages(images: List<TvImagesStill>) {
+    val pagerState = rememberPagerState(initialPage = 0)
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(50.dp),
+            count = images.size,
+            modifier = Modifier
+                .fillMaxSize()
+        ) { page ->
+            val imageEpisode = images[page]
+            HeroItemImageEpisode(
+                imageEpisode = imageEpisode,
+                isHero = page == pagerState.currentPage
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalPagerIndicator(
+            pagerState = pagerState,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            activeColor = Color.Black,
+            inactiveColor = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun HeroItemImageEpisode(imageEpisode: TvImagesStill, isHero: Boolean) {
+    val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .scale(scale),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        val image = imageEpisode.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+        AsyncImage(
+            model = image,
+            contentDescription = "profile image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(id = R.drawable.no_image),
+            error = painterResource(id = R.drawable.no_image)
+        )
+    }
 }
 
 @Composable

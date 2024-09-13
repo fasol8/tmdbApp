@@ -15,7 +15,9 @@ import com.sol.tmdb.domain.model.person.PersonResponse
 import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
+import com.sol.tmdb.domain.model.tv.TVImagesResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
+import com.sol.tmdb.domain.model.tv.TvImagesStill
 import com.sol.tmdb.domain.model.tv.TvProviderResponse
 import com.sol.tmdb.domain.model.tv.TvRatingsResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
@@ -117,6 +119,14 @@ interface TmdbApi {
         @Path("season_number") seasonId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvSeasonDetailResponse
+
+    @GET("tv/{tv_id}/season/{season_number}/episode/{episode_number}/images")
+    suspend fun getTvImagesEpisode(
+        @Path("tv_id") tvId: Int,
+        @Path("season_number") seasonId: Int,
+        @Path("episode_number") episodeId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TVImagesResponse
 
     @GET("person/popular")
     suspend fun getPopularPerson(

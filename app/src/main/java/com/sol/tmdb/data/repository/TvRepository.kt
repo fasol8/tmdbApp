@@ -4,6 +4,7 @@ import com.sol.tmdb.data.network.TmdbApi
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
+import com.sol.tmdb.domain.model.tv.TVImagesResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvRatingsResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
@@ -44,5 +45,13 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getSeasonDetails(tvId: Int, seasonNumber: Int): TvSeasonDetailResponse {
         return api.getTvSeasonDetails(tvId, seasonNumber)
+    }
+
+    suspend fun getImagesEpisode(
+        tvId: Int,
+        seasonNumber: Int,
+        episodeNumber: Int
+    ): TVImagesResponse {
+        return api.getTvImagesEpisode(tvId, seasonNumber, episodeNumber)
     }
 }
