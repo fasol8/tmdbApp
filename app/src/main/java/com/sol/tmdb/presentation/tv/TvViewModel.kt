@@ -12,6 +12,7 @@ import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.domain.model.tv.TvResult
+import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -41,10 +42,14 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private val _tvRecommendations = MutableLiveData<List<TvRecommendationsResult?>>()
     val tvRecommendations: LiveData<List<TvRecommendationsResult?>> = _tvRecommendations
 
+    private val _seasonDetails = MutableLiveData<List<TvSeasonDetailResponse>>()
+    val seasonDetails: LiveData<List<TvSeasonDetailResponse>> = _seasonDetails
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
     private var currentPage = 1
+    private val seasonDetailsList = mutableListOf<TvSeasonDetailResponse>()
 
     init {
         loadTv()
@@ -85,7 +90,6 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
             try {
                 val response = getTvUseCase.getTcRatingsByCountry(id)
                 _tvRatings.value = response
-                Log.i("VM",response.toString())
             } catch (e: Exception) {
                 _tvRatings.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
@@ -137,6 +141,30 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
             } catch (e: Exception) {
                 _tvRecommendations.value = emptyList()
                 _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun loadAllSeasons(tvId: Int, numberOfSeasons: Int) {
+        viewModelScope.launch {
+            try {
+                val seasonZero = getTvUseCase.getTvSeasonDetails(tvId, 0)
+                Log.i("VM", seasonZero.toString())
+                seasonDetailsList.add(seasonZero)
+                _seasonDetails.value = seasonDetailsList.toList()
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading season 0: ${e.message}"
+                Log.i("Error", "Error loading season 0: ${e.message}")
+            }
+            for (seasonNumber in 1..numberOfSeasons) {
+                try {
+                    val response = getTvUseCase.getTvSeasonDetails(tvId, seasonNumber)
+                    seasonDetailsList.add(response)
+                    _seasonDetails.value = seasonDetailsList.toList()
+
+                } catch (e: Exception) {
+                    _errorMessage.value = "Error loading season $seasonNumber: ${e.message}"
+                }
             }
         }
     }

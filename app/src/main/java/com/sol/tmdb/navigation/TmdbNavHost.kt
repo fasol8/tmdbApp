@@ -14,6 +14,7 @@ import com.sol.tmdb.presentation.person.PersonDetail
 import com.sol.tmdb.presentation.person.PersonScreen
 import com.sol.tmdb.presentation.tv.TvDetail
 import com.sol.tmdb.presentation.tv.TvScreen
+import com.sol.tmdb.presentation.tv.TvSeason
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -34,6 +35,18 @@ fun TmdbNavHost(navController: NavHostController) {
         ) { navBackStackEntry ->
             val tvId = navBackStackEntry.arguments?.getInt("tvId") ?: return@composable
             TvDetail(tvId = tvId, navController)
+        }
+        composable(
+            route = TmdbScreen.TvSeason.route + "/{tvSeasons}/{numberOfSeasons}",
+            arguments = listOf(
+                navArgument("tvSeasons") { type = NavType.IntType },
+                navArgument("numberOfSeasons") { type = NavType.IntType }
+            )
+        ) { navBackStackEntry ->
+            val tvId = navBackStackEntry.arguments?.getInt("tvSeasons") ?: return@composable
+            val numberOfSeasons =
+                navBackStackEntry.arguments?.getInt("numberOfSeasons") ?: return@composable
+            TvSeason(tvId, numberOfSeasons, navController)
         }
         composable(TmdbScreen.Person.route) { PersonScreen(navController) }
         composable(

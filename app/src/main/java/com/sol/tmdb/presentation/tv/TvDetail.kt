@@ -262,7 +262,7 @@ fun TvCard(
                         color = Color.Blue,
                         modifier = Modifier
                             .clickable {
-//                                navController.navigate(TmdbScreen.PersonDetail.route + "/${creator.id}")
+                                navController.navigate(TmdbScreen.TvSeason.route + "/${tv.id}/${tv.numberOfSeasons}")
                             })
                     Spacer(modifier = Modifier.height(4.dp))
                     RecommendationAndSimilarTabs(tvRecommendations, tvSimilar, navController)
@@ -442,74 +442,6 @@ fun FactsTab(tv: TvDetail) {
 }
 
 @Composable
-fun RecommendationAndSimilarTabs(
-    tvRecommendations: List<TvRecommendationsResult?>,
-    tvSimilar: List<SimilarResult?>,
-    navController: NavController
-) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-
-    val tabs = listOf("Recommendation", "Similar")
-
-    Column {
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                )
-            }
-        }
-
-        when (selectedTabIndex) {
-            0 -> RecommendationTab(
-                recommendation = tvRecommendations,
-                navController = navController
-            )
-
-            1 -> SimilarTab(tvSimilar = tvSimilar, navController = navController)
-        }
-    }
-}
-
-@Composable
-fun SimilarTab(tvSimilar: List<SimilarResult?>, navController: NavController) {
-    LazyRow {
-        items(tvSimilar.size) { index ->
-            val oneSimilar = tvSimilar[index]
-            ItemTvSimilar(oneSimilar) {
-                navController.navigate(TmdbScreen.TvDetail.route + "/${oneSimilar?.id}")
-            }
-        }
-    }
-}
-
-@Composable
-fun RecommendationTab(
-    recommendation: List<TvRecommendationsResult?>,
-    navController: NavController
-) {
-    LazyRow {
-        items(recommendation.size) { index ->
-            val tvRecommendation = recommendation[index]
-            ItemTvRecommendation(tvRecommendation) {
-                navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecommendation?.id}")
-            }
-        }
-    }
-}
-
-@Composable
 fun CastAndCrewTabs(
     cast: List<TvCast>,
     crew: List<TvCrew>,
@@ -584,16 +516,20 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
                 .fillMaxWidth()
         ) {
             Row(Modifier.align(Alignment.TopStart)) {
-                val image =
-                    last.posterPath.let { "https://image.tmdb.org/t/p/w500$it" }
-                        ?: R.drawable.no_image
+                val image = if (last.posterPath.isNullOrEmpty()) {
+                    R.drawable.no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${last.posterPath}"
+                }
                 AsyncImage(
                     model = image,
                     contentDescription = "poster Episode",
                     modifier = Modifier
                         .width(100.dp)
                         .fillMaxHeight(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
                 )
                 Column(Modifier.padding(start = 16.dp, top = 16.dp)) {
                     Text(
@@ -603,18 +539,20 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_star),
-                            contentDescription = "Star Icon",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFFFFD700) // Color dorado
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${(last.voteAverage * 10).toInt()}%",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (last.voteAverage.toInt() != 0) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_star),
+                                contentDescription = "Star Icon",
+                                modifier = Modifier.size(16.dp),
+                                tint = Color(0xFFFFD700) // Color dorado
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${(last.voteAverage * 10).toInt()}%",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
                         val year = last.airDate.let {
                             LocalDate.parse(it, DateTimeFormatter.ISO_DATE).year.toString()
@@ -748,6 +686,75 @@ fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun RecommendationAndSimilarTabs(
+    tvRecommendations: List<TvRecommendationsResult?>,
+    tvSimilar: List<SimilarResult?>,
+    navController: NavController
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Recommendation", "Similar")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> RecommendationTab(
+                recommendation = tvRecommendations,
+                navController = navController
+            )
+
+            1 -> SimilarTab(tvSimilar = tvSimilar, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun SimilarTab(tvSimilar: List<SimilarResult?>, navController: NavController) {
+    LazyRow {
+        items(tvSimilar.size) { index ->
+            val oneSimilar = tvSimilar[index]
+            ItemTvSimilar(oneSimilar) {
+                navController.navigate(TmdbScreen.TvDetail.route + "/${oneSimilar?.id}")
+            }
+        }
+    }
+}
+
+@Composable
+fun RecommendationTab(
+    recommendation: List<TvRecommendationsResult?>,
+    navController: NavController
+) {
+    LazyRow {
+        items(recommendation.size) { index ->
+            val tvRecommendation = recommendation[index]
+            ItemTvRecommendation(tvRecommendation) {
+                navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecommendation?.id}")
+            }
+        }
+    }
+}
+
 
 @Composable
 fun ItemTvSimilar(similar: SimilarResult?, onClick: () -> Unit) {

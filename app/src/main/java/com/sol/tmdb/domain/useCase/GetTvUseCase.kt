@@ -1,15 +1,14 @@
 package com.sol.tmdb.domain.useCase
 
-import android.util.Log
 import com.sol.tmdb.data.repository.TvRepository
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
-import com.sol.tmdb.domain.model.tv.RatingInfo
 import com.sol.tmdb.domain.model.tv.SimilarResponse
 import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvDetail
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
+import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import javax.inject.Inject
 
 class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
@@ -51,5 +50,9 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
 
     suspend fun getTvRecommendation(tvId: Int): TvRecommendationsResponse {
         return repository.getTvRecommendations(tvId)
+    }
+
+    suspend fun getTvSeasonDetails(tvId: Int, seasonNumber: Int): TvSeasonDetailResponse {
+        return repository.getSeasonDetails(tvId, seasonNumber)
     }
 }

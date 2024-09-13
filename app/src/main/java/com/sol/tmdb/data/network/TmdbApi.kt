@@ -20,6 +20,7 @@ import com.sol.tmdb.domain.model.tv.TvProviderResponse
 import com.sol.tmdb.domain.model.tv.TvRatingsResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
+import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -109,6 +110,13 @@ interface TmdbApi {
         @Path("tv_id") tvId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvRecommendationsResponse
+
+    @GET("tv/{tv_id}/season/{season_number}")
+    suspend fun getTvSeasonDetails(
+        @Path("tv_id") tvId: Int,
+        @Path("season_number") seasonId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvSeasonDetailResponse
 
     @GET("person/popular")
     suspend fun getPopularPerson(
