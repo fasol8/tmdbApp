@@ -8,6 +8,7 @@ import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
+import com.sol.tmdb.domain.model.movie.MovieVideosResponse
 import javax.inject.Inject
 
 class GetMovieUseCase @Inject constructor(private val repository: MovieRepository) {
@@ -32,6 +33,10 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
                 certification!!
             )
         }
+    }
+
+    suspend fun getMovieVideos(movieId: Int): MovieVideosResponse {
+        return repository.getMovieVideos(movieId)
     }
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {

@@ -1,5 +1,6 @@
 package com.sol.tmdb.presentation.movie
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,6 +12,7 @@ import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
+import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.useCase.GetMovieUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -29,6 +31,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
 
     private val _movieCertifications = MutableLiveData<Map<String?, Certification?>?>()
     val movieCertifications: LiveData<Map<String?, Certification?>?> = _movieCertifications
+
+    private val _movieVideos = MutableLiveData<List<MovieVideosResult>>()
+    val movieVideos: LiveData<List<MovieVideosResult>> = _movieVideos
 
     private val _movieCredits = MutableLiveData<MovieCredits?>()
     val movieCredits: LiveData<MovieCredits?> = _movieCredits
@@ -88,6 +93,19 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
                 _movieCertifications.value = response
             } catch (e: Exception) {
                 _movieCertifications.value = null
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun searchMovieVideos(movieId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getMovieUseCase.getMovieVideos(movieId)
+                _movieVideos.value = response.results
+                Log.i("VM", response.results.toString())
+            } catch (e: Exception) {
+                _movieVideos.value = emptyList()
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }

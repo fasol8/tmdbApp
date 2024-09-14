@@ -9,6 +9,7 @@ import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
+import com.sol.tmdb.domain.model.movie.MovieVideosResponse
 import javax.inject.Inject
 
 class MovieRepository @Inject constructor(private val api: TmdbApi) {
@@ -21,8 +22,12 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
         return api.getMovieDetail(movieId)
     }
 
-    suspend fun getMovieRelease(movieId: Int):MovieRelease{
+    suspend fun getMovieRelease(movieId: Int): MovieRelease {
         return api.getMovieRelease(movieId)
+    }
+
+    suspend fun getMovieVideos(movieId: Int): MovieVideosResponse {
+        return api.getMovieVideos(movieId)
     }
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {

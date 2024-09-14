@@ -1,5 +1,10 @@
 package com.sol.tmdb.presentation.movie
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +25,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,12 +70,9 @@ import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
+import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.navigation.TmdbScreen
-import com.sol.tmdb.presentation.tv.CastTab
-import com.sol.tmdb.presentation.tv.CrewTab
-import com.sol.tmdb.presentation.tv.FactsTab
-import com.sol.tmdb.presentation.tv.ProviderTab
 
 @Composable
 fun MovieDetail(
@@ -77,6 +82,7 @@ fun MovieDetail(
 ) {
     val movie by viewModel.movieById.observeAsState()
     val movieCertification by viewModel.movieCertifications.observeAsState()
+    val movieVideos by viewModel.movieVideos.observeAsState(emptyList())
     val movieCredits by viewModel.movieCredits.observeAsState()
     val movieProvider by viewModel.movieProviders.observeAsState()
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
@@ -89,6 +95,7 @@ fun MovieDetail(
     LaunchedEffect(movieId) {
         viewModel.searchMovieById(movieId)
         viewModel.searchMovieCertification(movieId)
+        viewModel.searchMovieVideos(movieId)
         viewModel.searchMovieCredits(movieId)
         viewModel.searchProvidersForMxAndUs(movieId)
         viewModel.searchMovieSimilar(movieId)
@@ -108,6 +115,7 @@ fun MovieDetail(
                         MovieCard(
                             movie,
                             movieCertification,
+                            movieVideos,
                             movieCredits!!,
                             movieProvider,
                             movieSimilar,
@@ -136,6 +144,7 @@ fun MovieDetail(
 fun MovieCard(
     movie: MovieDetail?,
     movieCertification: Map<String?, Certification?>?,
+    movieVideos: List<MovieVideosResult>,
     movieCredits: MovieCredits?,
     movieProvider: Map<String, CountryResult?>?,
     movieSimilar: List<MovieSimilarResult?>,
@@ -221,6 +230,11 @@ fun MovieCard(
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
+                    Row {
+//                        TODO: Favorite - List - Watchlist
+                        TrailerButton(movieVideos)
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                     InfoAndProvidersTabs(movie, movieProvider)
@@ -266,6 +280,45 @@ fun MovieCard(
             )
         }
     }
+}
+
+@Composable
+fun TrailerButton(movieVideos: List<MovieVideosResult>) {
+    val context = LocalContext.current
+    val trailer = getTrailerVideo(movieVideos)
+
+    if (trailer != null) {
+        Button(onClick = { openYoutubeVideo(context, trailer.key) }) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_play_arrow),
+                contentDescription = "Play trailer",
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(text = "Play Trailer")
+        }
+    } else {
+        Text(text = "Trailer not available")
+//        Toast.makeText(context, "Trailer not available", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun openYoutubeVideo(context: Context, videoKey: String) {
+    val videoUrl = "https://www.youtube.com/watch?v=$videoKey"
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+    intent.setPackage("com.google.android.youtube") // Intenta abrir la app de YouTube
+
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        // Si no puede abrir la app de YouTube, abre el navegador
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+        context.startActivity(webIntent)
+    }
+}
+
+fun getTrailerVideo(movieVideos: List<MovieVideosResult>): MovieVideosResult? {
+    return movieVideos.firstOrNull { it.type == "Trailer" && it.site == "YouTube" }
 }
 
 @Composable

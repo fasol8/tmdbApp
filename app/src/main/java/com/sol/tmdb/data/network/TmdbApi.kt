@@ -8,6 +8,7 @@ import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
+import com.sol.tmdb.domain.model.movie.MovieVideosResponse
 import com.sol.tmdb.domain.model.person.ImagesResponse
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
@@ -46,6 +47,12 @@ interface TmdbApi {
         @Path("movie_id") movieId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieRelease
+
+    @GET("movie/{movie_id}/videos")
+    suspend fun getMovieVideos(
+        @Path("movie_id") movieId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieVideosResponse
 
     @GET("movie/{movie_id}/credits")
     suspend fun getMovieCredits(
