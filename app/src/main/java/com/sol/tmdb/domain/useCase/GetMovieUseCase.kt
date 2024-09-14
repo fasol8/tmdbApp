@@ -5,6 +5,7 @@ import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieImagesResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
@@ -37,6 +38,10 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
 
     suspend fun getMovieVideos(movieId: Int): MovieVideosResponse {
         return repository.getMovieVideos(movieId)
+    }
+
+    suspend fun getMovieImages(movieId: Int):MovieImagesResponse{
+        return repository.getMovieImages(movieId)
     }
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {

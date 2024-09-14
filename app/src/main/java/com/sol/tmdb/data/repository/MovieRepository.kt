@@ -4,6 +4,7 @@ import com.sol.tmdb.data.network.TmdbApi
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieImagesResponse
 import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
@@ -28,6 +29,10 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getMovieVideos(movieId: Int): MovieVideosResponse {
         return api.getMovieVideos(movieId)
+    }
+
+    suspend fun getMovieImages(movieId: Int): MovieImagesResponse {
+        return api.getMovieImages(movieId)
     }
 
     suspend fun getMovieCredits(movieId: Int): MovieCredits {

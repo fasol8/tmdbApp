@@ -1,15 +1,17 @@
+@file:OptIn(ExperimentalPagerApi::class)
+
 package com.sol.tmdb.presentation.movie
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
-import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -45,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -60,6 +63,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.Cast
 import com.sol.tmdb.domain.model.movie.Certification
@@ -68,11 +75,15 @@ import com.sol.tmdb.domain.model.movie.Crew
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieGenre
+import com.sol.tmdb.domain.model.movie.MovieImagesBackdrop
+import com.sol.tmdb.domain.model.movie.MovieImagesPoster
+import com.sol.tmdb.domain.model.movie.MovieImagesResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.navigation.TmdbScreen
+import com.sol.tmdb.presentation.person.HeroItemImage
 
 @Composable
 fun MovieDetail(
@@ -83,6 +94,7 @@ fun MovieDetail(
     val movie by viewModel.movieById.observeAsState()
     val movieCertification by viewModel.movieCertifications.observeAsState()
     val movieVideos by viewModel.movieVideos.observeAsState(emptyList())
+    val movieImages by viewModel.movieImages.observeAsState()
     val movieCredits by viewModel.movieCredits.observeAsState()
     val movieProvider by viewModel.movieProviders.observeAsState()
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
@@ -93,13 +105,7 @@ fun MovieDetail(
     val isLoading = remember { mutableStateOf(true) }
 
     LaunchedEffect(movieId) {
-        viewModel.searchMovieById(movieId)
-        viewModel.searchMovieCertification(movieId)
-        viewModel.searchMovieVideos(movieId)
-        viewModel.searchMovieCredits(movieId)
-        viewModel.searchProvidersForMxAndUs(movieId)
-        viewModel.searchMovieSimilar(movieId)
-        viewModel.searchMovieRecommendation(movieId)
+        viewModel.searchAll(movieId)
     }
 
     LaunchedEffect(movie) {
@@ -116,6 +122,7 @@ fun MovieDetail(
                             movie,
                             movieCertification,
                             movieVideos,
+                            movieImages,
                             movieCredits!!,
                             movieProvider,
                             movieSimilar,
@@ -145,6 +152,7 @@ fun MovieCard(
     movie: MovieDetail?,
     movieCertification: Map<String?, Certification?>?,
     movieVideos: List<MovieVideosResult>,
+    movieImages: MovieImagesResponse?,
     movieCredits: MovieCredits?,
     movieProvider: Map<String, CountryResult?>?,
     movieSimilar: List<MovieSimilarResult?>,
@@ -241,6 +249,8 @@ fun MovieCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     CastAndCrewMovieTabs(movieCast, movieCrew, navController)
                     Spacer(modifier = Modifier.height(4.dp))
+                    MediaTabs(movieImages, movieVideos)
+                    Spacer(modifier = Modifier.height(4.dp))
                     RecommendationAndSimilarMovieTabs(
                         tvRecommendations = movieRecommendation,
                         tvSimilar = movieSimilar,
@@ -281,6 +291,7 @@ fun MovieCard(
         }
     }
 }
+
 
 @Composable
 fun TrailerButton(movieVideos: List<MovieVideosResult>) {
@@ -599,6 +610,186 @@ fun ItemCrew(crew: Crew, onClick: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+fun MediaTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVideosResult>) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Poster", "Back Drop", "Video")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> MoviePostersTab(posters = movieImages?.posters)
+            1 -> MovieBackdropTab(backdrops = movieImages?.backdrops)
+            2 -> MovieVideosTab(videos = movieVideos)
+        }
+    }
+}
+
+@Composable
+fun MoviePostersTab(posters: List<MovieImagesPoster>?) {
+    val pagerState = rememberPagerState(initialPage = 0)
+
+    if (posters!!.isEmpty()) {
+        Text(text = "No posters available")
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(50.dp),
+            count = posters!!.size,
+            modifier = Modifier
+                .fillMaxSize()
+        ) { page ->
+            val poster = posters[page]
+            PosterItem(poster = poster, isHero = page == pagerState.currentPage)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalPagerIndicator(
+            pagerState = pagerState,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            activeColor = Color.Black,
+            inactiveColor = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun PosterItem(poster: MovieImagesPoster, isHero: Boolean) {
+    val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .scale(scale),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        val image = poster.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+        AsyncImage(
+            model = image,
+            contentDescription = "profile image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+fun MovieBackdropTab(backdrops: List<MovieImagesBackdrop>?) {
+    val pagerState = rememberPagerState(initialPage = 0)
+
+    if (backdrops!!.isEmpty()) {
+        Text(text = "No backdrops available")
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(50.dp),
+            count = backdrops!!.size,
+            modifier = Modifier
+                .fillMaxSize()
+        ) { page ->
+            val backdrop = backdrops[page]
+            BackDropItem(backdrop = backdrop, isHero = page == pagerState.currentPage)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalPagerIndicator(
+            pagerState = pagerState,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            activeColor = Color.Black,
+            inactiveColor = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun BackDropItem(backdrop: MovieImagesBackdrop, isHero: Boolean) {
+    val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .scale(scale),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        val image = backdrop.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+        AsyncImage(
+            model = image,
+            contentDescription = "profile image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+fun MovieVideosTab(videos: List<MovieVideosResult>) {
+    val context = LocalContext.current
+    val videosYoutube = getYoutubeVideos(videos)
+
+    if (videosYoutube.isEmpty()) {
+        Text(text = "No YouTube videos available")
+    } else {
+        LazyRow {
+            items(videosYoutube.size) { index ->
+                val video = videosYoutube[index]
+                CardVideosYoutube(video) { openYoutubeVideo(context, video.key) }
+            }
+        }
+    }
+}
+
+@Composable
+fun CardVideosYoutube(videosYoutube: MovieVideosResult, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .size(120.dp)
+            .padding(4.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(4.dp)) {
+            Text(
+                text = videosYoutube.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.Blue
+            )
+        }
+    }
+}
+
+fun getYoutubeVideos(movieVideos: List<MovieVideosResult>): List<MovieVideosResult> {
+    return movieVideos.filter { it.site == "YouTube" }
 }
 
 @Composable

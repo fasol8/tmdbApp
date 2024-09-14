@@ -3,6 +3,7 @@ package com.sol.tmdb.data.network
 import com.sol.tmdb.BuildConfig
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieImagesResponse
 import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
@@ -48,6 +49,12 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieRelease
 
+    @GET("movie/{movie_id}/watch/providers")
+    suspend fun getMovieProviders(
+        @Path("movie_id") movieId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieProviderResponse
+
     @GET("movie/{movie_id}/videos")
     suspend fun getMovieVideos(
         @Path("movie_id") movieId: Int,
@@ -60,11 +67,11 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieCredits
 
-    @GET("movie/{movie_id}/watch/providers")
-    suspend fun getMovieProviders(
+    @GET("movie/{movie_id}/images")
+    suspend fun getMovieImages(
         @Path("movie_id") movieId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
-    ): MovieProviderResponse
+    ): MovieImagesResponse
 
     @GET("movie/{movie_id}/similar")
     suspend fun getMovieSimilar(

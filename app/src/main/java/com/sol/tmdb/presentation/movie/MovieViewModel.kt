@@ -9,6 +9,7 @@ import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
+import com.sol.tmdb.domain.model.movie.MovieImagesResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResult
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.domain.model.movie.MovieSimilarResult
@@ -35,6 +36,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     private val _movieVideos = MutableLiveData<List<MovieVideosResult>>()
     val movieVideos: LiveData<List<MovieVideosResult>> = _movieVideos
 
+    private val _movieImages = MutableLiveData<MovieImagesResponse>()
+    val movieImages: LiveData<MovieImagesResponse> = _movieImages
+
     private val _movieCredits = MutableLiveData<MovieCredits?>()
     val movieCredits: LiveData<MovieCredits?> = _movieCredits
 
@@ -56,6 +60,17 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         loadMovies()
     }
 
+    fun searchAll(movieId: Int) {
+        searchMovieById(movieId)
+        searchMovieCertification(movieId)
+        searchMovieVideos(movieId)
+        searchMovieImages(movieId)
+        searchMovieCredits(movieId)
+        searchProvidersForMxAndUs(movieId)
+        searchMovieSimilar(movieId)
+        searchMovieRecommendation(movieId)
+    }
+
     fun loadMovies() {
         viewModelScope.launch {
             try {
@@ -74,7 +89,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchMovieById(id: Int) {
+    private fun searchMovieById(id: Int) {
         viewModelScope.launch {
             try {
                 val response = getMovieUseCase.getMovieDetail(id)
@@ -86,7 +101,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchMovieCertification(movieId: Int) {
+    private fun searchMovieCertification(movieId: Int) {
         viewModelScope.launch {
             try {
                 val response = getMovieUseCase.getMovieReleaseWithCertification(movieId)
@@ -98,7 +113,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchMovieVideos(movieId: Int) {
+    private fun searchMovieVideos(movieId: Int) {
         viewModelScope.launch {
             try {
                 val response = getMovieUseCase.getMovieVideos(movieId)
@@ -111,7 +126,19 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchMovieCredits(id: Int) {
+    private fun searchMovieImages(movieId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getMovieUseCase.getMovieImages(movieId)
+                _movieImages.value = response
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+
+            }
+        }
+    }
+
+    private fun searchMovieCredits(id: Int) {
         viewModelScope.launch {
             try {
                 val response = getMovieUseCase.getMovieCredits(id)
@@ -123,7 +150,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchProvidersForMxAndUs(movieId: Int) {
+    private fun searchProvidersForMxAndUs(movieId: Int) {
         viewModelScope.launch {
             try {
                 val result = getMovieUseCase.getProvidersForMxAndUsUseCase(movieId)
@@ -134,7 +161,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchMovieSimilar(id: Int) {
+    private fun searchMovieSimilar(id: Int) {
         viewModelScope.launch {
             try {
                 val response = getMovieUseCase.getMovieSimilar(id)
@@ -146,7 +173,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun searchMovieRecommendation(id: Int) {
+    private fun searchMovieRecommendation(id: Int) {
         viewModelScope.launch {
             try {
                 val response = getMovieUseCase.getMovieRecommendation(id)
