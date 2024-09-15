@@ -10,10 +10,13 @@ import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
 import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvDetail
+import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvImagesStill
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
+import com.sol.tmdb.domain.model.tv.TvVideosResponse
+import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -37,6 +40,12 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private val _tvProviders = MutableLiveData<Map<String, CountryResult?>>()
     val tvProviders: LiveData<Map<String, CountryResult?>> = _tvProviders
 
+    private val _tvImages = MutableLiveData<TvImagesResponse>()
+    val tvImages: LiveData<TvImagesResponse> = _tvImages
+
+    private val _tvVideos = MutableLiveData<List<TvVideosResult>>()
+    val tvVideos: LiveData<List<TvVideosResult>> = _tvVideos
+
     private val _tvSimilar = MutableLiveData<List<SimilarResult?>>()
     val tvSimilar: LiveData<List<SimilarResult?>> = _tvSimilar
 
@@ -59,6 +68,17 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         loadTv()
     }
 
+    fun searchAll(tvId: Int) {
+        searchTvById(tvId)
+        searchTvRatings(tvId)
+        searchTvCredits(tvId)
+        searchTvProvidersForMXAndUs(tvId)
+        searchTvImages(tvId)
+        searchVideos(tvId)
+        searchTvSimilar(tvId)
+        searchTvRecommendation(tvId)
+    }
+
     fun loadTv() {
         viewModelScope.launch {
             try {
@@ -77,10 +97,10 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun searchTvById(id: Int) {
+    private fun searchTvById(tvId: Int) {
         viewModelScope.launch {
             try {
-                val response = getTvUseCase.getTvDetail(id)
+                val response = getTvUseCase.getTvDetail(tvId)
                 _tvById.value = response
             } catch (e: Exception) {
                 _tvById.value = null
@@ -89,10 +109,10 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun searchTvRatings(id: Int) {
+    private fun searchTvRatings(tvId: Int) {
         viewModelScope.launch {
             try {
-                val response = getTvUseCase.getTcRatingsByCountry(id)
+                val response = getTvUseCase.getTcRatingsByCountry(tvId)
                 _tvRatings.value = response
             } catch (e: Exception) {
                 _tvRatings.value = null
@@ -101,10 +121,10 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun searchTvCredits(id: Int) {
+    private fun searchTvCredits(tvId: Int) {
         viewModelScope.launch {
             try {
-                val response = getTvUseCase.getTvCredits(id)
+                val response = getTvUseCase.getTvCredits(tvId)
                 _tvCredits.value = response
             } catch (e: Exception) {
                 _tvCredits.value = null
@@ -113,10 +133,43 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun searchTvSimilar(id: Int) {
+    private fun searchTvProvidersForMXAndUs(tvId: Int) {
         viewModelScope.launch {
             try {
-                val response = getTvUseCase.getTVSimilar(id)
+                val result = getTvUseCase.getTvProvidersForMxAndUsUseCase(tvId)
+                _tvProviders.value = result
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading providers"
+            }
+        }
+    }
+
+    private fun searchTvImages(tvId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTvImages(tvId)
+                _tvImages.value = response
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading providers"
+            }
+        }
+    }
+
+    private fun searchVideos(tvId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTvVideos(tvId)
+                _tvVideos.value = response.results
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading providers"
+            }
+        }
+    }
+
+    private fun searchTvSimilar(tvId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTVSimilar(tvId)
                 _tvSimilar.value = response.results
             } catch (e: Exception) {
                 _tvSimilar.value = emptyList()
@@ -125,22 +178,10 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun searchTvProvidersForMXAndUs(id: Int) {
+    private fun searchTvRecommendation(tvId: Int) {
         viewModelScope.launch {
             try {
-                val result = getTvUseCase.getTvProvidersForMxAndUsUseCase(id)
-                _tvProviders.value = result
-            } catch (e: Exception) {
-                _errorMessage.value = "Error loading providers"
-
-            }
-        }
-    }
-
-    fun searchTvRecommendation(id: Int) {
-        viewModelScope.launch {
-            try {
-                val response = getTvUseCase.getTvRecommendation(id)
+                val response = getTvUseCase.getTvRecommendation(tvId)
                 _tvRecommendations.value = response.results
             } catch (e: Exception) {
                 _tvRecommendations.value = emptyList()
@@ -178,7 +219,8 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
             val imagesMap = mutableMapOf<Int, List<TvImagesStill>>()
             try {
                 for (episodeNumber in 1..numberOfEpisodes) {
-                    val response = getTvUseCase.getTvImagesEpisode(tvId, seasonNumber, episodeNumber)
+                    val response =
+                        getTvUseCase.getTvImagesEpisode(tvId, seasonNumber, episodeNumber)
                     imagesMap[episodeNumber] = response.stills
                 }
                 _episodeImages.value = imagesMap

@@ -4,12 +4,14 @@ import com.sol.tmdb.data.network.TmdbApi
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
-import com.sol.tmdb.domain.model.tv.TVImagesResponse
+import com.sol.tmdb.domain.model.tv.EpisodesImagesResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
+import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvRatingsResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
+import com.sol.tmdb.domain.model.tv.TvVideosResponse
 import javax.inject.Inject
 
 class TvRepository @Inject constructor(private val api: TmdbApi) {
@@ -35,6 +37,14 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
         return response.results
     }
 
+    suspend fun getTvImages(tvId: Int):TvImagesResponse{
+        return api.getTvImages(tvId)
+    }
+
+    suspend fun getTvVideos(tvId: Int):TvVideosResponse{
+        return api.getTvVideos(tvId)
+    }
+
     suspend fun getTvSimilar(tvId: Int): SimilarResponse {
         return api.getTvSimilar(tvId)
     }
@@ -51,7 +61,7 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
         tvId: Int,
         seasonNumber: Int,
         episodeNumber: Int
-    ): TVImagesResponse {
+    ): EpisodesImagesResponse {
         return api.getTvImagesEpisode(tvId, seasonNumber, episodeNumber)
     }
 }

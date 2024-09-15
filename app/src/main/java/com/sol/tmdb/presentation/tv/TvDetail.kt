@@ -1,13 +1,17 @@
+@file:OptIn(ExperimentalPagerApi::class)
+
 package com.sol.tmdb.presentation.tv
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -43,11 +47,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,8 +64,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.MovieGenre
+import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
@@ -70,8 +81,16 @@ import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCertification
 import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvDetail
+import com.sol.tmdb.domain.model.tv.TvImagesBackdrop
+import com.sol.tmdb.domain.model.tv.TvImagesPoster
+import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
+import com.sol.tmdb.domain.model.tv.TvVideosResponse
+import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.navigation.TmdbScreen
+import com.sol.tmdb.presentation.movie.CardVideosYoutube
+import com.sol.tmdb.presentation.movie.getYoutubeVideos
+import com.sol.tmdb.presentation.movie.openYoutubeVideo
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -82,6 +101,8 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
     val tvRatings by viewModel.tvRatings.observeAsState()
     val credits by viewModel.tvCredits.observeAsState()
     val tvProviders by viewModel.tvProviders.observeAsState()
+    val tvImages by viewModel.tvImages.observeAsState()
+    val tvVideos by viewModel.tvVideos.observeAsState(emptyList())
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
     val tvRecommendations by viewModel.tvRecommendations.observeAsState(emptyList())
 
@@ -90,12 +111,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
     val isLoading = remember { mutableStateOf(true) }
 
     LaunchedEffect(tvId) {
-        viewModel.searchTvById(tvId)
-        viewModel.searchTvRatings(tvId)
-        viewModel.searchTvCredits(tvId)
-        viewModel.searchTvSimilar(tvId)
-        viewModel.searchTvRecommendation(tvId)
-        viewModel.searchTvProvidersForMXAndUs(tvId)
+        viewModel.searchAll(tvId)
     }
 
     LaunchedEffect(tv) {
@@ -113,6 +129,8 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
                             tvRatings,
                             credits,
                             tvProviders,
+                            tvImages,
+                            tvVideos,
                             tvSimilar,
                             tvRecommendations,
                             navController
@@ -142,6 +160,8 @@ fun TvCard(
     tvRatings: Map<String, TvCertification?>?,
     credits: CreditsResponse?,
     tvProviders: Map<String, CountryResult?>?,
+    tvImages: TvImagesResponse?,
+    tvVideos: List<TvVideosResult>?,
     tvSimilar: List<SimilarResult?>,
     tvRecommendations: List<TvRecommendationsResult?>,
     navController: NavController
@@ -254,7 +274,6 @@ fun TvCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     CastAndCrewTabs(cast, crew, navController)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "Last Season")
                     LastSeason(tv.seasons.last(), tv.lastEpisodeToAir)
                     Text(text = "View All Seasons",
@@ -264,6 +283,8 @@ fun TvCard(
                             .clickable {
                                 navController.navigate(TmdbScreen.TvSeason.route + "/${tv.id}/${tv.numberOfSeasons}")
                             })
+                    Spacer(modifier = Modifier.height(4.dp))
+                    TvMediaTabs(tvImages, tvVideos)
                     Spacer(modifier = Modifier.height(4.dp))
                     RecommendationAndSimilarTabs(tvRecommendations, tvSimilar, navController)
                     Spacer(modifier = Modifier.height(24.dp))
@@ -502,7 +523,87 @@ fun CastTab(cast: List<TvCast>, navController: NavController) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
+
+@Composable
+fun ItemCast(cast: TvCast, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(120.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = if (cast.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${cast.profilePath}"
+                }
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(180.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
+                )
+                Text(
+                    text = cast.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = cast.character,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .width(100.dp),
+        onClick = { onClick() },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.align(Alignment.TopStart)) {
+                val image = if (crew.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${crew.profilePath}"
+                }
+                AsyncImage(
+                    model = image, contentDescription = "poster movie",
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(100.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
+                )
+                Text(
+                    text = crew.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
+                )
+                Text(
+                    text = crew.department,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
     Card(
@@ -608,83 +709,186 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
 }
 
 @Composable
-fun ItemCast(cast: TvCast, onClick: () -> Unit) {
+fun TvMediaTabs(tvImages: TvImagesResponse?, tvVideos: List<TvVideosResult>?) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+
+    val tabs = listOf("Poster", "Back Drop", "Videos")
+
+    Column {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
+        }
+
+        when (selectedTabIndex) {
+            0 -> TvPostersTab(posters = tvImages?.posters)
+            1 -> TvBackdropTab(backdrops = tvImages?.backdrops)
+            2 -> tvVideos?.let { TvVideosTab(videos = it) }
+        }
+    }
+}
+
+@Composable
+fun TvPostersTab(posters: List<TvImagesPoster>?) {
+    val pagerState = rememberPagerState(initialPage = 0)
+
+    if (posters!!.isEmpty()) {
+        Text(text = "No posters available")
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(50.dp),
+            count = posters.size,
+            modifier = Modifier
+                .fillMaxSize()
+        ) { page ->
+            val poster = posters[page]
+            TvPosterItem(poster = poster, isHero = page == pagerState.currentPage)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalPagerIndicator(
+            pagerState = pagerState,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            activeColor = Color.Black,
+            inactiveColor = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun TvPosterItem(poster: TvImagesPoster, isHero: Boolean) {
+    val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
+
     Card(
+        shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .padding(4.dp)
-            .width(120.dp),
-        onClick = { onClick() },
+            .padding(8.dp)
+            .scale(scale),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.align(Alignment.TopStart)) {
-                val image = if (cast.profilePath.isNullOrEmpty()) {
-                    R.drawable.profile_no_image
-                } else {
-                    "https://image.tmdb.org/t/p/w500${cast.profilePath}"
+        val image = poster.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+        AsyncImage(
+            model = image,
+            contentDescription = "profile image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+fun TvBackdropTab(backdrops: List<TvImagesBackdrop>?) {
+    val pagerState = rememberPagerState(initialPage = 0)
+
+    if (backdrops!!.isEmpty()) {
+        Text(text = "No backdrops available")
+        return
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(50.dp),
+            count = backdrops!!.size,
+            modifier = Modifier
+                .fillMaxSize()
+        ) { page ->
+            val backdrop = backdrops[page]
+            TvBackDropItem(backdrop = backdrop, isHero = page == pagerState.currentPage)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        HorizontalPagerIndicator(
+            pagerState = pagerState,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            activeColor = Color.Black,
+            inactiveColor = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun TvBackDropItem(backdrop: TvImagesBackdrop, isHero: Boolean) {
+    val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .scale(scale),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        val image = backdrop.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
+        AsyncImage(
+            model = image,
+            contentDescription = "profile image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+@Composable
+fun TvVideosTab(videos: List<TvVideosResult?>) {
+    val context = LocalContext.current
+    val videosYoutube = getYoutubeVideosTv(videos)
+
+    if (videosYoutube.isEmpty()) {
+        Text(text = "No YouTube videos available")
+    } else {
+        LazyRow {
+            items(videosYoutube.size) { index ->
+                val video = videosYoutube[index]
+                if (video != null) {
+                    CardTvVideosYoutube(video) { openYoutubeVideo(context, video.key) }
                 }
-                AsyncImage(
-                    model = image, contentDescription = "poster movie",
-                    modifier = Modifier
-                        .width(120.dp)
-                        .height(180.dp),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.profile_no_image),
-                    error = painterResource(id = R.drawable.profile_no_image)
-                )
-                Text(
-                    text = cast.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
-                )
-                Text(
-                    text = cast.character,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
-                )
             }
         }
     }
 }
 
 @Composable
-fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
+fun CardTvVideosYoutube(video: TvVideosResult, onClick: () -> Unit) {
+
     Card(
         modifier = Modifier
-            .padding(4.dp)
-            .width(100.dp),
+            .size(120.dp)
+            .padding(4.dp),
         onClick = { onClick() },
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.align(Alignment.TopStart)) {
-                val image = if (crew.profilePath.isNullOrEmpty()) {
-                    R.drawable.profile_no_image
-                } else {
-                    "https://image.tmdb.org/t/p/w500${crew.profilePath}"
-                }
-                AsyncImage(
-                    model = image, contentDescription = "poster movie",
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(100.dp),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.profile_no_image),
-                    error = painterResource(id = R.drawable.profile_no_image)
-                )
-                Text(
-                    text = crew.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 8.dp, start = 2.dp)
-                )
-                Text(
-                    text = crew.department,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 2.dp, start = 8.dp)
-                )
-            }
+        Column(modifier = Modifier.padding(4.dp)) {
+            Text(
+                text = video.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.Blue
+            )
         }
     }
+}
+
+fun getYoutubeVideosTv(tvVideos: List<TvVideosResult?>): List<TvVideosResult?> {
+    return tvVideos.filter { it!!.site == "YouTube" }
 }
 
 @Composable

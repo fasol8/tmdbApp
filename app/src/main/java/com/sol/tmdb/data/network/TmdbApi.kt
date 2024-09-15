@@ -17,14 +17,15 @@ import com.sol.tmdb.domain.model.person.PersonResponse
 import com.sol.tmdb.domain.model.person.TvCreditsResponse
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
-import com.sol.tmdb.domain.model.tv.TVImagesResponse
+import com.sol.tmdb.domain.model.tv.EpisodesImagesResponse
 import com.sol.tmdb.domain.model.tv.TvDetail
-import com.sol.tmdb.domain.model.tv.TvImagesStill
+import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvProviderResponse
 import com.sol.tmdb.domain.model.tv.TvRatingsResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
+import com.sol.tmdb.domain.model.tv.TvVideosResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -115,6 +116,18 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvProviderResponse
 
+    @GET("tv/{tv_id}/images")
+    suspend fun getTvImages(
+        @Path("tv_id") tvId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvImagesResponse
+
+    @GET("tv/{tv_id}/videos")
+    suspend fun getTvVideos(
+        @Path("tv_id") tvId: Int,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvVideosResponse
+
     @GET("tv/{tv_id}/similar")
     suspend fun getTvSimilar(
         @Path("tv_id") tvId: Int,
@@ -140,7 +153,7 @@ interface TmdbApi {
         @Path("season_number") seasonId: Int,
         @Path("episode_number") episodeId: Int,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
-    ): TVImagesResponse
+    ): EpisodesImagesResponse
 
     @GET("person/popular")
     suspend fun getPopularPerson(
