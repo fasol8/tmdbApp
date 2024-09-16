@@ -8,6 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.sol.tmdb.presentation.main.MainListScreen
 import com.sol.tmdb.presentation.movie.MovieDetail
 import com.sol.tmdb.presentation.movie.MoviesScreen
 import com.sol.tmdb.presentation.person.PersonDetail
@@ -19,7 +20,8 @@ import com.sol.tmdb.presentation.tv.TvSeason
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TmdbNavHost(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = TmdbScreen.Movie.route) {
+    NavHost(navController = navController, startDestination = TmdbScreen.MainScreen.route) {
+        composable(TmdbScreen.MainScreen.route) { MainListScreen(navController = navController) }
         composable(TmdbScreen.Movie.route) { MoviesScreen(navController) }
         composable(
             route = TmdbScreen.MovieDetail.route + "/{movieId}",

@@ -1,6 +1,7 @@
 package com.sol.tmdb.data.network
 
 import com.sol.tmdb.BuildConfig
+import com.sol.tmdb.domain.model.main.TrendingResponse
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieImagesResponse
@@ -31,6 +32,13 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface TmdbApi {
+
+    @GET("trending/{media_type}/{time}")
+    suspend fun getTrending(
+        @Path("media_type") type: String,
+        @Path("time") time: String,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TrendingResponse
 
     @GET("discover/movie")
     suspend fun getDiscoverMovie(
