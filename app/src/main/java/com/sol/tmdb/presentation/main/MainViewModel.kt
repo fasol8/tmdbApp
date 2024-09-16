@@ -24,16 +24,14 @@ class MainViewModel @Inject constructor(private val getMainUseCase: GetMainUseCa
         loadTrending("all", "day")
     }
 
-    private fun loadTrending(type: String, time: String) {
+    fun loadTrending(type: String, time: String) {
         viewModelScope.launch {
             try {
                 val response = getMainUseCase(type, time)
                 _trending.value = response.results
-                Log.i("VM", _trending.value.toString())
             } catch (e: Exception) {
 //                _trending.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
-                Log.i("Error", e.message.toString())
             }
         }
     }
