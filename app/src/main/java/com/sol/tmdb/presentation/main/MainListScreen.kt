@@ -2,6 +2,7 @@ package com.sol.tmdb.presentation.main
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -73,77 +75,72 @@ fun TrendingTabs(
     navController: NavController
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-
     val tabs = listOf("Today", "This Week")
 
-    Column {
-        // Wrap the TabRow inside a Box for better control over its background
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFFE0E0E0)) // Light background color similar to the border
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFFE0E0E0))
+    ) {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            indicator = { tabPositions ->
+                Box(
+                    Modifier
+                        .tabIndicatorOffset(tabPositions[selectedTabIndex])
+                        .height(36.dp)
+                        .width(tabPositions[selectedTabIndex].width * 0.9f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .padding(horizontal = 4.dp)
+                        .background(Color(0xFF102641))
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            divider = {}
         ) {
-
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-//                Modifier.background(Color.Transparent),
-                containerColor = Color.Transparent,
-//                backgroundColor = Color.Transparent, // Transparent background
-                contentColor = Color.Transparent, // No automatic content color
-                indicator = { tabPositions ->
-                    Box(
-                        Modifier
-                            .tabIndicatorOffset(tabPositions[selectedTabIndex])
-                            .height(36.dp) // Adjust the height
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(Color(0xFF102641)) // The background color of the selected tab
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                divider = {} // No divider between tabs
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = {
-                            selectedTabIndex = index
-                            if (index == 0) {
-                                viewModel.loadTrending("all", "day")
-                            } else {
-                                viewModel.loadTrending("all", "week")
-                            }
-                        },
-                        text = {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    color = if (selectedTabIndex == index) Color(0xFFA8E6CF) else Color(0xFF102641), // Color of selected and non-selected text
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = {
+                        selectedTabIndex = index
+                        if (index == 0) {
+                            viewModel.loadTrending("all", "day")
+                        } else {
+                            viewModel.loadTrending("all", "week")
                         }
-                    )
+                    },
+                    modifier = Modifier
+                        .height(36.dp)
+                        .zIndex(1f)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = if (selectedTabIndex == index) Color(0xFFA8E6CF) else Color(0xFF102641),
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.zIndex(2f) // El texto siempre está al frente, encima del box
+                        )
+                    }
                 }
             }
         }
+    }
 
-        // Load the content based on the selected tab
-        when (selectedTabIndex) {
-            0 -> {
-                // 'Today' content
-                TrendingTab(trending = trending, navController)
-            }
+    when (selectedTabIndex) {
+        0 -> { TrendingTab(trending = trending, navController) }
 
-            1 -> {
-                // 'This Week' content
-                TrendingTab(trending = trending, navController)
-            }
-        }
+        1 -> { TrendingTab(trending = trending, navController) }
     }
 }
-
 
 @Composable
 fun TrendingTab(trending: List<TrendingResult>, navController: NavController) {
