@@ -1,10 +1,12 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.sol.tmdb.presentation.main
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +15,18 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -44,22 +54,45 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.R
+import com.sol.tmdb.domain.model.main.SearchResult
 import com.sol.tmdb.domain.model.main.TrendingResult
 import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
 fun MainListScreen(navController: NavController, viewModel: MainViewModel = hiltViewModel()) {
+    val results by viewModel.searchResults.observeAsState(emptyList())
     val trending by viewModel.trending.observeAsState(emptyList())
+    var query by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp, top = 88.dp)
+            .padding(8.dp, top = 80.dp)
     ) {
         Column {
-            Spacer(modifier = Modifier.height(8.dp))
-//            TODO: SearchBar
-            Text(text = "Main Screen")
+            MultiSearchBar(
+                query = query,
+                onQueryChange = {
+                    query = it
+                },
+                onSearch = { viewModel.searchMultiByQuery(query) }
+            )
+            LazyRow {
+                items(results!!.size){ index: Int ->
+                    val result= results!![index]
+                    if(result.mediaType!="person"){
+                    CardSearchResult(result, navController){}
+                    }else{
+                        Text(text = "person")
+                    }
+
+                    if (index == results!!.size - 1) {
+                        LaunchedEffect(key1 = true) {
+                            viewModel.loadNextPage(query) // Cargar más resultados
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "Trending", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(2.dp))
@@ -68,6 +101,105 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
     }
 }
 
+@Composable
+fun MultiSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (String) -> Unit) {
+    var activate by remember { mutableStateOf(false) }
+
+    SearchBar(
+        query = query,
+        onQueryChange = {
+            val capitalizedQuery = it.replaceFirstChar { char ->
+                if (char.isLowerCase()) char.titlecase() else char.toString()
+            }
+            onQueryChange(capitalizedQuery)
+        },
+        onSearch = {
+            onSearch(it)
+            activate = false
+        },
+        active = activate,
+        onActiveChange = { activate = true },
+        placeholder = { Text(text = "Search Game") },
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        leadingIcon = {
+            Icon(imageVector = Icons.Default.Search, contentDescription = "Search Game")
+        },
+        trailingIcon = {
+            Row {
+                IconButton(onClick = {
+                    activate = false
+                    onQueryChange("")
+                    onSearch("")
+                }) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Close SearchBar")
+                }
+            }
+        }
+    ) {}
+}
+
+@Composable
+fun CardSearchResult(result: SearchResult, navController: NavController, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .height(250.dp)
+            .width(150.dp)
+            .padding(4.dp),
+        onClick = { onClick() }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column {
+                val image = if (result.posterPath.isNullOrEmpty()) {
+                    R.drawable.no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${result.posterPath}"
+                }
+                AsyncImage(
+                    model = image,
+                    contentDescription = "poster TV",
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.no_image),
+                    error = painterResource(id = R.drawable.no_image)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-4).dp, y = (-8).dp)
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawCircle(color = Color(0xFFEEEEEE))
+
+                    drawArc(
+                        color = when {
+                            ((result.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                            ((result.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                            else -> Color(0xFF0F9D58)
+                        },
+                        startAngle = -90f,
+                        sweepAngle = (result.voteAverage * 36).toFloat(),
+                        useCenter = false,
+                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                    )
+                }
+                Text(
+                    text = "${(result.voteAverage * 10).toInt()}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(
+                        Alignment.Center
+                    )
+                )
+            }
+        }
+    }
+}
 @Composable
 fun TrendingTabs(
     trending: List<TrendingResult>,
@@ -124,10 +256,12 @@ fun TrendingTabs(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyLarge.copy(
-                                color = if (selectedTabIndex == index) Color(0xFFA8E6CF) else Color(0xFF102641),
+                                color = if (selectedTabIndex == index) Color(0xFFA8E6CF) else Color(
+                                    0xFF102641
+                                ),
                                 fontWeight = FontWeight.Bold
                             ),
-                            modifier = Modifier.zIndex(2f) // El texto siempre está al frente, encima del box
+                            modifier = Modifier.zIndex(2f)
                         )
                     }
                 }
@@ -136,9 +270,13 @@ fun TrendingTabs(
     }
 
     when (selectedTabIndex) {
-        0 -> { TrendingTab(trending = trending, navController) }
+        0 -> {
+            TrendingTab(trending = trending, navController)
+        }
 
-        1 -> { TrendingTab(trending = trending, navController) }
+        1 -> {
+            TrendingTab(trending = trending, navController)
+        }
     }
 }
 

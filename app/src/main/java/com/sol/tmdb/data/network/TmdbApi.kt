@@ -1,6 +1,7 @@
 package com.sol.tmdb.data.network
 
 import com.sol.tmdb.BuildConfig
+import com.sol.tmdb.domain.model.main.SearchResponse
 import com.sol.tmdb.domain.model.main.TrendingResponse
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
@@ -32,6 +33,14 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface TmdbApi {
+
+    @GET("search/multi")
+    suspend fun getMultiSearch(
+        @Query("query") query: String,
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): SearchResponse
+
 
     @GET("trending/{media_type}/{time}")
     suspend fun getTrending(
