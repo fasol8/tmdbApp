@@ -41,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -53,6 +55,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.main.SearchResult
 import com.sol.tmdb.domain.model.main.TrendingResult
@@ -63,13 +66,35 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
     val results by viewModel.searchResults.observeAsState(emptyList())
     val trending by viewModel.trending.observeAsState(emptyList())
     var query by remember { mutableStateOf("") }
+    val imageBackground = if (trending.isNotEmpty()) {
+        "https://image.tmdb.org/t/p/w500" + trending.random().backdropPath
+    } else {
+        null
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp, top = 80.dp)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Blue.copy(alpha = .5f),
+                        Color.Transparent
+                    )
+                )
+            )
+            .paint(
+                painter = rememberAsyncImagePainter(model = imageBackground),
+                contentScale = ContentScale.FillHeight,
+                alpha = .3f
+            )
     ) {
-        Column {
+        Column(
+            Modifier.padding(4.dp, top = 68.dp)
+        ) {
+            if (query.isEmpty())
+                TextPlaceHolder()
+
             MultiSearchBar(
                 query = query,
                 onQueryChange = {
@@ -78,17 +103,17 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
                 onSearch = { viewModel.searchMultiByQuery(query) }
             )
             LazyRow {
-                items(results!!.size){ index: Int ->
-                    val result= results!![index]
-                    if(result.mediaType!="person"){
-                    CardSearchResult(result, navController){}
-                    }else{
+                items(results!!.size) { index: Int ->
+                    val result = results!![index]
+                    if (result.mediaType != "person") {
+                        CardSearchResult(result, navController) {}
+                    } else {
                         Text(text = "person")
                     }
 
                     if (index == results!!.size - 1) {
                         LaunchedEffect(key1 = true) {
-                            viewModel.loadNextPage(query) // Cargar más resultados
+                            viewModel.loadNextPage(query)
                         }
                     }
                 }
@@ -98,6 +123,25 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
             Spacer(modifier = Modifier.height(2.dp))
             TrendingTabs(trending, viewModel, navController)
         }
+    }
+}
+
+@Composable
+fun TextPlaceHolder() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Welcome \nMillions of movies, Tv shows and people to discover, Explore now",
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 36.sp,
+            lineHeight = 38.sp
+        )
     }
 }
 
@@ -200,6 +244,7 @@ fun CardSearchResult(result: SearchResult, navController: NavController, onClick
         }
     }
 }
+
 @Composable
 fun TrendingTabs(
     trending: List<TrendingResult>,
