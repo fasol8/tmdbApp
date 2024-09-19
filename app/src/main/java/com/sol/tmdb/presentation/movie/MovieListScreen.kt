@@ -76,8 +76,14 @@ fun MoviesScreen(
                     }
 
                     if (index == movies.size - 1) {
-                        LaunchedEffect(key1 = Unit) {
-                            viewModel.loadMovies()
+                        LaunchedEffect(true) {
+                            when (category) {
+                                "now_playing" -> viewModel.loadNowPlaying()
+                                "popular" -> viewModel.loadPopularMovies()
+                                "top_rated" -> viewModel.loadTopRatedMovies()
+                                "upcoming" -> viewModel.loadUpcomingMovies()
+                                else -> viewModel.loadMovies()
+                            }
                         }
                     }
                 }

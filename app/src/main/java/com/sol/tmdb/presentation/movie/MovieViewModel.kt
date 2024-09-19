@@ -101,31 +101,75 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun loadNowPlaying(page: Int = 1) {
+    fun loadNowPlaying() {
         viewModelScope.launch {
-            val response = getMovieUseCase.getNowPlaying(page)
-            _nowPlaying.value = response.results
+            try {
+                val response = getMovieUseCase.getNowPlaying(currentPage)
+                val newMovies = response.results
+                if (newMovies.isNotEmpty()) {
+                    val updateMovies = _nowPlaying.value.orEmpty() + newMovies
+                    _nowPlaying.value = updateMovies
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more movies"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
         }
     }
 
     fun loadPopularMovies(page: Int = 1) {
         viewModelScope.launch {
-            val response = getMovieUseCase.getPopularMovie(page)
-            _popularMovies.value = response.results
+            try {
+                val response = getMovieUseCase.getPopularMovie(currentPage)
+                val newMovies = response.results
+                if (newMovies.isNotEmpty()) {
+                    val updateMovies = _popularMovies.value.orEmpty() + newMovies
+                    _popularMovies.value = updateMovies
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more movies"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
         }
     }
 
     fun loadTopRatedMovies(page: Int = 1) {
         viewModelScope.launch {
-            val response = getMovieUseCase.getTopRated(page)
-            _topRatedMovies.value = response.results
+            try {
+                val response = getMovieUseCase.getTopRated(currentPage)
+                val newMovies = response.results
+                if (newMovies.isNotEmpty()) {
+                    val updateMovies = _topRatedMovies.value.orEmpty() + newMovies
+                    _topRatedMovies.value = updateMovies
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more movies"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
         }
     }
 
     fun loadUpcomingMovies(page: Int = 1) {
         viewModelScope.launch {
-            val response = getMovieUseCase.getUpcoming(page)
-            _upcomingMovies.value = response.results
+            try {
+                val response = getMovieUseCase.getUpcoming(currentPage)
+                val newMovies = response.results
+                if (newMovies.isNotEmpty()) {
+                    val updateMovies = _upcomingMovies.value.orEmpty() + newMovies
+                    _upcomingMovies.value = updateMovies
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more movies"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
         }
     }
 
