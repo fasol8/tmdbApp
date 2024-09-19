@@ -38,8 +38,28 @@ import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
-fun MoviesScreen(navController: NavController, viewModel: MovieViewModel = hiltViewModel()) {
-    val movies by viewModel.movies.observeAsState(emptyList())
+fun MoviesScreen(
+    category: String,
+    navController: NavController,
+    viewModel: MovieViewModel = hiltViewModel()
+) {
+    val movies by when (category) {
+        "now_playing" -> viewModel.nowPlaying.observeAsState(emptyList())
+        "popular" -> viewModel.popularMovies.observeAsState(emptyList())
+        "top_rated" -> viewModel.topRatedMovies.observeAsState(emptyList())
+        "upcoming" -> viewModel.upcomingMovies.observeAsState(emptyList())
+        else -> viewModel.movies.observeAsState(emptyList())  // Default case
+    }
+
+    LaunchedEffect(true) {
+        when (category) {
+            "now_playing" -> viewModel.loadNowPlaying()
+            "popular" -> viewModel.loadPopularMovies()
+            "top_rated" -> viewModel.loadTopRatedMovies()
+            "upcoming" -> viewModel.loadUpcomingMovies()
+            else -> viewModel.loadMovies()
+        }
+    }
 
     Box(
         modifier = Modifier

@@ -5,6 +5,7 @@ import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieImagesResponse
+import com.sol.tmdb.domain.model.movie.MovieNowResponse
 import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
@@ -17,6 +18,22 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getDiscoverMovie(page: Int = 1): MovieResponse {
         return api.getDiscoverMovie(page)
+    }
+
+    suspend fun getNowPlaying(page: Int = 1): MovieNowResponse {
+        return api.getNowPlayingMovie(page)
+    }
+
+    suspend fun getPopularMovie(page: Int = 1): MovieResponse {
+        return api.getPopularMovie(page)
+    }
+
+    suspend fun getTopRated(page: Int = 1): MovieResponse {
+        return api.getTopRatedMovie(page)
+    }
+
+    suspend fun getUpcoming(page: Int): MovieNowResponse {
+        return api.getUpcomingMovie(page)
     }
 
     suspend fun getMovieDetail(movieId: Int): MovieDetail {

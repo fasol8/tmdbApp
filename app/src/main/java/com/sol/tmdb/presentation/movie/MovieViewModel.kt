@@ -27,6 +27,18 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     private val _movies = MutableLiveData<List<MovieResult>>()
     val movies: LiveData<List<MovieResult>> = _movies
 
+    private val _nowPlaying = MutableLiveData<List<MovieResult>>()
+    val nowPlaying: LiveData<List<MovieResult>> = _nowPlaying
+
+    private val _popularMovies = MutableLiveData<List<MovieResult>>()
+    val popularMovies: LiveData<List<MovieResult>> = _popularMovies
+
+    private val _topRatedMovies = MutableLiveData<List<MovieResult>>()
+    val topRatedMovies: LiveData<List<MovieResult>> = _topRatedMovies
+
+    private val _upcomingMovies = MutableLiveData<List<MovieResult>>()
+    val upcomingMovies: LiveData<List<MovieResult>> = _upcomingMovies
+
     private val _movieById = MutableLiveData<MovieDetail?>()
     val movieById: LiveData<MovieDetail?> = _movieById
 
@@ -86,6 +98,34 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
             } catch (e: Exception) {
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
+        }
+    }
+
+    fun loadNowPlaying(page: Int = 1) {
+        viewModelScope.launch {
+            val response = getMovieUseCase.getNowPlaying(page)
+            _nowPlaying.value = response.results
+        }
+    }
+
+    fun loadPopularMovies(page: Int = 1) {
+        viewModelScope.launch {
+            val response = getMovieUseCase.getPopularMovie(page)
+            _popularMovies.value = response.results
+        }
+    }
+
+    fun loadTopRatedMovies(page: Int = 1) {
+        viewModelScope.launch {
+            val response = getMovieUseCase.getTopRated(page)
+            _topRatedMovies.value = response.results
+        }
+    }
+
+    fun loadUpcomingMovies(page: Int = 1) {
+        viewModelScope.launch {
+            val response = getMovieUseCase.getUpcoming(page)
+            _upcomingMovies.value = response.results
         }
     }
 

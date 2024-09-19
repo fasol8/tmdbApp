@@ -6,6 +6,7 @@ import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieImagesResponse
+import com.sol.tmdb.domain.model.movie.MovieNowResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
@@ -16,6 +17,22 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
 
     suspend operator fun invoke(page: Int): MovieResponse {
         return repository.getDiscoverMovie(page)
+    }
+
+    suspend fun getNowPlaying(page: Int = 1): MovieNowResponse {
+        return repository.getNowPlaying(page)
+    }
+
+    suspend fun getPopularMovie(page: Int = 1): MovieResponse {
+        return repository.getPopularMovie(page)
+    }
+
+    suspend fun getTopRated(page: Int = 1): MovieResponse {
+        return repository.getTopRated(page)
+    }
+
+    suspend fun getUpcoming(page: Int): MovieNowResponse {
+        return repository.getUpcoming(page)
     }
 
     suspend fun getMovieDetail(movieId: Int): MovieDetail {
@@ -40,7 +57,7 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
         return repository.getMovieVideos(movieId)
     }
 
-    suspend fun getMovieImages(movieId: Int):MovieImagesResponse{
+    suspend fun getMovieImages(movieId: Int): MovieImagesResponse {
         return repository.getMovieImages(movieId)
     }
 

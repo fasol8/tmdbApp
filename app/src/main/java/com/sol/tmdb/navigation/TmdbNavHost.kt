@@ -22,7 +22,11 @@ import com.sol.tmdb.presentation.tv.TvSeason
 fun TmdbNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = TmdbScreen.MainScreen.route) {
         composable(TmdbScreen.MainScreen.route) { MainListScreen(navController = navController) }
-        composable(TmdbScreen.Movie.route) { MoviesScreen(navController) }
+        composable(TmdbScreen.Movie.route) { MoviesScreen("movie", navController) }
+        composable(TmdbScreen.NowPlaying.route) { MoviesScreen("now_playing", navController) }
+        composable(TmdbScreen.PopularMovies.route) { MoviesScreen("popular", navController) }
+        composable(TmdbScreen.TopRatedMovies.route) { MoviesScreen("top_rated", navController) }
+        composable(TmdbScreen.UpcomingMovies.route) { MoviesScreen("upcoming", navController) }
         composable(
             route = TmdbScreen.MovieDetail.route + "/{movieId}",
             arguments = listOf(navArgument("movieId") { type = NavType.IntType })

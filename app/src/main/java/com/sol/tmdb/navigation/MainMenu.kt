@@ -48,16 +48,23 @@ fun MainMenu() {
     val coroutineScope = rememberCoroutineScope()
 
     val items = listOf(
-        TmdbScreen.Movie to R.drawable.ic_movie,
+        TmdbScreen.NowPlaying to R.drawable.ic_movie,
+        TmdbScreen.PopularMovies to R.drawable.ic_movie,
+        TmdbScreen.TopRatedMovies to R.drawable.ic_movie,
+        TmdbScreen.UpcomingMovies to R.drawable.ic_movie,
         TmdbScreen.Tv to R.drawable.ic_tv,
-        TmdbScreen.Person to R.drawable.ic_person
+        TmdbScreen.Person to R.drawable.ic_person,
     )
 
     val titles = mapOf(
-        TmdbScreen.Movie.route to "Movie",
+        TmdbScreen.NowPlaying.route to "Now Playing",
+        TmdbScreen.PopularMovies.route to "Popular",
+        TmdbScreen.TopRatedMovies.route to "Top Rated",
+        TmdbScreen.UpcomingMovies.route to "Upcoming",
         TmdbScreen.Tv.route to "TV",
-        TmdbScreen.Person.route to "Person"
+        TmdbScreen.Person.route to "Person",
     )
+
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
@@ -77,9 +84,9 @@ fun MainMenu() {
                         text = "TMDB App",
                         style = MaterialTheme.typography.titleLarge,
                         fontSize = 24.sp,
-                        modifier = Modifier.padding(24.dp)
+                        modifier = Modifier.padding(18.dp)
                     )
-                    HorizontalDivider(thickness = 2.dp, modifier = Modifier.width(200.dp))
+                    HorizontalDivider(thickness = 2.dp, modifier = Modifier.width(220.dp))
                     items.forEach { (screen, icon) ->
                         Row(modifier = Modifier
                             .padding(24.dp)

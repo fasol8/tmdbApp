@@ -6,6 +6,7 @@ import com.sol.tmdb.domain.model.main.TrendingResponse
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieImagesResponse
+import com.sol.tmdb.domain.model.movie.MovieNowResponse
 import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
@@ -41,7 +42,6 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): SearchResponse
 
-
     @GET("trending/{media_type}/{time}")
     suspend fun getTrending(
         @Path("media_type") type: String,
@@ -54,6 +54,30 @@ interface TmdbApi {
         @Query("page") page: Int = 1,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieResponse
+
+    @GET("movie/now_playing")
+    suspend fun getNowPlayingMovie(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieNowResponse
+
+    @GET("movie/popular")
+    suspend fun getPopularMovie(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieResponse
+
+    @GET("movie/top_rated")
+    suspend fun getTopRatedMovie(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieResponse
+
+    @GET("movie/upcoming")
+    suspend fun getUpcomingMovie(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieNowResponse
 
     @GET("movie/{movie_id}")
     suspend fun getMovieDetail(
