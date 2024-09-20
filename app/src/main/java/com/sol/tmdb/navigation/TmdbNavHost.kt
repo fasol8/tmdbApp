@@ -22,6 +22,7 @@ import com.sol.tmdb.presentation.tv.TvSeason
 fun TmdbNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = TmdbScreen.MainScreen.route) {
         composable(TmdbScreen.MainScreen.route) { MainListScreen(navController = navController) }
+
         composable(TmdbScreen.Movie.route) { MoviesScreen("movie", navController) }
         composable(TmdbScreen.NowPlaying.route) { MoviesScreen("now_playing", navController) }
         composable(TmdbScreen.PopularMovies.route) { MoviesScreen("popular", navController) }
@@ -34,7 +35,12 @@ fun TmdbNavHost(navController: NavHostController) {
             val movieId = navBackStackEntry.arguments?.getInt("movieId") ?: return@composable
             MovieDetail(movieId = movieId, navController = navController)
         }
-        composable(TmdbScreen.Tv.route) { TvScreen(navController) }
+
+        composable(TmdbScreen.Tv.route) { TvScreen("tv", navController) }
+        composable(TmdbScreen.AirToday.route) { TvScreen("air_today", navController) }
+        composable(TmdbScreen.OnAir.route) { TvScreen("on_the_air", navController) }
+        composable(TmdbScreen.PopularTv.route) { TvScreen("popular_tv", navController) }
+        composable(TmdbScreen.TopRatedTv.route) { TvScreen("top_rated_tv", navController) }
         composable(
             route = TmdbScreen.TvDetail.route + "/{tvId}",
             arguments = listOf(navArgument("tvId") { type = NavType.IntType })
@@ -54,6 +60,7 @@ fun TmdbNavHost(navController: NavHostController) {
                 navBackStackEntry.arguments?.getInt("numberOfSeasons") ?: return@composable
             TvSeason(tvId, numberOfSeasons, navController)
         }
+
         composable(TmdbScreen.Person.route) { PersonScreen(navController) }
         composable(
             TmdbScreen.PersonDetail.route + "/{personId}",

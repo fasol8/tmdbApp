@@ -38,8 +38,28 @@ import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.navigation.TmdbScreen
 
 @Composable
-fun TvScreen(navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
-    val tvs by viewModel.tvs.observeAsState(emptyList())
+fun TvScreen(
+    category: String,
+    navController: NavController,
+    viewModel: TvViewModel = hiltViewModel()
+) {
+    val tvs by when (category) {
+        "air_today" -> viewModel.airToday.observeAsState(emptyList())
+        "on_the_air" -> viewModel.onAir.observeAsState(emptyList())
+        "popular_tv" -> viewModel.popularTv.observeAsState(emptyList())
+        "top_rated_tv" -> viewModel.topRatedTv.observeAsState(emptyList())
+        else -> viewModel.tvs.observeAsState(emptyList())
+    }
+
+    LaunchedEffect (true){
+        when(category){
+            "air_today" -> viewModel.loadAirToday()
+            "on_the_air" -> viewModel.loadOnAir()
+            "popular_tv" -> viewModel.loadPopularTv()
+            "top_rated_tv" -> viewModel.loadTopRatedTv()
+            else -> viewModel.loadTv()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -56,8 +76,14 @@ fun TvScreen(navController: NavController, viewModel: TvViewModel = hiltViewMode
                     }
 
                     if (index == tvs.size - 1) {
-                        LaunchedEffect(key1 = Unit) {
-                            viewModel.loadTv()
+                        LaunchedEffect (true){
+                            when(category){
+                                "air_today" -> viewModel.loadAirToday()
+                                "on_the_air" -> viewModel.loadOnAir()
+                                "popular_tv" -> viewModel.loadPopularTv()
+                                "top_rated_tv" -> viewModel.loadTopRatedTv()
+                                else -> viewModel.loadTv()
+                            }
                         }
                     }
                 }
@@ -85,7 +111,9 @@ fun ItemTv(tv: TvResult, onClick: () -> Unit) {
                 AsyncImage(
                     model = image,
                     contentDescription = "poster TV",
-                    modifier = Modifier.fillMaxWidth().height(250.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(id = R.drawable.no_image),
                     error = painterResource(id = R.drawable.no_image)

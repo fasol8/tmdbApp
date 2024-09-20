@@ -16,8 +16,24 @@ import javax.inject.Inject
 
 class TvRepository @Inject constructor(private val api: TmdbApi) {
 
+    suspend fun getDiscoverTv(page: Int = 1): TvResponse {
+        return api.getDiscoverTv(page)
+    }
+
+    suspend fun getAirTodayTv(page: Int = 1): TvResponse {
+        return api.getAirTodayTv(page)
+    }
+
+    suspend fun getOnAirTv(page: Int = 1): TvResponse {
+        return api.getOnAirTv(page)
+    }
+
     suspend fun getPopularTv(page: Int = 1): TvResponse {
         return api.getPopularTv(page)
+    }
+
+    suspend fun getTopRatedTv(page: Int = 1): TvResponse {
+        return api.getTopRatedTv(page)
     }
 
     suspend fun getTvDetail(tvId: Int): TvDetail {
@@ -37,11 +53,11 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
         return response.results
     }
 
-    suspend fun getTvImages(tvId: Int):TvImagesResponse{
+    suspend fun getTvImages(tvId: Int): TvImagesResponse {
         return api.getTvImages(tvId)
     }
 
-    suspend fun getTvVideos(tvId: Int):TvVideosResponse{
+    suspend fun getTvVideos(tvId: Int): TvVideosResponse {
         return api.getTvVideos(tvId)
     }
 

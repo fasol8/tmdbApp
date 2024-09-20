@@ -127,8 +127,32 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieRecommendationResponse
 
+    @GET("discover/tv")
+    suspend fun getDiscoverTv(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvResponse
+
+    @GET("tv/airing_today")
+    suspend fun getAirTodayTv(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvResponse
+
+    @GET("tv/on_the_air")
+    suspend fun getOnAirTv(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvResponse
+
     @GET("tv/popular")
     suspend fun getPopularTv(
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvResponse
+
+    @GET("tv/top_rated")
+    suspend fun getTopRatedTv(
         @Query("page") page: Int = 1,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse

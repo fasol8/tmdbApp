@@ -15,7 +15,6 @@ import com.sol.tmdb.domain.model.tv.TvImagesStill
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
-import com.sol.tmdb.domain.model.tv.TvVideosResponse
 import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +26,18 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
 
     private val _tvs = MutableLiveData<List<TvResult>>()
     val tvs: LiveData<List<TvResult>> = _tvs
+
+    private val _airToday= MutableLiveData<List<TvResult>>()
+    val airToday: LiveData<List<TvResult>> = _airToday
+
+    private val _onAir= MutableLiveData<List<TvResult>>()
+    val onAir: LiveData<List<TvResult>> = _onAir
+
+    private val _popularTv= MutableLiveData<List<TvResult>>()
+    val popularTv: LiveData<List<TvResult>> = _popularTv
+
+    private val _topRatedTv= MutableLiveData<List<TvResult>>()
+    val topRatedTv: LiveData<List<TvResult>> = _topRatedTv
 
     private val _tvById = MutableLiveData<TvDetail?>()
     val tvById: LiveData<TvDetail?> = _tvById
@@ -97,6 +108,78 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
+    fun loadAirToday() {
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getAirToday(currentPage)
+                val newTvs = response.results
+                if (newTvs.isNotEmpty()) {
+                    val updateTvs = _airToday.value.orEmpty() + newTvs
+                    _airToday.value = updateTvs
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more tv shows"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun loadOnAir(){
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getOnAir(currentPage)
+                val newTvs = response.results
+                if (newTvs.isNotEmpty()) {
+                    val updateTvs = _onAir.value.orEmpty() + newTvs
+                    _onAir.value = updateTvs
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more tv shows"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun loadPopularTv(){
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getPopular(currentPage)
+                val newTvs = response.results
+                if (newTvs.isNotEmpty()) {
+                    val updateTvs = _popularTv.value.orEmpty() + newTvs
+                    _popularTv.value = updateTvs
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more tv shows"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
+    fun loadTopRatedTv(){
+        viewModelScope.launch {
+            try {
+                val response = getTvUseCase.getTopRated(currentPage)
+                val newTvs = response.results
+                if (newTvs.isNotEmpty()) {
+                    val updateTvs = _topRatedTv.value.orEmpty() + newTvs
+                    _topRatedTv.value = updateTvs
+                    currentPage++
+                } else {
+                    _errorMessage.value = "NO more tv shows"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            }
+        }
+    }
+
     private fun searchTvById(tvId: Int) {
         viewModelScope.launch {
             try {
@@ -112,7 +195,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private fun searchTvRatings(tvId: Int) {
         viewModelScope.launch {
             try {
-                val response = getTvUseCase.getTcRatingsByCountry(tvId)
+                val response = getTvUseCase.getTvRatingsByCountry(tvId)
                 _tvRatings.value = response
             } catch (e: Exception) {
                 _tvRatings.value = null

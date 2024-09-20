@@ -52,16 +52,22 @@ fun MainMenu() {
         TmdbScreen.PopularMovies to R.drawable.ic_movie,
         TmdbScreen.TopRatedMovies to R.drawable.ic_movie,
         TmdbScreen.UpcomingMovies to R.drawable.ic_movie,
-        TmdbScreen.Tv to R.drawable.ic_tv,
+        TmdbScreen.AirToday to R.drawable.ic_tv,
+        TmdbScreen.OnAir to R.drawable.ic_tv,
+        TmdbScreen.PopularTv to R.drawable.ic_tv,
+        TmdbScreen.TopRatedTv to R.drawable.ic_tv,
         TmdbScreen.Person to R.drawable.ic_person,
     )
 
     val titles = mapOf(
         TmdbScreen.NowPlaying.route to "Now Playing",
         TmdbScreen.PopularMovies.route to "Popular",
-        TmdbScreen.TopRatedMovies.route to "Top Rated",
+        TmdbScreen.TopRatedMovies.route to "Top Rated Movies",
         TmdbScreen.UpcomingMovies.route to "Upcoming",
-        TmdbScreen.Tv.route to "TV",
+        TmdbScreen.AirToday.route to "Airing Tv",
+        TmdbScreen.OnAir.route to "On the Air",
+        TmdbScreen.PopularTv.route to "Popular TV",
+        TmdbScreen.TopRatedTv.route to "Top Rated TV",
         TmdbScreen.Person.route to "Person",
     )
 

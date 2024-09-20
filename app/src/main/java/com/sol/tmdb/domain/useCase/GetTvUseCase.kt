@@ -17,14 +17,30 @@ import javax.inject.Inject
 class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
 
     suspend operator fun invoke(page: Int): TvResponse {
+        return repository.getDiscoverTv(page)
+    }
+
+    suspend fun getAirToday(page: Int): TvResponse {
+        return repository.getAirTodayTv(page)
+    }
+
+    suspend fun getOnAir(page: Int): TvResponse {
+        return repository.getOnAirTv(page)
+    }
+
+    suspend fun getPopular(page: Int): TvResponse {
         return repository.getPopularTv(page)
+    }
+
+    suspend fun getTopRated(page: Int): TvResponse {
+        return repository.getTopRatedTv(page)
     }
 
     suspend fun getTvDetail(tvId: Int): TvDetail {
         return repository.getTvDetail(tvId)
     }
 
-    suspend fun getTcRatingsByCountry(tvId: Int): Map<String, TvCertification?> {
+    suspend fun getTvRatingsByCountry(tvId: Int): Map<String, TvCertification?> {
         val tvRatings = repository.getRatings(tvId)
         val filterCountries =
             tvRatings.results.filter { it.iso31661 == "MX" || it.iso31661 == "US" }
@@ -51,9 +67,10 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
         return repository.getTvImages(tvId)
     }
 
-    suspend fun getTvVideos(tvId: Int):TvVideosResponse{
+    suspend fun getTvVideos(tvId: Int): TvVideosResponse {
         return repository.getTvVideos(tvId)
     }
+
     suspend fun getTVSimilar(tvId: Int): SimilarResponse {
         return repository.getTvSimilar(tvId)
     }
