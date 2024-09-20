@@ -106,9 +106,17 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
                 items(results!!.size) { index: Int ->
                     val result = results!![index]
                     if (result.mediaType != "person") {
-                        CardSearchResult(result, navController) {}
+                        CardSearchMovieAndTvResult(result, navController) {
+                            if (result.mediaType != "tv") {
+                                navController.navigate(TmdbScreen.MovieDetail.route + "/${result.id}")
+                            } else {
+                                navController.navigate(TmdbScreen.TvDetail.route + "/${result.id}")
+                            }
+                        }
                     } else {
-                        Text(text = "person")
+                        CardSearchPeopleResult(result, navController) {
+                            navController.navigate(TmdbScreen.PersonDetail.route + "/${result.id}")
+                        }
                     }
 
                     if (index == results!!.size - 1) {
@@ -185,7 +193,11 @@ fun MultiSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (St
 }
 
 @Composable
-fun CardSearchResult(result: SearchResult, navController: NavController, onClick: () -> Unit) {
+fun CardSearchMovieAndTvResult(
+    result: SearchResult,
+    navController: NavController,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .height(250.dp)
@@ -239,6 +251,40 @@ fun CardSearchResult(result: SearchResult, navController: NavController, onClick
                     modifier = Modifier.align(
                         Alignment.Center
                     )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CardSearchPeopleResult(
+    result: SearchResult,
+    navController: NavController,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .height(250.dp)
+            .width(150.dp)
+            .padding(4.dp),
+        onClick = { onClick() }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column {
+                val image = if (result.profilePath.isNullOrEmpty()) {
+                    R.drawable.profile_no_image
+                } else {
+                    "https://image.tmdb.org/t/p/w500${result.profilePath}"
+                }
+                AsyncImage(
+                    model = image,
+                    contentDescription = "poster TV",
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.profile_no_image),
+                    error = painterResource(id = R.drawable.profile_no_image)
                 )
             }
         }

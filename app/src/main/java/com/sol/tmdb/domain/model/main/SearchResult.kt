@@ -15,6 +15,7 @@ data class SearchResult(
     @SerializedName("original_name") val originalName: String,
     val overview: String,
     val popularity: Double,
+    @SerializedName("profile_path") val profilePath: String,
     @SerializedName("poster_path") val posterPath: String,
     @SerializedName("vote_average") val voteAverage: Double,
     @SerializedName("vote_count") val voteCount: Int
