@@ -70,7 +70,6 @@ import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
 import com.sol.tmdb.domain.model.movie.MovieGenre
-import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
@@ -85,11 +84,8 @@ import com.sol.tmdb.domain.model.tv.TvImagesBackdrop
 import com.sol.tmdb.domain.model.tv.TvImagesPoster
 import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
-import com.sol.tmdb.domain.model.tv.TvVideosResponse
 import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.navigation.TmdbScreen
-import com.sol.tmdb.presentation.movie.CardVideosYoutube
-import com.sol.tmdb.presentation.movie.getYoutubeVideos
 import com.sol.tmdb.presentation.movie.openYoutubeVideo
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

@@ -48,17 +48,11 @@ fun MoviesScreen(
         "popular" -> viewModel.popularMovies.observeAsState(emptyList())
         "top_rated" -> viewModel.topRatedMovies.observeAsState(emptyList())
         "upcoming" -> viewModel.upcomingMovies.observeAsState(emptyList())
-        else -> viewModel.movies.observeAsState(emptyList())  // Default case
+        else -> viewModel.movies.observeAsState(emptyList())
     }
 
     LaunchedEffect(true) {
-        when (category) {
-            "now_playing" -> viewModel.loadNowPlaying()
-            "popular" -> viewModel.loadPopularMovies()
-            "top_rated" -> viewModel.loadTopRatedMovies()
-            "upcoming" -> viewModel.loadUpcomingMovies()
-            else -> viewModel.loadMovies()
-        }
+        whenCategory(category, viewModel)
     }
 
     Box(
@@ -77,13 +71,7 @@ fun MoviesScreen(
 
                     if (index == movies.size - 1) {
                         LaunchedEffect(true) {
-                            when (category) {
-                                "now_playing" -> viewModel.loadNowPlaying()
-                                "popular" -> viewModel.loadPopularMovies()
-                                "top_rated" -> viewModel.loadTopRatedMovies()
-                                "upcoming" -> viewModel.loadUpcomingMovies()
-                                else -> viewModel.loadMovies()
-                            }
+                            whenCategory(category, viewModel)
                         }
                     }
                 }
@@ -126,37 +114,46 @@ fun ItemMovie(movie: MovieResult, onClick: () -> Unit) {
                     modifier = Modifier.padding(top = 4.dp, start = 16.dp)
                 )
             }
+            if (movie.voteAverage.toInt() != 0) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.BottomEnd) // Posiciona el círculo en la esquina inferior derecha
+                        .offset(x = (-8).dp, y = (-48).dp),
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        // Dibuja el fondo del círculo
+                        drawCircle(color = Color(0xFFEEEEEE))
 
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.BottomEnd) // Posiciona el círculo en la esquina inferior derecha
-                    .offset(x = (-8).dp, y = (-48).dp),
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    // Dibuja el fondo del círculo
-                    drawCircle(color = Color(0xFFEEEEEE))
-
-                    // Dibuja el arco que representa el porcentaje
-                    drawArc(
-                        color = when {
-                            ((movie.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
-                            ((movie.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
-                            else -> Color(0xFF0F9D58)
-                        },
-                        startAngle = -90f,
-                        sweepAngle = (movie.voteAverage * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
-                        useCenter = false,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        // Dibuja el arco que representa el porcentaje
+                        drawArc(
+                            color = when {
+                                ((movie.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                                ((movie.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                                else -> Color(0xFF0F9D58)
+                            },
+                            startAngle = -90f,
+                            sweepAngle = (movie.voteAverage * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
+                            useCenter = false,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(movie.voteAverage * 10).toInt()}%",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                Text(
-                    text = "${(movie.voteAverage * 10).toInt()}%",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
-                )
             }
         }
     }
+}
+
+fun whenCategory(category: String, viewModel: MovieViewModel) = when (category) {
+    "now_playing" -> viewModel.loadNowPlaying()
+    "popular" -> viewModel.loadPopularMovies()
+    "top_rated" -> viewModel.loadTopRatedMovies()
+    "upcoming" -> viewModel.loadUpcomingMovies()
+    else -> viewModel.loadMovies()
 }

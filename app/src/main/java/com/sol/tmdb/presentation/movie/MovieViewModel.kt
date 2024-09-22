@@ -24,19 +24,19 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     ViewModel() {
 
     //                          MutableStateFlow()
-    private val _movies = MutableLiveData<List<MovieResult>>()
+    private val _movies = MutableLiveData<List<MovieResult>>(emptyList())
     val movies: LiveData<List<MovieResult>> = _movies
 
-    private val _nowPlaying = MutableLiveData<List<MovieResult>>()
+    private val _nowPlaying = MutableLiveData<List<MovieResult>>(emptyList())
     val nowPlaying: LiveData<List<MovieResult>> = _nowPlaying
 
-    private val _popularMovies = MutableLiveData<List<MovieResult>>()
+    private val _popularMovies = MutableLiveData<List<MovieResult>>(emptyList())
     val popularMovies: LiveData<List<MovieResult>> = _popularMovies
 
-    private val _topRatedMovies = MutableLiveData<List<MovieResult>>()
+    private val _topRatedMovies = MutableLiveData<List<MovieResult>>(emptyList())
     val topRatedMovies: LiveData<List<MovieResult>> = _topRatedMovies
 
-    private val _upcomingMovies = MutableLiveData<List<MovieResult>>()
+    private val _upcomingMovies = MutableLiveData<List<MovieResult>>(emptyList())
     val upcomingMovies: LiveData<List<MovieResult>> = _upcomingMovies
 
     private val _movieById = MutableLiveData<MovieDetail?>()
@@ -45,22 +45,23 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     private val _movieCertifications = MutableLiveData<Map<String?, Certification?>?>()
     val movieCertifications: LiveData<Map<String?, Certification?>?> = _movieCertifications
 
-    private val _movieVideos = MutableLiveData<List<MovieVideosResult>>()
+    private val _movieVideos = MutableLiveData<List<MovieVideosResult>>(emptyList())
     val movieVideos: LiveData<List<MovieVideosResult>> = _movieVideos
 
-    private val _movieImages = MutableLiveData<MovieImagesResponse>()
-    val movieImages: LiveData<MovieImagesResponse> = _movieImages
+    private val _movieImages = MutableLiveData<MovieImagesResponse?>()
+    val movieImages: LiveData<MovieImagesResponse?> = _movieImages
 
     private val _movieCredits = MutableLiveData<MovieCredits?>()
     val movieCredits: LiveData<MovieCredits?> = _movieCredits
 
-    private val _movieProviders = MutableLiveData<Map<String, CountryResult?>>()
+    private val _movieProviders = MutableLiveData<Map<String, CountryResult?>>(emptyMap())
     val movieProviders: LiveData<Map<String, CountryResult?>> = _movieProviders
 
-    private val _movieSimilar = MutableLiveData<List<MovieSimilarResult?>>()
+    private val _movieSimilar = MutableLiveData<List<MovieSimilarResult?>>(emptyList())
     val movieSimilar: LiveData<List<MovieSimilarResult?>> = _movieSimilar
 
-    private val _movieRecommendation = MutableLiveData<List<MovieRecommendationResult?>>()
+    private val _movieRecommendation =
+        MutableLiveData<List<MovieRecommendationResult?>>(emptyList())
     val movieRecommendation: LiveData<List<MovieRecommendationResult?>> = _movieRecommendation
 
     private val _errorMessage = MutableLiveData<String?>()
@@ -72,105 +73,78 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         loadMovies()
     }
 
-    fun searchAll(movieId: Int) {
+    fun searchAllMovie(movieId: Int) {
         searchMovieById(movieId)
         searchMovieCertification(movieId)
         searchMovieVideos(movieId)
         searchMovieImages(movieId)
         searchMovieCredits(movieId)
-        searchProvidersForMxAndUs(movieId)
+        searchMovieProvidersForMxAndUs(movieId)
         searchMovieSimilar(movieId)
         searchMovieRecommendation(movieId)
     }
 
-    fun loadMovies() {
+    private fun <T> updateLiveData(liveData: MutableLiveData<List<T>>, newData: List<T>) {
+        val updatedList = liveData.value.orEmpty() + newData
+        liveData.value = updatedList
+    }
+
+    private fun <T, R> loadMoviesData(
+        liveData: MutableLiveData<List<R>>,
+        fetchMovies: suspend (Int) -> T,
+        mapResponse: (T) -> List<R>
+    ) {
         viewModelScope.launch {
             try {
-                val response = getMovieUseCase(currentPage)
-                val newMovies = response.results
+                val response = fetchMovies(currentPage)
+                val newMovies = mapResponse(response)
                 if (newMovies.isNotEmpty()) {
-                    val updateMovies = _movies.value.orEmpty() + newMovies
-                    _movies.value = updateMovies
+                    updateLiveData(liveData, newMovies)
                     currentPage++
                 } else {
-                    _errorMessage.value = "NO more movies"
+                    _errorMessage.value = "No more movies"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }
+    }
+
+    fun loadMovies() {
+        loadMoviesData(
+            _movies,
+            fetchMovies = { getMovieUseCase(currentPage) },
+            mapResponse = { it.results })
     }
 
     fun loadNowPlaying() {
-        viewModelScope.launch {
-            try {
-                val response = getMovieUseCase.getNowPlaying(currentPage)
-                val newMovies = response.results
-                if (newMovies.isNotEmpty()) {
-                    val updateMovies = _nowPlaying.value.orEmpty() + newMovies
-                    _nowPlaying.value = updateMovies
-                    currentPage++
-                } else {
-                    _errorMessage.value = "NO more movies"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "An error occurred: ${e.message}"
-            }
-        }
+        loadMoviesData(
+            _nowPlaying,
+            fetchMovies = { getMovieUseCase.getNowPlaying(currentPage) },
+            mapResponse = { it.results }  // Mapeamos el resultado del tipo MovieNowResponse
+        )
     }
 
     fun loadPopularMovies(page: Int = 1) {
-        viewModelScope.launch {
-            try {
-                val response = getMovieUseCase.getPopularMovie(currentPage)
-                val newMovies = response.results
-                if (newMovies.isNotEmpty()) {
-                    val updateMovies = _popularMovies.value.orEmpty() + newMovies
-                    _popularMovies.value = updateMovies
-                    currentPage++
-                } else {
-                    _errorMessage.value = "NO more movies"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "An error occurred: ${e.message}"
-            }
-        }
+        loadMoviesData(
+            _popularMovies,
+            fetchMovies = { getMovieUseCase.getPopularMovie(currentPage) },
+            mapResponse = { it.results }  // Mapeamos el resultado del tipo MovieResponse
+        )
     }
 
     fun loadTopRatedMovies(page: Int = 1) {
-        viewModelScope.launch {
-            try {
-                val response = getMovieUseCase.getTopRated(currentPage)
-                val newMovies = response.results
-                if (newMovies.isNotEmpty()) {
-                    val updateMovies = _topRatedMovies.value.orEmpty() + newMovies
-                    _topRatedMovies.value = updateMovies
-                    currentPage++
-                } else {
-                    _errorMessage.value = "NO more movies"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "An error occurred: ${e.message}"
-            }
-        }
+        loadMoviesData(_topRatedMovies,
+            fetchMovies = { getMovieUseCase.getTopRated(currentPage) },
+            mapResponse = { it.results }
+        )
     }
 
     fun loadUpcomingMovies(page: Int = 1) {
-        viewModelScope.launch {
-            try {
-                val response = getMovieUseCase.getUpcoming(currentPage)
-                val newMovies = response.results
-                if (newMovies.isNotEmpty()) {
-                    val updateMovies = _upcomingMovies.value.orEmpty() + newMovies
-                    _upcomingMovies.value = updateMovies
-                    currentPage++
-                } else {
-                    _errorMessage.value = "NO more movies"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "An error occurred: ${e.message}"
-            }
-        }
+        loadMoviesData(
+            _upcomingMovies,
+            fetchMovies = { getMovieUseCase.getUpcoming(currentPage) },
+            mapResponse = { it.results })
     }
 
     private fun searchMovieById(id: Int) {
@@ -222,10 +196,10 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    private fun searchMovieCredits(id: Int) {
+    private fun searchMovieCredits(movieId: Int) {
         viewModelScope.launch {
             try {
-                val response = getMovieUseCase.getMovieCredits(id)
+                val response = getMovieUseCase.getMovieCredits(movieId)
                 _movieCredits.value = response
             } catch (e: Exception) {
                 _movieCredits.value = null
@@ -234,7 +208,7 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    private fun searchProvidersForMxAndUs(movieId: Int) {
+    private fun searchMovieProvidersForMxAndUs(movieId: Int) {
         viewModelScope.launch {
             try {
                 val result = getMovieUseCase.getProvidersForMxAndUsUseCase(movieId)
@@ -245,10 +219,10 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    private fun searchMovieSimilar(id: Int) {
+    private fun searchMovieSimilar(movieId: Int) {
         viewModelScope.launch {
             try {
-                val response = getMovieUseCase.getMovieSimilar(id)
+                val response = getMovieUseCase.getMovieSimilar(movieId)
                 _movieSimilar.value = response.results
             } catch (e: Exception) {
                 _movieSimilar.value = emptyList()
@@ -257,10 +231,10 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    private fun searchMovieRecommendation(id: Int) {
+    private fun searchMovieRecommendation(movieId: Int) {
         viewModelScope.launch {
             try {
-                val response = getMovieUseCase.getMovieRecommendation(id)
+                val response = getMovieUseCase.getMovieRecommendation(movieId)
                 _movieRecommendation.value = response.results
             } catch (e: Exception) {
                 _movieRecommendation.value = emptyList()

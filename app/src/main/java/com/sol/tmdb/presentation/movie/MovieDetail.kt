@@ -27,7 +27,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -83,7 +83,6 @@ import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.navigation.TmdbScreen
-import com.sol.tmdb.presentation.person.HeroItemImage
 
 @Composable
 fun MovieDetail(
@@ -102,20 +101,11 @@ fun MovieDetail(
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    val isLoading = remember { mutableStateOf(true) }
-
-    LaunchedEffect(movieId) {
-        viewModel.searchAll(movieId)
-    }
-
-    LaunchedEffect(movie) {
-        if (movie != null)
-            isLoading.value = true
-    }
+    LaunchedEffect(movieId) { viewModel.searchAllMovie(movieId) }
 
     when {
         movie != null -> {
-            if (movieCredits != null) {
+            if (movieCredits != null && movieProvider != null) {
                 LazyColumn {
                     item {
                         MovieCard(
@@ -123,7 +113,7 @@ fun MovieDetail(
                             movieCertification,
                             movieVideos,
                             movieImages,
-                            movieCredits!!,
+                            movieCredits,
                             movieProvider,
                             movieSimilar,
                             movieRecommendation,
@@ -131,18 +121,25 @@ fun MovieDetail(
                         )
                     }
                 }
+            } else {
+                CircularProgressIndicator(modifier = Modifier.padding(164.dp))
             }
         }
 
-        isLoading.value -> {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        }
-
         else -> {
-            Text(
-                text = errorMessage ?: "Unknown error",
-                modifier = Modifier.padding(16.dp, top = 96.dp)
-            )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "Error message: ${errorMessage}",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
     }
 }
@@ -159,139 +156,152 @@ fun MovieCard(
     movieRecommendation: List<MovieRecommendationResult?>,
     navController: NavController
 ) {
-    val imageBackground = "https://image.tmdb.org/t/p/w500" + movie!!.backdropPath
-    val imagePoster = "https://image.tmdb.org/t/p/w500" + movie.posterPath
-    val movieCast = movieCredits!!.cast
-    val movieCrew = movieCredits.crew
+    val imageBackground = ("https://image.tmdb.org/t/p/w500" + movie?.backdropPath)
+        ?: painterResource(id = R.drawable.no_image)
+    val imagePoster = ("https://image.tmdb.org/t/p/w500" + movie?.posterPath)
+        ?: painterResource(id = R.drawable.no_image)
+    val movieCast = movieCredits?.cast ?: emptyList()
+    val movieCrew = movieCredits?.crew ?: emptyList()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Black.copy(alpha = 0.5f),
-                        Color.Transparent
-                    )
-                )
-            )
-            .paint(
-                painter = rememberAsyncImagePainter(model = imageBackground),
-                contentScale = ContentScale.FillHeight,
-                alpha = 0.3f
-            )
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally, // Centra el contenido horizontalmente
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 96.dp, bottom = 16.dp)
-                    .offset(y = 18.dp) // Desplaza la imagen hacia abajo, superponiéndola sobre la tarjeta
-                    .zIndex(1f) // Asegura que la imagen esté sobre la tarjeta
-            ) {
-                AsyncImage(
-                    model = imagePoster,
-                    contentDescription = "Poster movie",
-                    modifier = Modifier
-                        .height(300.dp)
-                        .aspectRatio(0.66f) // Mantiene la relación de aspecto típica de un póster
-                        .clip(RoundedCornerShape(8.dp)) // Esquina redondeada opcional
-                )
-            }
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
-            ) {
-                Column(Modifier.padding(horizontal = 8.dp)) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = movie.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 24.sp
-                    )
-                    Row {
-                        movieCertification?.let { certs ->
-                            certs.forEach { (country, certification) ->
-                                if (country == "MX" && certification?.certification != null) {
-                                    Text(
-                                        text = certification.certification ?: "",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier
-                                            .border(2.dp, Color.Black)
-                                            .padding(2.dp)
-                                    )
-                                }
-                            }
-                        }
-                        val genreNames =
-                            movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
-                        Text(
-                            text = genreNames.joinToString(", "),
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Light,
-                            modifier = Modifier.padding(2.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row {
-//                        TODO: Favorite - List - Watchlist
-                        TrailerButton(movieVideos)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    InfoAndProvidersTabs(movie, movieProvider)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    CastAndCrewMovieTabs(movieCast, movieCrew, navController)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    MediaTabs(movieImages, movieVideos)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RecommendationAndSimilarMovieTabs(
-                        tvRecommendations = movieRecommendation,
-                        tvSimilar = movieSimilar,
-                        navController = navController
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-            }
-        }
-
+    if (movie != null) {
         Box(
             modifier = Modifier
-                .size(50.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-28).dp, y = (370).dp),
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(color = Color(0xFFEEEEEE))
-
-                drawArc(
-                    color = when {
-                        ((movie.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
-                        ((movie.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
-                        else -> Color(0xFF0F9D58)
-                    },
-                    startAngle = -90f,
-                    sweepAngle = (movie.voteAverage * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
-                    useCenter = false,
-                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.5f),
+                            Color.Transparent
+                        )
+                    )
                 )
+                .paint(
+                    painter = rememberAsyncImagePainter(model = imageBackground),
+                    contentScale = ContentScale.FillHeight,
+                    alpha = 0.3f
+                )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally, // Centra el contenido horizontalmente
+                modifier = Modifier.padding(horizontal = 4.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 96.dp, bottom = 16.dp)
+                        .offset(y = 30.dp) // Desplaza la imagen hacia abajo, superponiéndola sobre la tarjeta
+                        .zIndex(1f) // Asegura que la imagen esté sobre la tarjeta
+                ) {
+                    AsyncImage(
+                        model = imagePoster,
+                        contentDescription = "Poster movie",
+                        modifier = Modifier
+                            .height(300.dp)
+                            .aspectRatio(0.66f) // Mantiene la relación de aspecto típica de un póster
+                            .clip(RoundedCornerShape(8.dp)) // Esquina redondeada opcional
+                    )
+                }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
+                ) {
+                    Column(Modifier.padding(horizontal = 8.dp)) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = movie.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 24.sp
+                        )
+                        CertificationAndGenresMovie(movie, movieCertification)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row {
+//                        TODO: Favorite - List - Watchlist
+                            TrailerButton(movieVideos)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        InfoAndProvidersMovieTabs(movie, movieProvider)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        CastAndCrewMovieTabs(movieCast, movieCrew, navController)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        MediaMovieTabs(movieImages, movieVideos)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        RecommendationAndSimilarMovieTabs(
+                            tvRecommendations = movieRecommendation,
+                            tvSimilar = movieSimilar,
+                            navController = navController
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
             }
-            Text(
-                text = "${(movie.voteAverage * 10).toInt()}%",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
+
+            if (movie.voteAverage.toInt() != 0) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-28).dp, y = (370).dp),
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawCircle(color = Color(0xFFEEEEEE))
+
+                        drawArc(
+                            color = when {
+                                ((movie.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                                ((movie.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                                else -> Color(0xFF0F9D58)
+                            },
+                            startAngle = -90f,
+                            sweepAngle = (movie.voteAverage * 36).toFloat(), // 10 * 36 = 360 grados (cierre del círculo)
+                            useCenter = false,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(movie.voteAverage * 10).toInt()}%",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
         }
     }
 }
 
+@Composable
+fun CertificationAndGenresMovie(
+    movie: MovieDetail,
+    movieCertification: Map<String?, Certification?>?
+) {
+    Row {
+        movieCertification?.let { certs ->
+            certs.forEach { (country, certification) ->
+                if (country == "MX" && certification?.certification != null) {
+                    Text(
+                        text = certification.certification ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .border(2.dp, Color.Black)
+                            .padding(2.dp)
+                    )
+                }
+            }
+        }
+        val genreNames =
+            movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
+        Text(
+            text = genreNames.joinToString(", "),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Light,
+            modifier = Modifier.padding(2.dp)
+        )
+    }
+}
 
 @Composable
 fun TrailerButton(movieVideos: List<MovieVideosResult>) {
@@ -333,7 +343,7 @@ fun getTrailerVideo(movieVideos: List<MovieVideosResult>): MovieVideosResult? {
 }
 
 @Composable
-fun InfoAndProvidersTabs(movie: MovieDetail, movieProvider: Map<String, CountryResult?>?) {
+fun InfoAndProvidersMovieTabs(movie: MovieDetail, movieProvider: Map<String, CountryResult?>?) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val tabs = listOf("Facts", "Providers")
@@ -432,42 +442,38 @@ fun InfoMovieTab(movie: MovieDetail) {
 
 @Composable
 fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?) {
-    when {
-        movieProvider != null -> {
-            val mxProviders = movieProvider["MX"]
-            val usProviders = movieProvider["US"]
+    if (movieProvider != null) {
+        val mxProviders = movieProvider["MX"]
+        val usProviders = movieProvider["US"]
 
-            Column {
-                if (mxProviders != null) {
-                    LazyRow {
-                        items(mxProviders.flatrate.size) { index ->
-                            val provide = mxProviders.flatrate[index]
-                            provide.let {
-                                val image = if (it.logoPath.isNullOrEmpty()) {
-                                    R.drawable.no_image
-                                } else {
-                                    "https://image.tmdb.org/t/p/w500${it.logoPath}"
-                                }
-                                AsyncImage(
-                                    model = image,
-                                    contentDescription = "logo provider",
-                                    modifier = Modifier
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .padding(4.dp),
-                                    placeholder = painterResource(id = R.drawable.no_image),
-                                    error = painterResource(id = R.drawable.no_image)
-                                )
-                            }
+        Column {
+            if (mxProviders?.flatrate?.isNotEmpty() == true) {
+                LazyRow {
+                    items(mxProviders.flatrate.size) { index ->
+                        val provide = mxProviders.flatrate[index]
+                        val image = if (provide.logoPath.isNullOrEmpty()) {
+                            R.drawable.no_image
+                        } else {
+                            "https://image.tmdb.org/t/p/w500${provide.logoPath}"
                         }
+                        AsyncImage(
+                            model = image,
+                            contentDescription = "logo provider",
+                            modifier = Modifier
+                                .width(60.dp)
+                                .height(60.dp)
+                                .padding(4.dp),
+                            placeholder = painterResource(id = R.drawable.no_image),
+                            error = painterResource(id = R.drawable.no_image)
+                        )
                     }
-                } else Text(text = "No providers available for MX")
+                }
+            } else {
+                Text(text = "No providers available for MX")
             }
         }
-
-        else -> {
-            CircularProgressIndicator()
-        }
+    } else {
+        CircularProgressIndicator()
     }
 }
 
@@ -502,8 +508,17 @@ fun CastAndCrewMovieTabs(
         }
 
         when (selectedTabIndex) {
-            0 -> CastMovieTab(movieCast = movieCast, navController = navController)
-            1 -> CrewMovieTab(movieCrew = movieCrew, navController = navController)
+            0 -> if (movieCast.isNullOrEmpty()) {
+                Text(text = "No cast available")
+            } else {
+                CastMovieTab(movieCast = movieCast, navController = navController)
+            }
+
+            1 -> if (movieCrew.isNullOrEmpty()) {
+                Text(text = "No crew available")
+            } else {
+                CrewMovieTab(movieCrew = movieCrew, navController = navController)
+            }
         }
     }
 }
@@ -513,7 +528,7 @@ fun CrewMovieTab(movieCrew: List<Crew>, navController: NavController) {
     LazyRow {
         items(movieCrew.size) { index ->
             val crew = movieCrew[index]
-            ItemCrew(crew) {
+            CrewMovieItem(crew) {
                 navController.navigate(TmdbScreen.PersonDetail.route + "/${crew.id}")
             }
         }
@@ -525,7 +540,7 @@ fun CastMovieTab(movieCast: List<Cast>, navController: NavController) {
     LazyRow {
         items(movieCast.size) { index ->
             val cast = movieCast[index]
-            ItemCast(cast) {
+            CastMovieItem(cast) {
                 navController.navigate(TmdbScreen.PersonDetail.route + "/${cast.id}")
             }
         }
@@ -533,7 +548,7 @@ fun CastMovieTab(movieCast: List<Cast>, navController: NavController) {
 }
 
 @Composable
-fun ItemCast(cast: Cast, onClick: () -> Unit) {
+fun CastMovieItem(cast: Cast, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -573,7 +588,7 @@ fun ItemCast(cast: Cast, onClick: () -> Unit) {
 }
 
 @Composable
-fun ItemCrew(crew: Crew, onClick: () -> Unit) {
+fun CrewMovieItem(crew: Crew, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -613,7 +628,7 @@ fun ItemCrew(crew: Crew, onClick: () -> Unit) {
 }
 
 @Composable
-fun MediaTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVideosResult>) {
+fun MediaMovieTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVideosResult>) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val tabs = listOf("Poster", "Back Drop", "Video")
@@ -639,15 +654,15 @@ fun MediaTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVideosRe
         }
 
         when (selectedTabIndex) {
-            0 -> MoviePostersTab(posters = movieImages?.posters)
-            1 -> MovieBackdropTab(backdrops = movieImages?.backdrops)
-            2 -> MovieVideosTab(videos = movieVideos)
+            0 -> PostersMovieTab(posters = movieImages?.posters ?: emptyList())
+            1 -> BackdropMovieTab(backdrops = movieImages?.backdrops ?: emptyList())
+            2 -> VideosMovieTab(videos = movieVideos ?: emptyList())
         }
     }
 }
 
 @Composable
-fun MoviePostersTab(posters: List<MovieImagesPoster>?) {
+fun PostersMovieTab(posters: List<MovieImagesPoster>?) {
     val pagerState = rememberPagerState(initialPage = 0)
 
     if (posters!!.isEmpty()) {
@@ -664,7 +679,7 @@ fun MoviePostersTab(posters: List<MovieImagesPoster>?) {
                 .fillMaxSize()
         ) { page ->
             val poster = posters[page]
-            PosterItem(poster = poster, isHero = page == pagerState.currentPage)
+            PosterMovieItem(poster = poster, isHero = page == pagerState.currentPage)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -679,7 +694,7 @@ fun MoviePostersTab(posters: List<MovieImagesPoster>?) {
 }
 
 @Composable
-fun PosterItem(poster: MovieImagesPoster, isHero: Boolean) {
+fun PosterMovieItem(poster: MovieImagesPoster, isHero: Boolean) {
     val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
 
     Card(
@@ -700,7 +715,7 @@ fun PosterItem(poster: MovieImagesPoster, isHero: Boolean) {
 }
 
 @Composable
-fun MovieBackdropTab(backdrops: List<MovieImagesBackdrop>?) {
+fun BackdropMovieTab(backdrops: List<MovieImagesBackdrop>?) {
     val pagerState = rememberPagerState(initialPage = 0)
 
     if (backdrops!!.isEmpty()) {
@@ -717,7 +732,7 @@ fun MovieBackdropTab(backdrops: List<MovieImagesBackdrop>?) {
                 .fillMaxSize()
         ) { page ->
             val backdrop = backdrops[page]
-            BackDropItem(backdrop = backdrop, isHero = page == pagerState.currentPage)
+            BackDropMovieItem(backdrop = backdrop, isHero = page == pagerState.currentPage)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -732,7 +747,7 @@ fun MovieBackdropTab(backdrops: List<MovieImagesBackdrop>?) {
 }
 
 @Composable
-fun BackDropItem(backdrop: MovieImagesBackdrop, isHero: Boolean) {
+fun BackDropMovieItem(backdrop: MovieImagesBackdrop, isHero: Boolean) {
     val scale = animateFloatAsState(if (isHero) 1.2f else 0.85f).value
 
     Card(
@@ -753,7 +768,7 @@ fun BackDropItem(backdrop: MovieImagesBackdrop, isHero: Boolean) {
 }
 
 @Composable
-fun MovieVideosTab(videos: List<MovieVideosResult>) {
+fun VideosMovieTab(videos: List<MovieVideosResult>) {
     val context = LocalContext.current
     val videosYoutube = getYoutubeVideos(videos)
 
@@ -763,14 +778,14 @@ fun MovieVideosTab(videos: List<MovieVideosResult>) {
         LazyRow {
             items(videosYoutube.size) { index ->
                 val video = videosYoutube[index]
-                CardVideosYoutube(video) { openYoutubeVideo(context, video.key) }
+                VideosYoutubeMovieCard(video) { openYoutubeVideo(context, video.key) }
             }
         }
     }
 }
 
 @Composable
-fun CardVideosYoutube(videosYoutube: MovieVideosResult, onClick: () -> Unit) {
+fun VideosYoutubeMovieCard(videosYoutube: MovieVideosResult, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .size(120.dp)
@@ -824,11 +839,14 @@ fun RecommendationAndSimilarMovieTabs(
 
         when (selectedTabIndex) {
             0 -> RecommendationMovieTab(
-                recommendation = tvRecommendations,
+                recommendation = tvRecommendations ?: emptyList(),
                 navController = navController
             )
 
-            1 -> SimilarMovieTab(movieSimilar = tvSimilar, navController = navController)
+            1 -> SimilarMovieTab(
+                movieSimilar = tvSimilar ?: emptyList(),
+                navController = navController
+            )
         }
     }
 }
@@ -841,8 +859,12 @@ fun SimilarMovieTab(
     LazyRow {
         items(movieSimilar.size) { index ->
             val movieSim = movieSimilar[index]
-            ItemMovieSimilar(movieSim) {
-                navController.navigate(TmdbScreen.MovieDetail.route + "/${movieSim?.id}")
+            if (movieSim != null) {
+                SimilarMovieItem(movieSim) {
+                    navController.navigate(TmdbScreen.MovieDetail.route + "/${movieSim?.id}")
+                }
+            } else {
+                Text(text = "Invalid movie data")
             }
         }
     }
@@ -856,15 +878,19 @@ fun RecommendationMovieTab(
     LazyRow {
         items(recommendation.size) { index ->
             val movie = recommendation[index]
-            ItemMovieRecommendation(movie) {
-                navController.navigate(TmdbScreen.MovieDetail.route + "/${movie?.id}")
+            if (movie != null) {
+                RecommendationMovieItem(movie) {
+                    navController.navigate(TmdbScreen.MovieDetail.route + "/${movie?.id}")
+                }
+            } else {
+                Text(text = "Invalid movie data")
             }
         }
     }
 }
 
 @Composable
-fun ItemMovieSimilar(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
+fun SimilarMovieItem(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -894,7 +920,7 @@ fun ItemMovieSimilar(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
 }
 
 @Composable
-fun ItemMovieRecommendation(movieRec: MovieRecommendationResult?, onClick: () -> Unit) {
+fun RecommendationMovieItem(movieRec: MovieRecommendationResult?, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
