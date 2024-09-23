@@ -18,7 +18,7 @@ import javax.inject.Inject
 class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPersonUseCase) :
     ViewModel() {
 
-    private val _persons = MutableLiveData<List<PersonResult>>()
+    private val _persons = MutableLiveData<List<PersonResult>>(emptyList())
     val persons: LiveData<List<PersonResult>> = _persons
 
     private val _personById = MutableLiveData<PersonDetail?>()
@@ -30,8 +30,8 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
     private val _creditsTv = MutableLiveData<TvCreditsResponse?>()
     val creditsTv: LiveData<TvCreditsResponse?> = _creditsTv
 
-    private val _personImages = MutableLiveData<List<ImagesProfile?>>()
-    val personImages: LiveData<List<ImagesProfile?>> = _personImages
+    private val _personImages = MutableLiveData<List<ImagesProfile>>(emptyList())
+    val personImages: LiveData<List<ImagesProfile>> = _personImages
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -40,6 +40,13 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
 
     init {
         loadPerson()
+    }
+
+    fun searchAll(personId: Int) {
+        searchPersonById(personId)
+        searchCreditsMovies(personId)
+        searchCreditsTv(personId)
+        searchImagesProfile(personId)
     }
 
     fun loadPerson() {
@@ -61,10 +68,10 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         }
     }
 
-    fun searchPersonById(id: Int) {
+    private fun searchPersonById(personId: Int) {
         viewModelScope.launch {
             try {
-                val response = getPersonUseCase.getPersonDetail(id)
+                val response = getPersonUseCase.getPersonDetail(personId)
                 _personById.value = response
             } catch (e: Exception) {
                 _personById.value = null
@@ -73,10 +80,10 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         }
     }
 
-    fun searchCreditsMovies(id: Int) {
+    private fun searchCreditsMovies(personId: Int) {
         viewModelScope.launch {
             try {
-                val response = getPersonUseCase.getCreditsMovies(id)
+                val response = getPersonUseCase.getCreditsMovies(personId)
                 _creditsMovies.value = response
             } catch (e: Exception) {
                 _creditsMovies.value = null
@@ -85,10 +92,10 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         }
     }
 
-    fun searchCreditsTv(id: Int) {
+    private fun searchCreditsTv(personId: Int) {
         viewModelScope.launch {
             try {
-                val response = getPersonUseCase.getCreditsTv(id)
+                val response = getPersonUseCase.getCreditsTv(personId)
                 _creditsTv.value = response
             } catch (e: Exception) {
                 _creditsTv.value = null
@@ -97,10 +104,10 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         }
     }
 
-    fun searchImagesProfile(id: Int) {
+    private fun searchImagesProfile(personId: Int) {
         viewModelScope.launch {
             try {
-                val response = getPersonUseCase.getImagesProfile(id)
+                val response = getPersonUseCase.getImagesProfile(personId)
                 _personImages.value = response.profiles
             } catch (e: Exception) {
                 _personImages.value = emptyList()

@@ -76,18 +76,8 @@ fun PersonDetail(
     val imagesProfile by viewModel.personImages.observeAsState(emptyList())
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    val isLoading = remember { mutableStateOf(true) }
-
     LaunchedEffect(key1 = personId) {
-        viewModel.searchPersonById(personId)
-        viewModel.searchCreditsMovies(personId)
-        viewModel.searchCreditsTv(personId)
-        viewModel.searchImagesProfile(personId)
-    }
-
-    LaunchedEffect(key1 = person) {
-        if (person != null)
-            isLoading.value = true
+        viewModel.searchAll(personId)
     }
 
     when {
@@ -95,27 +85,39 @@ fun PersonDetail(
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn {
                     item {
-                        PersonCard(
-                            person!!,
-                            creditsMovies,
-                            creditsTvs,
-                            imagesProfile,
-                            navController
-                        )
+                        person?.let {
+                            PersonCard(
+                                person = it,
+                                creditsMovies,
+                                creditsTvs,
+                                imagesProfile,
+                                navController
+                            )
+                        } ?: run {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(100.dp)
+                            )
+                        }
                     }
                 }
             }
         }
 
-        isLoading.value -> {
-            CircularProgressIndicator()
-        }
-
         else -> {
-            Text(
-                text = errorMessage ?: "Unknown error",
-                modifier = Modifier.padding(16.dp, top = 96.dp)
-            )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "Error message: $errorMessage",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
     }
 }
@@ -155,52 +157,8 @@ fun PersonCard(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp, start = 8.dp)
                     )
-                    Row {
-                        if (person.birthday != null) {
-                            Text(
-                                text = "(${calculateAge(person.birthday)} years old) " + person.birthday + if (person.deathDay != null) "-${person.deathDay}" else "",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Light,
-                                modifier = Modifier
-                                    .padding(2.dp)
-                                    .weight(1f)
-                            )
-                        } else {
-                            Text(
-                                text = "(?? years old)",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Light,
-                                modifier = Modifier
-                                    .padding(2.dp)
-                                    .weight(1f)
-                            )
-                        }
-                        Text(
-                            text = Gender.fromValue(person.gender).name.replace("_", "  "),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .border(1.dp, MaterialTheme.colorScheme.primary)
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
-                    Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                        Text(
-                            text = person.placeOfBirth ?: "Unknown",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier
-                                .padding(2.dp)
-                                .weight(1f)
-                        )
-                        Text(
-                            text = person.knownForDepartment,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier
-                                .border(1.dp, MaterialTheme.colorScheme.secondary)
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+                    BirthDayAndGenre(person)
+                    PlaceOfBirthDayAndDepartment(person)
                     Spacer(modifier = Modifier.height(4.dp))
                     BiographyText(person.biography)
                     Text(
@@ -222,14 +180,71 @@ fun PersonCard(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
-fun calculateAge(birthday: String, format: String = "yyyy-MM-dd"): Int {
-    val formatter = DateTimeFormatter.ofPattern(format)
-    val birthLocalDate = LocalDate.parse(birthday, formatter)
-    val currentDate = LocalDate.now()
-    return Period.between(birthLocalDate, currentDate).years
+@Composable
+fun BirthDayAndGenre(person: PersonDetail) {
+    Row {
+        if (person.birthday != null) {
+            Text(
+                text = "(${calculateAge(person.birthday)} years old) " + person.birthday + if (person.deathDay != null) "-${person.deathDay}" else "",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier
+                    .padding(2.dp)
+                    .weight(1f)
+            )
+        } else {
+            Text(
+                text = "(?? years old)",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Light,
+                modifier = Modifier
+                    .padding(2.dp)
+                    .weight(1f)
+            )
+        }
+        Text(
+            text = Gender.fromValue(person.gender).name.replace("_", "  "),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colorScheme.primary)
+                .padding(horizontal = 4.dp, vertical = 2.dp)
+        )
+    }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
+fun calculateAge(birthday: String, format: String = "yyyy-MM-dd"): Int {
+    return if (birthday != null) {
+        val formatter = DateTimeFormatter.ofPattern(format)
+        val birthLocalDate = LocalDate.parse(birthday, formatter)
+        val currentDate = LocalDate.now()
+        Period.between(birthLocalDate, currentDate).years
+    } else {
+        0
+    }
+}
+
+@Composable
+fun PlaceOfBirthDayAndDepartment(person: PersonDetail) {
+    Row(modifier = Modifier.padding(vertical = 2.dp)) {
+        Text(
+            text = person.placeOfBirth ?: "Unknown",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .padding(2.dp)
+                .weight(1f)
+        )
+        Text(
+            text = person.knownForDepartment,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colorScheme.secondary)
+                .padding(horizontal = 4.dp, vertical = 2.dp)
+        )
+    }
+}
 
 @Composable
 fun BiographyText(biography: String) {
@@ -239,7 +254,8 @@ fun BiographyText(biography: String) {
     Box(
         Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp)) {
+            .padding(bottom = 8.dp)
+    ) {
         Text(
             text = if (expand) biography else biography.take(196),
             overflow = TextOverflow.Ellipsis,
@@ -301,8 +317,10 @@ fun TvTab(tvs: List<TvCast>, navController: NavController) {
     LazyRow {
         items(tvs.size) { index ->
             val tv = tvs[index]
-            ItemCreditTv(tv) {
-                navController.navigate(TmdbScreen.TvDetail.route + "/${tv.id}")
+            tv.let {
+                ItemCreditTv(it) {
+                    navController.navigate(TmdbScreen.TvDetail.route + "/${it.id}")
+                }
             }
         }
     }
@@ -426,7 +444,9 @@ fun HeroItemImage(imageProfile: ImagesProfile?, isHero: Boolean) {
             model = image,
             contentDescription = "profile image",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            placeholder = painterResource(id = R.drawable.no_image),
+            error = painterResource(id = R.drawable.no_image)
         )
     }
 }
