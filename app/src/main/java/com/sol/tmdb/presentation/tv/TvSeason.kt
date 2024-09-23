@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -63,7 +64,6 @@ import com.sol.tmdb.domain.model.tv.TvImagesStill
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailEpisode
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import com.sol.tmdb.navigation.TmdbScreen
-import com.sol.tmdb.presentation.person.HeroItemImage
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -80,21 +80,37 @@ fun TvSeason(
         viewModel.loadAllSeasons(tvId, numberOfSeasons)
     }
 
-    val seasonDetails by viewModel.seasonDetails.observeAsState(listOf())
-    val episodeImages by viewModel.episodeImages.observeAsState(mapOf())
-    val errorMessage by viewModel.errorMessage.observeAsState("") //TODO: Toast.short
+    val seasonDetails by viewModel.seasonDetails.observeAsState(emptyList())
+    val episodeImages by viewModel.episodeImages.observeAsState(emptyMap())
+    val errorMessage by viewModel.errorMessage.observeAsState("")
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 96.dp)
-    ) {
-        Column {
-            LazyColumn {
-                items(seasonDetails.size) { index ->
-                    val season = seasonDetails[index]
-                    SeasonCard(season = season, tvId, episodeImages, viewModel, navController)
+    if (seasonDetails != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 96.dp)
+        ) {
+            Column {
+                LazyColumn {
+                    items(seasonDetails.size) { index ->
+                        val season = seasonDetails[index]
+                        SeasonCard(season = season, tvId, episodeImages, viewModel, navController)
+                    }
                 }
+            }
+        }
+    } else {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = "Error message: $errorMessage",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
@@ -148,7 +164,7 @@ fun SeasonCard(
                             .padding(8.dp)
                     ) {
                         Text(
-                            text = season.name,
+                            text = season.name ?: "Unknown",
                             style = MaterialTheme.typography.titleLarge
                         )
                         Row(
@@ -170,7 +186,11 @@ fun SeasonCard(
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             val year = season.airDate.let {
-                                LocalDate.parse(it, DateTimeFormatter.ISO_DATE).year.toString()
+                                try {
+                                    LocalDate.parse(it, DateTimeFormatter.ISO_DATE).year.toString()
+                                } catch (e: Exception) {
+                                    "N/A"
+                                }
                             } ?: "N/A"
                             Text(
                                 text = year,
@@ -178,13 +198,13 @@ fun SeasonCard(
                                 color = Color.Gray
                             )
                             Text(
-                                text = " • ${season.episodes.size} Episodes",
+                                text = " • ${season.episodes.size ?: "Unknown"} Episodes",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = season.overview,
+                            text = season.overview ?: "No overview available",
                             maxLines = 4,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodyMedium
@@ -254,16 +274,16 @@ fun ItemEpisodes(
                     )
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(
-                            text = "Episode ${episode.episodeNumber}: ${episode.name}",
+                            text = "Episode ${episode.episodeNumber ?: 0}: ${episode.name ?: "Unknown"}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Air Date: ${episode.airDate}",
+                            text = "Air Date: ${episode.airDate ?: "Unknown"}",
                             style = MaterialTheme.typography.bodySmall
                         )
                         Text(
-                            text = episode.overview,
+                            text = episode.overview ?: "Unknown",
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis
@@ -403,12 +423,12 @@ fun EpisodeGuestStar(cast: TvCast, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = cast.name,
+                    text = cast.name ?: "Unknown",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = cast.character,
+                    text = cast.character ?: "Unknown",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
@@ -455,12 +475,12 @@ fun EpisodeItemCrew(crew: TvCrew, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = crew.name,
+                    text = crew.name ?: "Unknown",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = crew.department,
+                    text = crew.department ?: "Unknown",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
