@@ -52,7 +52,7 @@ fun MoviesScreen(
     }
 
     LaunchedEffect(true) {
-        whenCategory(category, viewModel)
+        whenCategoryMovie(category, viewModel)
     }
 
     Box(
@@ -71,7 +71,7 @@ fun MoviesScreen(
 
                     if (index == movies.size - 1) {
                         LaunchedEffect(true) {
-                            whenCategory(category, viewModel)
+                            whenCategoryMovie(category, viewModel)
                         }
                     }
                 }
@@ -150,7 +150,7 @@ fun ItemMovie(movie: MovieResult, onClick: () -> Unit) {
     }
 }
 
-fun whenCategory(category: String, viewModel: MovieViewModel) = when (category) {
+fun whenCategoryMovie(category: String, viewModel: MovieViewModel) = when (category) {
     "now_playing" -> viewModel.loadNowPlaying()
     "popular" -> viewModel.loadPopularMovies()
     "top_rated" -> viewModel.loadTopRatedMovies()

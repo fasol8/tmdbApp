@@ -42,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,36 +95,26 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
     val tv by viewModel.tvById.observeAsState()
-    val tvRatings by viewModel.tvRatings.observeAsState()
-    val credits by viewModel.tvCredits.observeAsState()
-    val tvProviders by viewModel.tvProviders.observeAsState()
+    val tvRatings by viewModel.tvRatings.observeAsState(emptyMap())
+    val tvCredits by viewModel.tvCredits.observeAsState()
+    val tvProviders by viewModel.tvProviders.observeAsState(emptyMap())
     val tvImages by viewModel.tvImages.observeAsState()
     val tvVideos by viewModel.tvVideos.observeAsState(emptyList())
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
     val tvRecommendations by viewModel.tvRecommendations.observeAsState(emptyList())
-
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    val isLoading = remember { mutableStateOf(true) }
-
-    LaunchedEffect(tvId) {
-        viewModel.searchAll(tvId)
-    }
-
-    LaunchedEffect(tv) {
-        if (tv != null)
-            isLoading.value = true
-    }
+    LaunchedEffect(tvId) { viewModel.searchAll(tvId) }
 
     when {
         tv != null -> {
-            if (credits != null) {
+            if (tvCredits != null && tvImages != null && tvRatings != null) {
                 LazyColumn {
                     item {
                         TvCard(
-                            tv!!,
+                            tv,
                             tvRatings,
-                            credits,
+                            tvCredits,
                             tvProviders,
                             tvImages,
                             tvVideos,
@@ -133,18 +124,25 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
                         )
                     }
                 }
+            } else {
+                CircularProgressIndicator(modifier = Modifier.padding(164.dp))
             }
         }
 
-        isLoading.value -> {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        }
-
         else -> {
-            Text(
-                text = errorMessage ?: "Unknown error",
-                modifier = Modifier.padding(16.dp, top = 96.dp)
-            )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "Error message: $errorMessage",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
     }
 }
@@ -152,7 +150,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TvCard(
-    tv: TvDetail,
+    tv: TvDetail?,
     tvRatings: Map<String, TvCertification?>?,
     credits: CreditsResponse?,
     tvProviders: Map<String, CountryResult?>?,
@@ -162,168 +160,188 @@ fun TvCard(
     tvRecommendations: List<TvRecommendationsResult?>,
     navController: NavController
 ) {
-    val imageBackground = "https://image.tmdb.org/t/p/w500" + tv.backdropPath
-    val imagePoster = "https://image.tmdb.org/t/p/w500" + tv.posterPath
+    val imageBackground = ("https://image.tmdb.org/t/p/w500" + tv?.backdropPath)
+        ?: painterResource(id = R.drawable.no_image)
+    val imagePoster = ("https://image.tmdb.org/t/p/w500" + tv?.posterPath)
+        ?: painterResource(id = R.drawable.no_image)
     val cast = credits?.cast ?: emptyList()
     val crew = credits?.crew ?: emptyList()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Black.copy(alpha = 0.5f),
-                        Color.Transparent
-                    )
-                )
-            )
-            .paint(
-                painter = rememberAsyncImagePainter(model = imageBackground),
-                contentScale = ContentScale.FillHeight,
-                alpha = 0.3f
-            )
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 96.dp)
-                    .offset(y = 18.dp)
-                    .zIndex(1f)
-            ) {
-                AsyncImage(
-                    model = imagePoster,
-                    contentDescription = "Poster tv",
-                    modifier = Modifier
-                        .height(300.dp)
-                        .aspectRatio(0.66f)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-            }
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
-            ) {
-                Column(Modifier.padding(horizontal = 8.dp)) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = tv.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 24.sp
-                    )
-                    Row {
-                        tvRatings?.let { rati ->
-                            rati.forEach { (country, rating) ->
-                                if (country == "MX" && rating?.certification != null) {
-                                    Text(
-                                        text = rating.certification,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier
-                                            .border(2.dp, Color.Black)
-                                            .padding(2.dp)
-                                    )
-                                }
-                            }
-                        }
-                        val genreNames =
-                            tv.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
-                        Text(
-                            text = genreNames.joinToString(", "),
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Light,
-                            modifier = Modifier.padding(2.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = tv.overview, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    if (tv.createdBy.isNotEmpty()) {
-                        Text(
-                            text = "Created by:",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                        Row {
-                            tv.createdBy.forEach { creator ->
-                                Text(
-                                    text = creator.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Blue,  // Puedes agregarle color para que parezca un enlace
-                                    modifier = Modifier
-                                        .clickable {
-                                            navController.navigate(TmdbScreen.PersonDetail.route + "/${creator.id}")
-                                        }
-                                        .weight(1f)
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    InfoTabs(tv, tvProviders)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    CastAndCrewTabs(cast, crew, navController)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Last Season")
-                    LastSeason(tv.seasons.last(), tv.lastEpisodeToAir)
-                    Text(text = "View All Seasons",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Blue,
-                        modifier = Modifier
-                            .clickable {
-                                navController.navigate(TmdbScreen.TvSeason.route + "/${tv.id}/${tv.numberOfSeasons}")
-                            })
-                    Spacer(modifier = Modifier.height(4.dp))
-                    TvMediaTabs(tvImages, tvVideos)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RecommendationAndSimilarTabs(tvRecommendations, tvSimilar, navController)
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-            }
-        }
-
+    if (tv != null) {
         Box(
             modifier = Modifier
-                .size(50.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-28).dp, y = (370).dp)
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.5f),
+                            Color.Transparent
+                        )
+                    )
+                )
+                .paint(
+                    painter = rememberAsyncImagePainter(model = imageBackground),
+                    contentScale = ContentScale.FillHeight,
+                    alpha = 0.3f
+                )
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawCircle(color = Color(0xFFEEEEEE))
-
-                drawArc(
-                    color = when {
-                        ((tv.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
-                        ((tv.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
-                        else -> Color(0xFF0F9D58)
-                    },
-                    startAngle = -90f,
-                    sweepAngle = (tv.voteAverage * 36).toFloat(),
-                    useCenter = false,
-                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 96.dp)
+                        .offset(y = 18.dp)
+                        .zIndex(1f)
+                ) {
+                    AsyncImage(
+                        model = imagePoster,
+                        contentDescription = "Poster tv",
+                        modifier = Modifier
+                            .height(300.dp)
+                            .aspectRatio(0.66f)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
+                ) {
+                    Column(Modifier.padding(horizontal = 8.dp)) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = tv.name ?: "No title available",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 24.sp
+                        )
+                        TvRatingAndGenre(tv, tvRatings)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = tv.overview ?: "No Overview Available",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        TvCreatedByPerson(tv, navController)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        TvInfoTabs(tv, tvProviders)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        TvCastAndCrewTabs(cast, crew, navController)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = "Last Season")
+                        LastSeason(tv.seasons.last(), tv.lastEpisodeToAir)
+                        Text(text = "View All Seasons",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Blue,
+                            modifier = Modifier
+                                .clickable {
+                                    navController.navigate(TmdbScreen.TvSeason.route + "/${tv.id}/${tv.numberOfSeasons}")
+                                })
+                        Spacer(modifier = Modifier.height(4.dp))
+                        TvMediaTabs(tvImages, tvVideos)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        TvRecommendationAndSimilarTabs(tvRecommendations, tvSimilar, navController)
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
             }
-            Text(
-                text = "${(tv.voteAverage * 10).toInt()}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(
-                    Alignment.Center
-                )
-            )
+
+            if (tv.voteAverage.toInt() != 0) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-28).dp, y = (370).dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawCircle(color = Color(0xFFEEEEEE))
+
+                        drawArc(
+                            color = when {
+                                ((tv.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                                ((tv.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                                else -> Color(0xFF0F9D58)
+                            },
+                            startAngle = -90f,
+                            sweepAngle = (tv.voteAverage * 36).toFloat(),
+                            useCenter = false,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(tv.voteAverage * 10).toInt()}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        )
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun InfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?) {
+    Row {
+        tvRatings?.let { rati ->
+            rati.forEach { (country, rating) ->
+                if (country == "MX" && rating?.certification != null) {
+                    Text(
+                        text = rating.certification,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .border(2.dp, Color.Black)
+                            .padding(2.dp)
+                    )
+                }
+            }
+        }
+        val genreNames =
+            tv.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
+                ?: listOf("No Genres Available")
+        Text(
+            text = genreNames.joinToString(", "),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Light,
+            modifier = Modifier.padding(2.dp)
+        )
+    }
+}
+
+@Composable
+fun TvCreatedByPerson(tv: TvDetail, navController: NavController) {
+    if (tv.createdBy.isNotEmpty()) {
+        Text(
+            text = "Created by:",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        Row {
+            tv.createdBy.forEach { creator ->
+                Text(
+                    text = creator.name ?: "Unknown",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Blue,
+                    modifier = Modifier
+                        .clickable {
+                            navController.navigate(TmdbScreen.PersonDetail.route + "/${creator.id}")
+                        }
+                        .weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Facts", "Providers")
 
@@ -348,59 +366,51 @@ fun InfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
         }
 
         when (selectedTabIndex) {
-            0 -> FactsTab(tv = tv)
+            0 -> TvFactsTab(tv = tv)
 
-            1 -> ProviderTab(tvProviders = tvProviders)
+            1 -> TvProviderTab(tvProviders = tvProviders ?: emptyMap())
         }
     }
 }
 
 @Composable
-fun ProviderTab(tvProviders: Map<String, CountryResult?>?) {
-    when {
-        tvProviders != null -> {
-            val mxProviders = tvProviders["MX"]
-            val usProviders = tvProviders["US"]
+fun TvProviderTab(tvProviders: Map<String, CountryResult?>) {
+    val mxProviders = tvProviders["MX"]
+    val usProviders = tvProviders["US"]
 
-            Column {
-                if (mxProviders != null) {
-                    LazyRow {
-                        items(mxProviders.flatrate.size) { index ->
-                            val provide = mxProviders.flatrate[index]
-                            provide.let {
-                                val image = if (it.logoPath.isNullOrEmpty()) {
-                                    R.drawable.no_image
-                                } else {
-                                    "https://image.tmdb.org/t/p/w500${it.logoPath}"
-                                }
-                                AsyncImage(
-                                    model = image,
-                                    contentDescription = "logo provider",
-                                    modifier = Modifier
-                                        .width(60.dp)
-                                        .height(60.dp)
-                                        .padding(4.dp),
-                                    placeholder = painterResource(id = R.drawable.no_image),
-                                    error = painterResource(id = R.drawable.no_image)
-                                )
-                            }
+    Column {
+        if (mxProviders != null) {
+            LazyRow {
+                items(mxProviders.flatrate.size) { index ->
+                    val provide = mxProviders.flatrate[index]
+                    provide.let {
+                        val image = if (it.logoPath.isNullOrEmpty()) {
+                            R.drawable.no_image
+                        } else {
+                            "https://image.tmdb.org/t/p/w500${it.logoPath}"
                         }
+                        AsyncImage(
+                            model = image,
+                            contentDescription = "logo provider",
+                            modifier = Modifier
+                                .width(60.dp)
+                                .height(60.dp)
+                                .padding(4.dp),
+                            placeholder = painterResource(id = R.drawable.no_image),
+                            error = painterResource(id = R.drawable.no_image)
+                        )
                     }
-                } else Text(text = "No providers available for MX")
+                }
             }
-        }
-
-        else -> {
-            CircularProgressIndicator()
-        }
+        } else Text(text = "No providers available for MX")
     }
 }
 
 @Composable
-fun FactsTab(tv: TvDetail) {
+fun TvFactsTab(tv: TvDetail) {
     Row {
         Text(
-            text = "Status \n" + tv.status,
+            text = "Status \n" + (tv.status ?: "Unknown"),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
                 .padding(2.dp)
@@ -408,21 +418,21 @@ fun FactsTab(tv: TvDetail) {
         )
         Column(Modifier.weight(1.2f)) {
             Text(
-                text = "Total season: " + tv.numberOfSeasons,
+                text = "Total season: " + (tv.numberOfSeasons ?: 0),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
             Text(
-                text = "Total episodes: " + tv.numberOfEpisodes,
+                text = "Total episodes: " + (tv.numberOfEpisodes ?: 0),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
             Text(
-                text = "Origin country: " + tv.originCountry.joinToString {
+                text = "Origin country: " + (tv.originCountry.joinToString {
                     CountryFlag.getFlagByCode(it)
-                },
+                } ?: "Unknown"),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
@@ -459,12 +469,12 @@ fun FactsTab(tv: TvDetail) {
 }
 
 @Composable
-fun CastAndCrewTabs(
-    cast: List<TvCast>,
-    crew: List<TvCrew>,
+fun TvCastAndCrewTabs(
+    tvCast: List<TvCast>,
+    tvCrew: List<TvCrew>,
     navController: NavController
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Cast", "Crew")
 
@@ -489,18 +499,27 @@ fun CastAndCrewTabs(
         }
 
         when (selectedTabIndex) {
-            0 -> CastTab(cast = cast, navController = navController)
-            1 -> CrewTab(crew = crew, navController = navController)
+            0 -> if (tvCast.isNullOrEmpty()) {
+                Text(text = "No cast available")
+            } else {
+                CastTvTab(cast = tvCast, navController = navController)
+            }
+
+            1 -> if (tvCrew.isNullOrEmpty()) {
+                Text(text = "No crew available")
+            } else {
+                CrewTvTab(crew = tvCrew, navController = navController)
+            }
         }
     }
 }
 
 @Composable
-fun CrewTab(crew: List<TvCrew>, navController: NavController) {
+fun CrewTvTab(crew: List<TvCrew>, navController: NavController) {
     LazyRow {
         items(crew.size) { index ->
             val oneCrew = crew[index]
-            ItemCrew(oneCrew) {
+            ItemTvCrew(oneCrew) {
                 navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCrew.id}")
             }
         }
@@ -508,20 +527,19 @@ fun CrewTab(crew: List<TvCrew>, navController: NavController) {
 }
 
 @Composable
-fun CastTab(cast: List<TvCast>, navController: NavController) {
+fun CastTvTab(cast: List<TvCast>, navController: NavController) {
     LazyRow {
         items(cast.size) { index ->
             val oneCast = cast[index]
-            ItemCast(oneCast) {
+            ItemTvCast(oneCast) {
                 navController.navigate(TmdbScreen.PersonDetail.route + "/${oneCast.id}")
             }
         }
     }
 }
 
-
 @Composable
-fun ItemCast(cast: TvCast, onClick: () -> Unit) {
+fun ItemTvCast(cast: TvCast, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -546,12 +564,12 @@ fun ItemCast(cast: TvCast, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = cast.name,
+                    text = cast.name ?: "Unknown",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = cast.character,
+                    text = cast.character ?: "Unknown",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
@@ -561,7 +579,7 @@ fun ItemCast(cast: TvCast, onClick: () -> Unit) {
 }
 
 @Composable
-fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
+fun ItemTvCrew(crew: TvCrew, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(4.dp)
@@ -586,12 +604,12 @@ fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = crew.name,
+                    text = crew.name ?: "Unknown",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = crew.department,
+                    text = crew.department ?: "Unknown",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
@@ -601,101 +619,109 @@ fun ItemCrew(crew: TvCrew, onClick: () -> Unit) {
 }
 
 @Composable
-fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
-    Card(
-        modifier = Modifier
-            .padding(4.dp)
-            .height(150.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(
+fun LastSeason(last: Season?, lastEpisodeToAir: LastEpisodeToAir?) {
+    if (last != null && lastEpisodeToAir != null) {
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
+                .padding(4.dp)
+                .height(150.dp),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
         ) {
-            Row(Modifier.align(Alignment.TopStart)) {
-                val image = if (last.posterPath.isNullOrEmpty()) {
-                    R.drawable.no_image
-                } else {
-                    "https://image.tmdb.org/t/p/w500${last.posterPath}"
-                }
-                AsyncImage(
-                    model = image,
-                    contentDescription = "poster Episode",
-                    modifier = Modifier
-                        .width(100.dp)
-                        .fillMaxHeight(),
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(id = R.drawable.no_image),
-                    error = painterResource(id = R.drawable.no_image)
-                )
-                Column(Modifier.padding(start = 16.dp, top = 16.dp)) {
-                    Text(
-                        text = last.name,
-                        style = MaterialTheme.typography.titleLarge
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Row(Modifier.align(Alignment.TopStart)) {
+                    val image = if (last.posterPath.isNullOrEmpty()) {
+                        R.drawable.no_image
+                    } else {
+                        "https://image.tmdb.org/t/p/w500${last.posterPath ?: ""}"
+                    }
+                    AsyncImage(
+                        model = image,
+                        contentDescription = "poster Episode",
+                        modifier = Modifier
+                            .width(100.dp)
+                            .fillMaxHeight(),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(id = R.drawable.no_image),
+                        error = painterResource(id = R.drawable.no_image)
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (last.voteAverage.toInt() != 0) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_star),
-                                contentDescription = "Star Icon",
-                                modifier = Modifier.size(16.dp),
-                                tint = Color(0xFFFFD700) // Color dorado
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
+                    Column(Modifier.padding(start = 16.dp, top = 16.dp)) {
+                        Text(
+                            text = last.name ?: "Unknown",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (last.voteAverage.toInt() != 0) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_star),
+                                    contentDescription = "Star Icon",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFFFFD700) // Color dorado
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${(last.voteAverage * 10).toInt()}%",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            val year = last.airDate?.let {
+                                try {
+                                    LocalDate.parse(it, DateTimeFormatter.ISO_DATE).year.toString()
+                                } catch (e: Exception) {
+                                    "N/A"
+                                }
+                            } ?: "N/A"
                             Text(
-                                text = "${(last.voteAverage * 10).toInt()}%",
+                                text = year,
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = " • ${last.episodeCount ?: "0"} Episodes",
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        val year = last.airDate.let {
-                            LocalDate.parse(it, DateTimeFormatter.ISO_DATE).year.toString()
-                        } ?: "N/A"
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = year,
+                            text = last.overview ?: "No overview available",
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = lastEpisodeToAir.name ?: "No episode name available",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = " • ${last.episodeCount} Episodes",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = last.overview,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = lastEpisodeToAir.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "(${lastEpisodeToAir.seasonNumber}x${lastEpisodeToAir.episodeNumber})",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        if (lastEpisodeToAir.episodeType == "finale") {
-                            Text(
-                                text = "Season Finale",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .border(1.dp, MaterialTheme.colorScheme.primary)
-                                    .padding(horizontal = 4.dp, vertical = 2.dp)
-                            )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (lastEpisodeToAir.seasonNumber != null && lastEpisodeToAir.episodeNumber != null) {
+                                Text(
+                                    text = "(${lastEpisodeToAir.seasonNumber}x${lastEpisodeToAir.episodeNumber})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            if (lastEpisodeToAir.episodeType == "finale") {
+                                Text(
+                                    text = "Season Finale",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .border(1.dp, MaterialTheme.colorScheme.primary)
+                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -706,7 +732,7 @@ fun LastSeason(last: Season, lastEpisodeToAir: LastEpisodeToAir) {
 
 @Composable
 fun TvMediaTabs(tvImages: TvImagesResponse?, tvVideos: List<TvVideosResult>?) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Poster", "Back Drop", "Videos")
 
@@ -731,8 +757,8 @@ fun TvMediaTabs(tvImages: TvImagesResponse?, tvVideos: List<TvVideosResult>?) {
         }
 
         when (selectedTabIndex) {
-            0 -> TvPostersTab(posters = tvImages?.posters)
-            1 -> TvBackdropTab(backdrops = tvImages?.backdrops)
+            0 -> TvPostersTab(posters = tvImages?.posters ?: emptyList())
+            1 -> TvBackdropTab(backdrops = tvImages?.backdrops ?: emptyList())
             2 -> tvVideos?.let { TvVideosTab(videos = it) }
         }
     }
@@ -740,33 +766,35 @@ fun TvMediaTabs(tvImages: TvImagesResponse?, tvVideos: List<TvVideosResult>?) {
 
 @Composable
 fun TvPostersTab(posters: List<TvImagesPoster>?) {
-    val pagerState = rememberPagerState(initialPage = 0)
+    if (posters != null) {
+        val pagerState = rememberPagerState(initialPage = 0)
 
-    if (posters!!.isEmpty()) {
-        Text(text = "No posters available")
-        return
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(50.dp),
-            count = posters.size,
-            modifier = Modifier
-                .fillMaxSize()
-        ) { page ->
-            val poster = posters[page]
-            TvPosterItem(poster = poster, isHero = page == pagerState.currentPage)
+        if (posters.isEmpty()) {
+            Text(text = "No posters available")
+            return
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(modifier = Modifier.fillMaxWidth()) {
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(50.dp),
+                count = posters.size,
+                modifier = Modifier
+                    .fillMaxSize()
+            ) { page ->
+                val poster = posters[page]
+                TvPosterItem(poster = poster, isHero = page == pagerState.currentPage)
+            }
 
-        HorizontalPagerIndicator(
-            pagerState = pagerState,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            activeColor = Color.Black,
-            inactiveColor = Color.Gray
-        )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            HorizontalPagerIndicator(
+                pagerState = pagerState,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                activeColor = Color.Black,
+                inactiveColor = Color.Gray
+            )
+        }
     }
 }
 
@@ -793,33 +821,34 @@ fun TvPosterItem(poster: TvImagesPoster, isHero: Boolean) {
 
 @Composable
 fun TvBackdropTab(backdrops: List<TvImagesBackdrop>?) {
-    val pagerState = rememberPagerState(initialPage = 0)
-
-    if (backdrops!!.isEmpty()) {
-        Text(text = "No backdrops available")
-        return
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(50.dp),
-            count = backdrops!!.size,
-            modifier = Modifier
-                .fillMaxSize()
-        ) { page ->
-            val backdrop = backdrops[page]
-            TvBackDropItem(backdrop = backdrop, isHero = page == pagerState.currentPage)
+    if (backdrops != null) {
+        val pagerState = rememberPagerState(initialPage = 0)
+        if (backdrops.isEmpty()) {
+            Text(text = "No backdrops available")
+            return
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(modifier = Modifier.fillMaxWidth()) {
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(50.dp),
+                count = backdrops!!.size,
+                modifier = Modifier
+                    .fillMaxSize()
+            ) { page ->
+                val backdrop = backdrops[page]
+                TvBackDropItem(backdrop = backdrop, isHero = page == pagerState.currentPage)
+            }
 
-        HorizontalPagerIndicator(
-            pagerState = pagerState,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            activeColor = Color.Black,
-            inactiveColor = Color.Gray
-        )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            HorizontalPagerIndicator(
+                pagerState = pagerState,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                activeColor = Color.Black,
+                inactiveColor = Color.Gray
+            )
+        }
     }
 }
 
@@ -865,7 +894,6 @@ fun TvVideosTab(videos: List<TvVideosResult?>) {
 
 @Composable
 fun CardTvVideosYoutube(video: TvVideosResult, onClick: () -> Unit) {
-
     Card(
         modifier = Modifier
             .size(120.dp)
@@ -875,7 +903,7 @@ fun CardTvVideosYoutube(video: TvVideosResult, onClick: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(4.dp)) {
             Text(
-                text = video.name,
+                text = video.name ?: "Unknown",
                 style = MaterialTheme.typography.titleSmall,
                 color = Color.Blue
             )
@@ -884,16 +912,16 @@ fun CardTvVideosYoutube(video: TvVideosResult, onClick: () -> Unit) {
 }
 
 fun getYoutubeVideosTv(tvVideos: List<TvVideosResult?>): List<TvVideosResult?> {
-    return tvVideos.filter { it!!.site == "YouTube" }
+    return tvVideos.filter { it?.site == "YouTube" }
 }
 
 @Composable
-fun RecommendationAndSimilarTabs(
+fun TvRecommendationAndSimilarTabs(
     tvRecommendations: List<TvRecommendationsResult?>,
     tvSimilar: List<SimilarResult?>,
     navController: NavController
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Recommendation", "Similar")
 
@@ -918,43 +946,58 @@ fun RecommendationAndSimilarTabs(
         }
 
         when (selectedTabIndex) {
-            0 -> RecommendationTab(
-                recommendation = tvRecommendations,
-                navController = navController
-            )
+            0 -> if (tvRecommendations.isNullOrEmpty()) {
+                Text(text = "")
+            } else {
+                TvRecommendationTab(
+                    tvRecommendation = tvRecommendations,
+                    navController = navController
+                )
+            }
 
-            1 -> SimilarTab(tvSimilar = tvSimilar, navController = navController)
-        }
-    }
-}
-
-@Composable
-fun SimilarTab(tvSimilar: List<SimilarResult?>, navController: NavController) {
-    LazyRow {
-        items(tvSimilar.size) { index ->
-            val oneSimilar = tvSimilar[index]
-            ItemTvSimilar(oneSimilar) {
-                navController.navigate(TmdbScreen.TvDetail.route + "/${oneSimilar?.id}")
+            1 -> if (tvSimilar.isNullOrEmpty()) {
+                Text(text = "")
+            } else {
+                TvSimilarTab(tvSimilar = tvSimilar, navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun RecommendationTab(
-    recommendation: List<TvRecommendationsResult?>,
+fun TvSimilarTab(tvSimilar: List<SimilarResult?>, navController: NavController) {
+    LazyRow {
+        items(tvSimilar.size) { index ->
+            val tvSim = tvSimilar[index]
+            if (tvSim != null) {
+                ItemTvSimilar(tvSim) {
+                    navController.navigate(TmdbScreen.TvDetail.route + "/${tvSim.id}")
+                }
+            } else {
+                Text(text = "Invalid movie data")
+            }
+        }
+    }
+}
+
+@Composable
+fun TvRecommendationTab(
+    tvRecommendation: List<TvRecommendationsResult?>,
     navController: NavController
 ) {
     LazyRow {
-        items(recommendation.size) { index ->
-            val tvRecommendation = recommendation[index]
-            ItemTvRecommendation(tvRecommendation) {
-                navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecommendation?.id}")
+        items(tvRecommendation.size) { index ->
+            val tvRecom = tvRecommendation[index]
+            if (tvRecom != null) {
+                ItemTvRecommendation(tvRecom) {
+                    navController.navigate(TmdbScreen.TvDetail.route + "/${tvRecom.id}")
+                }
+            } else {
+                Text(text = "Invalid movie data")
             }
         }
     }
 }
-
 
 @Composable
 fun ItemTvSimilar(similar: SimilarResult?, onClick: () -> Unit) {
@@ -1015,4 +1058,3 @@ fun ItemTvRecommendation(recommendation: TvRecommendationsResult?, onClick: () -
         }
     }
 }
-

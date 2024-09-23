@@ -28,11 +28,11 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
         return repository.getOnAirTv(page)
     }
 
-    suspend fun getPopular(page: Int): TvResponse {
+    suspend fun getPopularTv(page: Int): TvResponse {
         return repository.getPopularTv(page)
     }
 
-    suspend fun getTopRated(page: Int): TvResponse {
+    suspend fun getTopRatedTv(page: Int): TvResponse {
         return repository.getTopRatedTv(page)
     }
 
@@ -75,7 +75,7 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
         return repository.getTvSimilar(tvId)
     }
 
-    suspend fun getTvRecommendation(tvId: Int): TvRecommendationsResponse {
+    suspend fun getTvRecommendations(tvId: Int): TvRecommendationsResponse {
         return repository.getTvRecommendations(tvId)
     }
 

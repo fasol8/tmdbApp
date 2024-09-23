@@ -51,14 +51,8 @@ fun TvScreen(
         else -> viewModel.tvs.observeAsState(emptyList())
     }
 
-    LaunchedEffect (true){
-        when(category){
-            "air_today" -> viewModel.loadAirToday()
-            "on_the_air" -> viewModel.loadOnAir()
-            "popular_tv" -> viewModel.loadPopularTv()
-            "top_rated_tv" -> viewModel.loadTopRatedTv()
-            else -> viewModel.loadTv()
-        }
+    LaunchedEffect(true) {
+        whenCategoryTv(category, viewModel)
     }
 
     Box(
@@ -76,14 +70,8 @@ fun TvScreen(
                     }
 
                     if (index == tvs.size - 1) {
-                        LaunchedEffect (true){
-                            when(category){
-                                "air_today" -> viewModel.loadAirToday()
-                                "on_the_air" -> viewModel.loadOnAir()
-                                "popular_tv" -> viewModel.loadPopularTv()
-                                "top_rated_tv" -> viewModel.loadTopRatedTv()
-                                else -> viewModel.loadTv()
-                            }
+                        LaunchedEffect(true) {
+                            whenCategoryTv(category, viewModel)
                         }
                     }
                 }
@@ -129,37 +117,46 @@ fun ItemTv(tv: TvResult, onClick: () -> Unit) {
                     modifier = Modifier.padding(top = 4.dp, start = 16.dp)
                 )
             }
+            if (tv.voteAverage.toInt() != 0) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-8).dp, y = (-48).dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawCircle(color = Color(0xFFEEEEEE))
 
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-8).dp, y = (-48).dp)
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawCircle(color = Color(0xFFEEEEEE))
-
-                    drawArc(
-                        color = when {
-                            ((tv.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
-                            ((tv.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
-                            else -> Color(0xFF0F9D58)
-                        },
-                        startAngle = -90f,
-                        sweepAngle = (tv.voteAverage * 36).toFloat(),
-                        useCenter = false,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        drawArc(
+                            color = when {
+                                ((tv.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                                ((tv.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                                else -> Color(0xFF0F9D58)
+                            },
+                            startAngle = -90f,
+                            sweepAngle = (tv.voteAverage * 36).toFloat(),
+                            useCenter = false,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(tv.voteAverage * 10).toInt()}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        )
                     )
                 }
-                Text(
-                    text = "${(tv.voteAverage * 10).toInt()}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(
-                        Alignment.Center
-                    )
-                )
             }
         }
     }
+}
+
+fun whenCategoryTv(category: String, viewModel: TvViewModel) = when (category) {
+    "air_today" -> viewModel.loadAirToday()
+    "on_the_air" -> viewModel.loadOnAir()
+    "popular_tv" -> viewModel.loadPopularTv()
+    "top_rated_tv" -> viewModel.loadTopRatedTv()
+    else -> viewModel.loadTv()
 }
