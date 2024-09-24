@@ -32,7 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -163,14 +163,14 @@ fun PersonCard(
                     BiographyText(person.biography)
                     Text(
                         text = "Known For",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     MovieAndTvTabs(movieCredits, tvCredits, navController)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Gallery",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     ImageCarousel(imagesProfile)
@@ -248,7 +248,7 @@ fun PlaceOfBirthDayAndDepartment(person: PersonDetail) {
 
 @Composable
 fun BiographyText(biography: String) {
-    var expand by remember { mutableStateOf(false) }
+    var expand by rememberSaveable { mutableStateOf(false) }
     val showReadMore = biography.length > 196
 
     Box(
@@ -273,7 +273,7 @@ fun BiographyText(biography: String) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
-                            .padding(top = 54.dp)
+                            .padding(top = 59.dp)
                     )
                 }
             }
@@ -287,7 +287,7 @@ fun MovieAndTvTabs(
     tvCredits: List<TvCast>,
     navController: NavController
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
     val tabs = listOf("Movie", "Tv Series")
 
     Column {

@@ -82,6 +82,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 //    implementation (libs.androidx.material)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.ui.text.google.fonts)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.retrofit)

@@ -27,11 +27,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -41,7 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -203,7 +203,7 @@ fun MovieCard(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                        .padding(start = 2.dp, end = 2.dp, bottom = 24.dp),
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
                 ) {
                     Column(Modifier.padding(horizontal = 8.dp)) {
@@ -233,7 +233,6 @@ fun MovieCard(
                             tvSimilar = movieSimilar,
                             navController = navController
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
@@ -344,7 +343,7 @@ fun getTrailerVideo(movieVideos: List<MovieVideosResult>): MovieVideosResult? {
 
 @Composable
 fun InfoAndProvidersMovieTabs(movie: MovieDetail, movieProvider: Map<String, CountryResult?>?) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Facts", "Providers")
 
@@ -483,7 +482,7 @@ fun CastAndCrewMovieTabs(
     movieCrew: List<Crew>,
     navController: NavController
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Cast", "Crew")
 
@@ -629,7 +628,7 @@ fun CrewMovieItem(crew: Crew, onClick: () -> Unit) {
 
 @Composable
 fun MediaMovieTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVideosResult>) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Poster", "Back Drop", "Video")
 
@@ -813,7 +812,7 @@ fun RecommendationAndSimilarMovieTabs(
     tvSimilar: List<MovieSimilarResult?>,
     navController: NavController
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Recommendation", "Similar")
 
@@ -829,7 +828,8 @@ fun RecommendationAndSimilarMovieTabs(
                     text = {
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.bodyLarge,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }

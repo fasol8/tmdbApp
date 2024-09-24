@@ -41,7 +41,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -207,7 +206,7 @@ fun TvCard(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
+                        .padding(start = 2.dp, end = 2.dp, bottom = 24.dp),
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 16.dp)
                 ) {
                     Column(Modifier.padding(horizontal = 8.dp)) {
@@ -243,7 +242,6 @@ fun TvCard(
                         TvMediaTabs(tvImages, tvVideos)
                         Spacer(modifier = Modifier.height(4.dp))
                         TvRecommendationAndSimilarTabs(tvRecommendations, tvSimilar, navController)
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
@@ -937,7 +935,8 @@ fun TvRecommendationAndSimilarTabs(
                     text = {
                         Text(
                             text = title,
-                            style = MaterialTheme.typography.bodyLarge,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
