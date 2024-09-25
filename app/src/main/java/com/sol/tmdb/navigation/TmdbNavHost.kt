@@ -37,11 +37,11 @@ fun TmdbNavHost(navController: NavHostController, mainViewModel: MainViewModel) 
             MovieDetail(movieId = movieId, navController = navController)
         }
 
-        composable(TmdbScreen.Tv.route) { TvScreen("tv", navController) }
-        composable(TmdbScreen.AirToday.route) { TvScreen("air_today", navController) }
-        composable(TmdbScreen.OnAir.route) { TvScreen("on_the_air", navController) }
-        composable(TmdbScreen.PopularTv.route) { TvScreen("popular_tv", navController) }
-        composable(TmdbScreen.TopRatedTv.route) { TvScreen("top_rated_tv", navController) }
+        composable(TmdbScreen.Tv.route) { TvScreen("tv", navController, mainViewModel) }
+        composable(TmdbScreen.AirToday.route) { TvScreen("air_today", navController, mainViewModel) }
+        composable(TmdbScreen.OnAir.route) { TvScreen("on_the_air", navController, mainViewModel) }
+        composable(TmdbScreen.PopularTv.route) { TvScreen("popular_tv", navController, mainViewModel) }
+        composable(TmdbScreen.TopRatedTv.route) { TvScreen("top_rated_tv", navController, mainViewModel) }
         composable(
             route = TmdbScreen.TvDetail.route + "/{tvId}",
             arguments = listOf(navArgument("tvId") { type = NavType.IntType })

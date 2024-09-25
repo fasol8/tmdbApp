@@ -36,6 +36,10 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
         return repository.getTopRatedTv(page)
     }
 
+    suspend fun getSearchTv(query:String, page: Int=1):TvResponse{
+        return repository.getSearchTv(query, page)
+    }
+
     suspend fun getTvDetail(tvId: Int): TvDetail {
         return repository.getTvDetail(tvId)
     }

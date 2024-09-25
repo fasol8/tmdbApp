@@ -36,6 +36,10 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
         return api.getTopRatedTv(page)
     }
 
+    suspend fun getSearchTv(query: String, page: Int = 1): TvResponse {
+        return api.getSearchTv(query, page)
+    }
+
     suspend fun getTvDetail(tvId: Int): TvDetail {
         return api.getTvDetail(tvId)
     }

@@ -164,6 +164,13 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
 
+    @GET("search/tv")
+    suspend fun getSearchTv(
+        @Query("query") query: String,
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): TvResponse
+
     @GET("tv/{tv_id}")
     suspend fun getTvDetail(
         @Path("tv_id") tvId: Int,

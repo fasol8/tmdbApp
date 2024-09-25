@@ -20,6 +20,7 @@ import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import retrofit2.http.Query
 import java.io.IOException
 import javax.inject.Inject
 
@@ -32,7 +33,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private val _airToday = MutableLiveData<List<TvResult>>()
     val airToday: LiveData<List<TvResult>> = _airToday
 
-    private val _onAir= MutableLiveData<List<TvResult>>()
+    private val _onAir = MutableLiveData<List<TvResult>>()
     val onAir: LiveData<List<TvResult>> = _onAir
 
     private val _popularTv = MutableLiveData<List<TvResult>>()
@@ -75,6 +76,8 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     val errorMessage: LiveData<String> = _errorMessage
 
     private var currentPage = 1
+    private var lastQuery: String? = null
+    private var isLoading = false
     private val seasonDetailsList = mutableListOf<TvSeasonDetailResponse>()
 
     fun searchAll(tvId: Int) {
@@ -121,7 +124,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         loadTvShows(getTvUseCase::getAirToday, _airToday)
     }
 
-    fun loadOnAir(){
+    fun loadOnAir() {
         loadTvShows(getTvUseCase::getOnAir, _onAir)
     }
 
@@ -131,6 +134,37 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
 
     fun loadTopRatedTv() {
         loadTvShows(getTvUseCase::getTopRatedTv, _topRatedTv)
+    }
+
+    fun searchTv(query: String) {
+        if (isLoading) return
+        viewModelScope.launch {
+            try {
+                isLoading = true
+                if (query.isBlank()) {
+                    loadTv()
+                } else {
+                    if (query != lastQuery) {
+                        lastQuery = query
+                        currentPage = 1
+                        _tvs.value = emptyList()
+                    }
+                    val reponse = getTvUseCase.getSearchTv(query, currentPage)
+                    val newTvs = reponse.results
+                    if (newTvs.isNotEmpty()) {
+                        val updateTvs = tvs.value.orEmpty() + newTvs
+                        _tvs.value = updateTvs
+                        currentPage++
+                    } else {
+                        _errorMessage.value = "No more results"
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     private fun searchTvById(tvId: Int) {
