@@ -308,6 +308,7 @@ fun TrendingTabs(
     ) {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+//            containerColor = Color.Transparent,
             indicator = { tabPositions ->
                 Box(
                     Modifier

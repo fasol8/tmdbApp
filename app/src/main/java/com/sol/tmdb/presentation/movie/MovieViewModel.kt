@@ -68,6 +68,8 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
     val errorMessage: LiveData<String?> = _errorMessage
 
     private var currentPage = 1
+    private var lastQuery: String? = null
+    private var isLoading = false
 
     init {
         loadMovies()
@@ -145,6 +147,37 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
             _upcomingMovies,
             fetchMovies = { getMovieUseCase.getUpcoming(currentPage) },
             mapResponse = { it.results })
+    }
+
+    fun searchMovie(query: String) {
+        if (isLoading) return
+        viewModelScope.launch {
+            try {
+                isLoading = true
+                if (query.isBlank()) {
+                    loadMovies()
+                } else {
+                    if (query != lastQuery) {
+                        lastQuery = query
+                        currentPage = 1
+                        _movies.value = emptyList()
+                    }
+                    val response = getMovieUseCase.getSearchMovie(query, currentPage)
+                    val newMovies = response.results
+                    if (newMovies.isNotEmpty()) {
+                        val updateMovie = _movies.value.orEmpty() + newMovies
+                        _movies.value = updateMovie
+                        currentPage++
+                    } else {
+                        _errorMessage.value = "No more results"
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     private fun searchMovieById(id: Int) {

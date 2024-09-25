@@ -79,6 +79,13 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieNowResponse
 
+    @GET("search/movie")
+    suspend fun getSearchMovie(
+        @Query("query") query: String,
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): MovieResponse
+
     @GET("movie/{movie_id}")
     suspend fun getMovieDetail(
         @Path("movie_id") movieId: Int,

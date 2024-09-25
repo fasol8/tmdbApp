@@ -35,6 +35,10 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
         return repository.getUpcoming(page)
     }
 
+    suspend fun getSearchMovie(query: String, page: Int = 1): MovieResponse {
+        return repository.getSearchMovie(query, page)
+    }
+
     suspend fun getMovieDetail(movieId: Int): MovieDetail {
         return repository.getMovieDetail(movieId)
     }

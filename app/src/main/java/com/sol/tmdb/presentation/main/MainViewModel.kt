@@ -22,6 +22,9 @@ class MainViewModel @Inject constructor(private val getMainUseCase: GetMainUseCa
     private val _searchResults = MutableLiveData<List<SearchResult>?>()
     val searchResults: LiveData<List<SearchResult>?> = _searchResults
 
+    private val _isSearchBarVisible = MutableLiveData(false)
+    val isSearchBarVisible: LiveData<Boolean> = _isSearchBarVisible
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
@@ -39,7 +42,6 @@ class MainViewModel @Inject constructor(private val getMainUseCase: GetMainUseCa
                 val response = getMainUseCase(type, time)
                 _trending.value = response.results
             } catch (e: Exception) {
-//                _trending.value = null
                 _errorMessage.value = "An error occurred: ${e.message}"
             }
         }
@@ -75,5 +77,9 @@ class MainViewModel @Inject constructor(private val getMainUseCase: GetMainUseCa
                 isLoading = false
             }
         }
+    }
+
+    fun toggleSearchBar() {
+        _isSearchBarVisible.value = _isSearchBarVisible.value?.not()
     }
 }

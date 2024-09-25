@@ -36,6 +36,10 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
         return api.getUpcomingMovie(page)
     }
 
+    suspend fun getSearchMovie(query:String, page: Int=1):MovieResponse{
+        return api.getSearchMovie(query, page)
+    }
+
     suspend fun getMovieDetail(movieId: Int): MovieDetail {
         return api.getMovieDetail(movieId)
     }

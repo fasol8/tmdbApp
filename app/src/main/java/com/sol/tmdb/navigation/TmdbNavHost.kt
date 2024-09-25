@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.sol.tmdb.presentation.main.MainListScreen
+import com.sol.tmdb.presentation.main.MainViewModel
 import com.sol.tmdb.presentation.movie.MovieDetail
 import com.sol.tmdb.presentation.movie.MoviesScreen
 import com.sol.tmdb.presentation.person.PersonDetail
@@ -19,15 +20,15 @@ import com.sol.tmdb.presentation.tv.TvSeason
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TmdbNavHost(navController: NavHostController) {
+fun TmdbNavHost(navController: NavHostController, mainViewModel: MainViewModel) {
     NavHost(navController = navController, startDestination = TmdbScreen.MainScreen.route) {
         composable(TmdbScreen.MainScreen.route) { MainListScreen(navController = navController) }
 
-        composable(TmdbScreen.Movie.route) { MoviesScreen("movie", navController) }
-        composable(TmdbScreen.NowPlaying.route) { MoviesScreen("now_playing", navController) }
-        composable(TmdbScreen.PopularMovies.route) { MoviesScreen("popular", navController) }
-        composable(TmdbScreen.TopRatedMovies.route) { MoviesScreen("top_rated", navController) }
-        composable(TmdbScreen.UpcomingMovies.route) { MoviesScreen("upcoming", navController) }
+        composable(TmdbScreen.Movie.route) { MoviesScreen("movie", navController, mainViewModel) }
+        composable(TmdbScreen.NowPlaying.route) { MoviesScreen("now_playing", navController, mainViewModel) }
+        composable(TmdbScreen.PopularMovies.route) { MoviesScreen("popular", navController, mainViewModel) }
+        composable(TmdbScreen.TopRatedMovies.route) { MoviesScreen("top_rated", navController, mainViewModel) }
+        composable(TmdbScreen.UpcomingMovies.route) { MoviesScreen("upcoming", navController, mainViewModel) }
         composable(
             route = TmdbScreen.MovieDetail.route + "/{movieId}",
             arguments = listOf(navArgument("movieId") { type = NavType.IntType })
