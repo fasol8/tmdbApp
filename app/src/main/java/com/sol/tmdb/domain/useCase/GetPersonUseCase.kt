@@ -14,6 +14,10 @@ class GetPersonUseCase @Inject constructor(private val repository: PersonReposit
         return repository.getPopularPerson(page)
     }
 
+    suspend fun getSearchPerson(query: String, page: Int = 1): PersonResponse {
+        return repository.getSearchPerson(query, page)
+    }
+
     suspend fun getPersonDetail(personId: Int): PersonDetail {
         return repository.getPersonDetail(personId)
     }

@@ -37,6 +37,8 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
     val errorMessage: LiveData<String?> = _errorMessage
 
     private var currentPage = 1
+    private var lastQuery: String? = null
+    private var isLoading = false
 
     init {
         loadPerson()
@@ -64,6 +66,37 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
             } catch (e: Exception) {
                 _errorMessage.value = "An error occurred: ${e.message}"
 
+            }
+        }
+    }
+
+    fun searchPerson(query: String) {
+        if (isLoading) return
+        viewModelScope.launch {
+            try {
+                isLoading = true
+                if (query.isBlank()) {
+                    loadPerson()
+                } else {
+                    if (query != lastQuery) {
+                        lastQuery = query
+                        currentPage = 1
+                        _persons.value = emptyList()
+                    }
+                    val response = getPersonUseCase.getSearchPerson(query, currentPage)
+                    val newMovies = response.results
+                    if (newMovies.isNotEmpty()) {
+                        val updateMovie = _persons.value.orEmpty() + newMovies
+                        _persons.value = updateMovie
+                        currentPage++
+                    } else {
+                        _errorMessage.value = "No more results"
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "An error occurred: ${e.message}"
+            } finally {
+                isLoading = false
             }
         }
     }

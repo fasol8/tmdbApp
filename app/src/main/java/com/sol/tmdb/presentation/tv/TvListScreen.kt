@@ -62,17 +62,12 @@ fun TvScreen(
     viewModel: TvViewModel = hiltViewModel()
 ) {
     val isSearchIsVisible by mainViewModel.isSearchBarVisible.observeAsState(false)
-    val tvs by
-//    if (isSearchIsVisible) {
-//        viewModel.tvs.observeAsState(emptyList())
-//    } else {
-        when (category) {
-            "air_today" -> viewModel.airToday.observeAsState(emptyList())
-            "on_the_air" -> viewModel.onAir.observeAsState(emptyList())
-            "popular_tv" -> viewModel.popularTv.observeAsState(emptyList())
-            "top_rated_tv" -> viewModel.topRatedTv.observeAsState(emptyList())
-            else -> viewModel.tvs.observeAsState(emptyList())
-//        }
+    val tvs by when (category) {
+        "air_today" -> viewModel.airToday.observeAsState(emptyList())
+        "on_the_air" -> viewModel.onAir.observeAsState(emptyList())
+        "popular_tv" -> viewModel.popularTv.observeAsState(emptyList())
+        "top_rated_tv" -> viewModel.topRatedTv.observeAsState(emptyList())
+        else -> viewModel.tvs.observeAsState(emptyList())
     }
     var query by rememberSaveable { mutableStateOf("") }
 

@@ -14,6 +14,10 @@ class PersonRepository @Inject constructor(private val api: TmdbApi) {
         return api.getPopularPerson(page)
     }
 
+    suspend fun getSearchPerson(query: String, page: Int = 1): PersonResponse {
+        return api.getSearchPerson(query, page)
+    }
+
     suspend fun getPersonDetail(personId: Int): PersonDetail {
         return api.getPersonDetail(personId)
     }

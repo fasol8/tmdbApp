@@ -240,6 +240,13 @@ interface TmdbApi {
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): PersonResponse
 
+    @GET("search/person")
+    suspend fun getSearchPerson(
+        @Query("query") query: String,
+        @Query("page") page: Int = 1,
+        @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
+    ): PersonResponse
+
     @GET("person/{person_id}")
     suspend fun getPersonDetail(
         @Path("person_id") page: Int,

@@ -62,7 +62,7 @@ fun TmdbNavHost(navController: NavHostController, mainViewModel: MainViewModel) 
             TvSeason(tvId, numberOfSeasons, navController)
         }
 
-        composable(TmdbScreen.Person.route) { PersonScreen(navController) }
+        composable(TmdbScreen.Person.route) { PersonScreen(navController, mainViewModel) }
         composable(
             TmdbScreen.PersonDetail.route + "/{personId}",
             arguments = listOf(navArgument("personId") { type = NavType.IntType })

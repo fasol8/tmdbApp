@@ -61,17 +61,12 @@ fun MoviesScreen(
     viewModel: MovieViewModel = hiltViewModel(),
 ) {
     val isSearchIsVisible by mainViewModel.isSearchBarVisible.observeAsState(false)
-
-    val movies by if (isSearchIsVisible) {
-        viewModel.movies.observeAsState(emptyList())
-    } else {
-        when (category) {
-            "now_playing" -> viewModel.nowPlaying.observeAsState(emptyList())
-            "popular" -> viewModel.popularMovies.observeAsState(emptyList())
-            "top_rated" -> viewModel.topRatedMovies.observeAsState(emptyList())
-            "upcoming" -> viewModel.upcomingMovies.observeAsState(emptyList())
-            else -> viewModel.movies.observeAsState(emptyList())
-        }
+    val movies by when (category) {
+        "now_playing" -> viewModel.nowPlaying.observeAsState(emptyList())
+        "popular" -> viewModel.popularMovies.observeAsState(emptyList())
+        "top_rated" -> viewModel.topRatedMovies.observeAsState(emptyList())
+        "upcoming" -> viewModel.upcomingMovies.observeAsState(emptyList())
+        else -> viewModel.movies.observeAsState(emptyList())
     }
     var query by rememberSaveable { mutableStateOf("") }
 
@@ -132,7 +127,7 @@ fun MovieSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (St
         },
         active = activate,
         onActiveChange = { activate = true },
-        placeholder = { Text(text = "Search Game") },
+        placeholder = { Text(text = "Search Movie") },
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
