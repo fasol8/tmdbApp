@@ -309,6 +309,7 @@ fun InfoGalleryAndGuestStarsTabs(
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.Transparent)

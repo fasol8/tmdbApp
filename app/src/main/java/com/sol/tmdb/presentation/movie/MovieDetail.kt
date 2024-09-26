@@ -350,6 +350,7 @@ fun InfoAndProvidersMovieTabs(movie: MovieDetail, movieProvider: Map<String, Cou
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
@@ -489,6 +490,7 @@ fun CastAndCrewMovieTabs(
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
@@ -635,6 +637,7 @@ fun MediaMovieTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVid
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
@@ -819,6 +822,7 @@ fun RecommendationAndSimilarMovieTabs(
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->

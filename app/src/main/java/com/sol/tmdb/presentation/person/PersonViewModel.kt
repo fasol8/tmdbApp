@@ -76,6 +76,7 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
             try {
                 isLoading = true
                 if (query.isBlank()) {
+                    _persons.value = emptyList()
                     loadPerson()
                 } else {
                     if (query != lastQuery) {

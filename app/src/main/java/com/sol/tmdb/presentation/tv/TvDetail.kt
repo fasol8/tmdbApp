@@ -346,6 +346,7 @@ fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
@@ -479,6 +480,7 @@ fun TvCastAndCrewTabs(
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
@@ -737,6 +739,7 @@ fun TvMediaTabs(tvImages: TvImagesResponse?, tvVideos: List<TvVideosResult>?) {
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
@@ -926,6 +929,7 @@ fun TvRecommendationAndSimilarTabs(
     Column {
         TabRow(
             selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth()
         ) {
             tabs.forEachIndexed { index, title ->
