@@ -20,7 +20,6 @@ import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import retrofit2.http.Query
 import java.io.IOException
 import javax.inject.Inject
 

@@ -86,7 +86,8 @@ fun PersonScreen(
                                 if (isSearchIsVisible) {
                                     viewModel.searchPerson(query)
                                 } else {
-                                viewModel.loadPerson()}
+                                    viewModel.loadPerson()
+                                }
                             }
                         }
                     }

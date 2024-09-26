@@ -61,12 +61,16 @@ fun MoviesScreen(
     viewModel: MovieViewModel = hiltViewModel(),
 ) {
     val isSearchIsVisible by mainViewModel.isSearchBarVisible.observeAsState(false)
-    val movies by when (category) {
-        "now_playing" -> viewModel.nowPlaying.observeAsState(emptyList())
-        "popular" -> viewModel.popularMovies.observeAsState(emptyList())
-        "top_rated" -> viewModel.topRatedMovies.observeAsState(emptyList())
-        "upcoming" -> viewModel.upcomingMovies.observeAsState(emptyList())
-        else -> viewModel.movies.observeAsState(emptyList())
+    val movies by if (isSearchIsVisible) {
+        viewModel.movies.observeAsState(emptyList())
+    } else {
+        when (category) {
+            "now_playing" -> viewModel.nowPlaying.observeAsState(emptyList())
+            "popular" -> viewModel.popularMovies.observeAsState(emptyList())
+            "top_rated" -> viewModel.topRatedMovies.observeAsState(emptyList())
+            "upcoming" -> viewModel.upcomingMovies.observeAsState(emptyList())
+            else -> viewModel.movies.observeAsState(emptyList())
+        }
     }
     var query by rememberSaveable { mutableStateOf("") }
 
@@ -160,7 +164,7 @@ fun ItemMovie(movie: MovieResult, onClick: () -> Unit) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.align(Alignment.TopStart)) {
                 val image = if (movie.posterPath.isNullOrEmpty()) {
-                    R.drawable.profile_no_image
+                    R.drawable.no_image
                 } else {
                     "https://image.tmdb.org/t/p/w500${movie.posterPath}"
                 }
