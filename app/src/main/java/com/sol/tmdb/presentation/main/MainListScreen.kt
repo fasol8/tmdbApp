@@ -106,7 +106,7 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
                 items(results!!.size) { index: Int ->
                     val result = results!![index]
                     if (result.mediaType != "person") {
-                        CardSearchMovieAndTvResult(result, navController) {
+                        CardSearchMovieAndTvResult(result) {
                             if (result.mediaType != "tv") {
                                 navController.navigate(TmdbScreen.MovieDetail.route + "/${result.id}")
                             } else {
@@ -114,7 +114,7 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
                             }
                         }
                     } else {
-                        CardSearchPeopleResult(result, navController) {
+                        CardSearchPeopleResult(result) {
                             navController.navigate(TmdbScreen.PersonDetail.route + "/${result.id}")
                         }
                     }
@@ -127,9 +127,19 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Trending", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(2.dp))
-            TrendingTabs(trending, viewModel, navController)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(2.dp)
+            ) {
+                Text(
+                    text = "Trending",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 4.dp, start = 8.dp)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                TrendingTabs(trending, viewModel, navController)
+            }
         }
     }
 }
@@ -195,7 +205,6 @@ fun MultiSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (St
 @Composable
 fun CardSearchMovieAndTvResult(
     result: SearchResult,
-    navController: NavController,
     onClick: () -> Unit
 ) {
     Card(
@@ -222,36 +231,37 @@ fun CardSearchMovieAndTvResult(
                     error = painterResource(id = R.drawable.no_image)
                 )
             }
+            if (result.voteAverage.toInt() != 0) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-4).dp, y = (-8).dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawCircle(color = Color(0xFFEEEEEE))
 
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-4).dp, y = (-8).dp)
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawCircle(color = Color(0xFFEEEEEE))
-
-                    drawArc(
-                        color = when {
-                            ((result.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
-                            ((result.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
-                            else -> Color(0xFF0F9D58)
-                        },
-                        startAngle = -90f,
-                        sweepAngle = (result.voteAverage * 36).toFloat(),
-                        useCenter = false,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        drawArc(
+                            color = when {
+                                ((result.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                                ((result.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                                else -> Color(0xFF0F9D58)
+                            },
+                            startAngle = -90f,
+                            sweepAngle = (result.voteAverage * 36).toFloat(),
+                            useCenter = false,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(result.voteAverage * 10).toInt()}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        )
                     )
                 }
-                Text(
-                    text = "${(result.voteAverage * 10).toInt()}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(
-                        Alignment.Center
-                    )
-                )
             }
         }
     }
@@ -260,7 +270,6 @@ fun CardSearchMovieAndTvResult(
 @Composable
 fun CardSearchPeopleResult(
     result: SearchResult,
-    navController: NavController,
     onClick: () -> Unit
 ) {
     Card(
@@ -308,7 +317,7 @@ fun TrendingTabs(
     ) {
         TabRow(
             selectedTabIndex = selectedTabIndex,
-//            containerColor = Color.Transparent,
+            containerColor = Color.Transparent,
             indicator = { tabPositions ->
                 Box(
                     Modifier
@@ -415,35 +424,37 @@ fun ItemTrending(trend: TrendingResult, onClick: () -> Unit) {
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-4).dp, y = (-8).dp)
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawCircle(color = Color(0xFFEEEEEE))
+            if (trend.voteAverage.toInt() != 0) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-4).dp, y = (-8).dp)
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        drawCircle(color = Color(0xFFEEEEEE))
 
-                    drawArc(
-                        color = when {
-                            ((trend.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
-                            ((trend.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
-                            else -> Color(0xFF0F9D58)
-                        },
-                        startAngle = -90f,
-                        sweepAngle = (trend.voteAverage * 36).toFloat(),
-                        useCenter = false,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        drawArc(
+                            color = when {
+                                ((trend.voteAverage * 10).toInt()) < 30 -> Color(0xFFEF5350)
+                                ((trend.voteAverage * 10).toInt()) < 60 -> Color(0xFFFFCA28)
+                                else -> Color(0xFF0F9D58)
+                            },
+                            startAngle = -90f,
+                            sweepAngle = (trend.voteAverage * 36).toFloat(),
+                            useCenter = false,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(trend.voteAverage * 10).toInt()}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(
+                            Alignment.Center
+                        )
                     )
                 }
-                Text(
-                    text = "${(trend.voteAverage * 10).toInt()}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(
-                        Alignment.Center
-                    )
-                )
             }
         }
     }
