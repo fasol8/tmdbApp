@@ -2,23 +2,28 @@ package com.sol.tmdb.navigation
 
 import android.annotation.SuppressLint
 import android.util.Log
-import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -32,16 +37,24 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.sol.tmdb.LanguageChangeHelper
 import com.sol.tmdb.R
 import com.sol.tmdb.presentation.main.MainViewModel
 import kotlinx.coroutines.launch
@@ -49,10 +62,26 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainMenu(mainViewModel: MainViewModel= hiltViewModel()) {
+fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+    val context= LocalContext.current
+
+    val languageChangeHelper by lazy { LanguageChangeHelper() }
+
+    val allLanguages = listOf(
+        Language("en", "English", R.drawable.ic_movie),
+        Language("es", "Español", R.drawable.ic_person),
+    )
+
+    val currentLanguageCode: String = languageChangeHelper.getLanguageCode(context)
+
+    var currentLanguage by remember { mutableStateOf(currentLanguageCode) }
+    val onCurrentLanguageChange: (String) -> Unit = { newLanguage ->
+        currentLanguage = newLanguage
+        languageChangeHelper.changeLanguage(context, newLanguage)
+    }
 
     val items = listOf(
         TmdbScreen.NowPlaying to R.drawable.ic_movie,
@@ -138,14 +167,110 @@ fun MainMenu(mainViewModel: MainViewModel= hiltViewModel()) {
                         IconButton(onClick = { mainViewModel.toggleSearchBar() }) {
                             Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                         }
-                        IconButton(onClick = { Log.i("TopBar","Info") }) {
-                            Icon(imageVector = Icons.Default.Info, contentDescription = "Info")
-                        }
+                        LanguagesDropdown(
+                            modifier = Modifier
+//                                    .background(MaterialTheme.colorScheme.background)
+                                .padding(top = 8.dp),
+                            languagesList = allLanguages,
+                            currentLanguage = currentLanguage,
+                            onCurrentLanguageChange = onCurrentLanguageChange
+                        )
+                            Log.i("MM", currentLanguage)
+//                        IconButton(onClick = {
+////                            val lanCode = if (currentLanguage != "en") "es" else "en"
+////                            onCurrentLanguageChange(lanCode)
+////                            Log.i("MM", lanCode)
+//                        }) {
+//                            Icon(
+//                                painter = painterResource(id = R.drawable.ic_language),
+//                                contentDescription = "Language"
+//                            )
+//                        }
                     }
                 )
             }
         ) {
-            TmdbNavHost(navController = navController, mainViewModel=mainViewModel)
+            TmdbNavHost(navController = navController, mainViewModel = mainViewModel)
         }
     }
 }
+
+@Composable
+fun LanguagesDropdown(
+    modifier: Modifier,
+    languagesList: List<Language>,
+    currentLanguage: String,
+    onCurrentLanguageChange: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf(languagesList.first { it.code == currentLanguage }) }
+
+    Box(
+        modifier = modifier
+            .padding(end = 16.dp)
+//            .wrapContentSize(Alignment.TopEnd)
+    ) {
+        Row(
+            modifier = Modifier
+                .height(24.dp)
+                .clickable {
+                    expanded = !expanded
+                }
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            LanguageListItem(selectedItem)
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(MaterialTheme.colorScheme.background)
+        ) {
+            repeat(languagesList.size) {
+                val item = languagesList[it]
+                DropdownMenuItem(text = {
+                    LanguageListItem(selectedItem = item)
+                }, onClick = {
+                    selectedItem = item
+                    expanded = !expanded
+                    onCurrentLanguageChange(selectedItem.code)
+                })
+            }
+
+        }
+    }
+}
+
+@Composable
+fun LanguageListItem(selectedItem: Language) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Image(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape),
+            painter = painterResource(selectedItem.flag),
+            contentScale = ContentScale.Crop,
+            contentDescription = selectedItem.code
+        )
+
+        Text(
+            modifier = Modifier.padding(start = 8.dp),
+            text = selectedItem.name,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.W500,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        )
+    }
+}
+
+data class Language(
+    val code: String,
+    val name: String,
+    @DrawableRes val flag: Int
+)

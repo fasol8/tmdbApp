@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">tmdb</string>
+    <string name="text_presentation">Welcome \nMillions of movies, Tv shows and people to discover, Explore now</string>
+    <string name="trending">Trending</string>
+    <string name="search_multi">Search movie or tv or person …</string>
+    <string name="today_tab">Today</string>
+    <string name="this_week_tab">This Week</string>
 </resources>

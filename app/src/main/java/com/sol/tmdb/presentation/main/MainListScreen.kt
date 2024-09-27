@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -133,7 +134,7 @@ fun MainListScreen(navController: NavController, viewModel: MainViewModel = hilt
                     .padding(2.dp)
             ) {
                 Text(
-                    text = "Trending",
+                    text = stringResource(R.string.trending),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp, start = 8.dp)
                 )
@@ -153,7 +154,7 @@ fun TextPlaceHolder() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Welcome \nMillions of movies, Tv shows and people to discover, Explore now",
+            text = stringResource(R.string.text_presentation),
             style = MaterialTheme.typography.titleLarge,
             color = Color.White,
             fontWeight = FontWeight.Bold,
@@ -181,7 +182,7 @@ fun MultiSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (St
         },
         active = activate,
         onActiveChange = { activate = true },
-        placeholder = { Text(text = "Search Game") },
+        placeholder = { Text(text = stringResource(R.string.search_multi)) },
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
@@ -307,7 +308,7 @@ fun TrendingTabs(
     navController: NavController
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Today", "This Week")
+    val tabs = listOf(stringResource(R.string.today_tab), stringResource(R.string.this_week_tab))
 
     Box(
         modifier = Modifier

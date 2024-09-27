@@ -64,6 +64,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    androidResources {
+        generateLocaleConfig = true
+    }
 }
 
 dependencies {
@@ -83,6 +87,7 @@ dependencies {
 //    implementation (libs.androidx.material)
     implementation(libs.hilt.android)
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.appcompat)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.retrofit)
@@ -91,8 +96,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.material3)
 //    implementation(libs.androidx.navigation.compose.v270)
-    implementation (libs.accompanist.pager)
-    implementation (libs.accompanist.pager.indicators)
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.pager.indicators)
 
 
     testImplementation(libs.junit)

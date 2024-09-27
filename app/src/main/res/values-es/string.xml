@@ -1,0 +1,7 @@
+<resources>
+    <string name="search_multi">Buscar película o tv or persona …</string>
+    <string name="trending">Tendencia</string>
+    <string name="text_presentation">Bienvenid@ \nMillones de peliculas, Tv shows y personas para descubir, Explora ahora</string>
+    <string name="today_tab">Hoy</string>
+    <string name="this_week_tab">Esta semana</string>
+</resources>
