@@ -1,6 +1,7 @@
 package com.sol.tmdb.navigation
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -66,13 +67,13 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
-    val context= LocalContext.current
+    val context = LocalContext.current
 
     val languageChangeHelper by lazy { LanguageChangeHelper() }
 
     val allLanguages = listOf(
-        Language("en", "English", R.drawable.ic_movie),
-        Language("es", "Español", R.drawable.ic_person),
+        Language("en", "English", R.drawable.ic_movie), //TODO:change flag
+        Language("es", "Español", R.drawable.ic_person), //TODO:change flag
     )
 
     val currentLanguageCode: String = languageChangeHelper.getLanguageCode(context)
@@ -81,6 +82,9 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
     val onCurrentLanguageChange: (String) -> Unit = { newLanguage ->
         currentLanguage = newLanguage
         languageChangeHelper.changeLanguage(context, newLanguage)
+
+        val activity = (context as? Activity)
+        activity?.recreate()
     }
 
     val items = listOf(
@@ -175,17 +179,7 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
                             currentLanguage = currentLanguage,
                             onCurrentLanguageChange = onCurrentLanguageChange
                         )
-                            Log.i("MM", currentLanguage)
-//                        IconButton(onClick = {
-////                            val lanCode = if (currentLanguage != "en") "es" else "en"
-////                            onCurrentLanguageChange(lanCode)
-////                            Log.i("MM", lanCode)
-//                        }) {
-//                            Icon(
-//                                painter = painterResource(id = R.drawable.ic_language),
-//                                contentDescription = "Language"
-//                            )
-//                        }
+                        Log.i("LanguageDropdown", "Current language code: $currentLanguage")
                     }
                 )
             }
@@ -203,7 +197,10 @@ fun LanguagesDropdown(
     onCurrentLanguageChange: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedItem by remember { mutableStateOf(languagesList.first { it.code == currentLanguage }) }
+    var selectedItem by remember {
+        mutableStateOf(languagesList.firstOrNull { it.code == currentLanguage }
+            ?: languagesList.first())
+    }
 
     Box(
         modifier = modifier

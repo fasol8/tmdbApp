@@ -6,24 +6,28 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import java.util.Locale
 
 class LanguageChangeHelper {
-    fun changeLanguage(context: Context, languageCode: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) //version >=12
-            context.getSystemService(LocaleManager::class.java).applicationLocales =
-                LocaleList.forLanguageTags(languageCode)
-        else { //version<12
-            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageCode))
-        }
+    fun getLanguageCode(context: Context): String {
+        val sharedPref = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
+        return sharedPref.getString("selectedLanguage", "en-US") ?: "en-US"
     }
 
-    fun getLanguageCode(context: Context): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.getSystemService(LocaleManager::class.java).applicationLocales[0].toLanguageTag()
-                ?.split("-")?.first() ?: "en"
-        } else {
-            AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag()?.split("-")?.first()
-                ?: "en"
+    fun changeLanguage(context: Context, languageCode: String) {
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        val config = context.resources.configuration
+        config.setLocale(locale)
+        config.setLayoutDirection(locale)
+
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+        // Guardar el idioma en SharedPreferences
+        val sharedPref = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("selectedLanguage", languageCode)
+            apply()
         }
     }
 }

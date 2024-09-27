@@ -7,22 +7,19 @@ import androidx.activity.enableEdgeToEdge
 import com.sol.tmdb.navigation.MainMenu
 import com.sol.tmdb.ui.theme.TmdbTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-//    private val languageChangeHelper = LanguageChangeHelper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
-//        val sharedPref = getSharedPreferences("AppSettings", MODE_PRIVATE)
-//        val selectedLanguage = sharedPref.getString("selectedLanguage", "en") ?: "en"
-//
-//        // Verificar si el idioma actual es diferente del seleccionado
-//        if (languageChangeHelper.getLanguageCode(this) != selectedLanguage) {
-//            languageChangeHelper.changeLanguage(this, selectedLanguage)
-//        }
+        val sharedPref = getSharedPreferences("AppSettings", MODE_PRIVATE)
+        val selectedLanguage = sharedPref.getString("selectedLanguage", "en-US") ?: "en-US"
+        setLocale(selectedLanguage)
+
+        enableEdgeToEdge()
         setContent {
             TmdbTheme {
                 MainMenu()
@@ -30,5 +27,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
+    private fun setLocale(language: String) {
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        val config = resources.configuration
+        config.setLocale(locale)
+        resources.updateConfiguration(config, resources.displayMetrics)
+    }
 }
