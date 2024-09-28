@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.person.PersonResult
 import com.sol.tmdb.navigation.TmdbScreen
 import com.sol.tmdb.presentation.main.MainViewModel
@@ -51,10 +52,10 @@ import com.sol.tmdb.presentation.movie.MovieSearchBar
 @Composable
 fun PersonScreen(
     navController: NavController,
-    mainViewModel: MainViewModel,
+    sharedViewModel: SharedViewModel,
     viewModel: PersonViewModel = hiltViewModel()
 ) {
-    val isSearchIsVisible by mainViewModel.isSearchBarVisible.observeAsState(false)
+    val isSearchIsVisible by sharedViewModel.isSearchBarVisible.observeAsState(false)
     val persons by viewModel.persons.observeAsState(emptyList())
     var query by rememberSaveable { mutableStateOf("") }
 

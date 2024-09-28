@@ -49,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.movie.MovieResult
 import com.sol.tmdb.navigation.TmdbScreen
 import com.sol.tmdb.presentation.main.MainViewModel
@@ -57,10 +58,10 @@ import com.sol.tmdb.presentation.main.MainViewModel
 fun MoviesScreen(
     category: String,
     navController: NavController,
-    mainViewModel: MainViewModel,
+    sharedViewModel: SharedViewModel,
     viewModel: MovieViewModel = hiltViewModel(),
 ) {
-    val isSearchIsVisible by mainViewModel.isSearchBarVisible.observeAsState(false)
+    val isSearchIsVisible by sharedViewModel.isSearchBarVisible.observeAsState(false)
     val movies by if (isSearchIsVisible) {
         viewModel.movies.observeAsState(emptyList())
     } else {
@@ -74,7 +75,10 @@ fun MoviesScreen(
     }
     var query by rememberSaveable { mutableStateOf("") }
 
-    LaunchedEffect(true) { whenCategoryMovie(category, viewModel) }
+    LaunchedEffect(true) {
+        viewModel.observeLanguage(sharedViewModel)
+//        whenCategoryMovie(category, viewModel)
+    }
 
     Box(
         modifier = Modifier
@@ -103,6 +107,7 @@ fun MoviesScreen(
                             if (isSearchIsVisible) {
                                 viewModel.searchMovie(query)
                             } else {
+//                                viewModel.loadPopularMovies()
                                 whenCategoryMovie(category, viewModel)
                             }
                         }

@@ -68,6 +68,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.movie.Cast
 import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
@@ -88,6 +89,7 @@ import com.sol.tmdb.navigation.TmdbScreen
 fun MovieDetail(
     movieId: Int,
     navController: NavController,
+    sharedViewModel: SharedViewModel,
     viewModel: MovieViewModel = hiltViewModel()
 ) {
     val movie by viewModel.movieById.observeAsState()
@@ -98,10 +100,15 @@ fun MovieDetail(
     val movieProvider by viewModel.movieProviders.observeAsState()
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
     val movieRecommendation by viewModel.movieRecommendation.observeAsState(emptyList())
+    val language by viewModel.language.observeAsState()
+//    var language: String = "en-US"
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    LaunchedEffect(movieId) { viewModel.searchAllMovie(movieId) }
+    LaunchedEffect(true) {
+        viewModel.observeLanguage(sharedViewModel, movieId)
+    }
+//    LaunchedEffect(movieId) { viewModel.searchAllMovie(movieId, language) }
 
     when {
         movie != null -> {
@@ -117,6 +124,7 @@ fun MovieDetail(
                             movieProvider,
                             movieSimilar,
                             movieRecommendation,
+                            language,
                             navController
                         )
                     }
@@ -154,6 +162,7 @@ fun MovieCard(
     movieProvider: Map<String, CountryResult?>?,
     movieSimilar: List<MovieSimilarResult?>,
     movieRecommendation: List<MovieRecommendationResult?>,
+    language: String?,
     navController: NavController
 ) {
     val imageBackground = ("https://image.tmdb.org/t/p/w500" + movie?.backdropPath)
@@ -213,7 +222,7 @@ fun MovieCard(
                             style = MaterialTheme.typography.titleMedium,
                             fontSize = 24.sp
                         )
-                        CertificationAndGenresMovie(movie, movieCertification)
+                        CertificationAndGenresMovie(movie, movieCertification, language)
                         Spacer(modifier = Modifier.height(4.dp))
                         Row {
 //                        TODO: Favorite - List - Watchlist
@@ -222,7 +231,9 @@ fun MovieCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(4.dp))
-                        InfoAndProvidersMovieTabs(movie, movieProvider)
+                        if (language != null) {
+                            InfoAndProvidersMovieTabs(movie, movieProvider, language)
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         CastAndCrewMovieTabs(movieCast, movieCrew, navController)
                         Spacer(modifier = Modifier.height(4.dp))
@@ -274,12 +285,15 @@ fun MovieCard(
 @Composable
 fun CertificationAndGenresMovie(
     movie: MovieDetail,
-    movieCertification: Map<String?, Certification?>?
+    movieCertification: Map<String?, Certification?>?,
+    language: String?
 ) {
+    val countryRegion = if (language != "es-MX") "US" else "MX"
+
     Row {
         movieCertification?.let { certs ->
             certs.forEach { (country, certification) ->
-                if (country == "MX" && certification?.certification != null) {
+                if (country == countryRegion && certification?.certification != null) {
                     Text(
                         text = certification.certification ?: "",
                         style = MaterialTheme.typography.bodySmall,
@@ -342,7 +356,11 @@ fun getTrailerVideo(movieVideos: List<MovieVideosResult>): MovieVideosResult? {
 }
 
 @Composable
-fun InfoAndProvidersMovieTabs(movie: MovieDetail, movieProvider: Map<String, CountryResult?>?) {
+fun InfoAndProvidersMovieTabs(
+    movie: MovieDetail,
+    movieProvider: Map<String, CountryResult?>?,
+    language: String
+) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Facts", "Providers")
@@ -371,7 +389,7 @@ fun InfoAndProvidersMovieTabs(movie: MovieDetail, movieProvider: Map<String, Cou
         when (selectedTabIndex) {
             0 -> InfoMovieTab(movie = movie)
 
-            1 -> ProvidersMovieTab(movieProvider = movieProvider)
+            1 -> ProvidersMovieTab(movieProvider = movieProvider, language)
         }
     }
 }
@@ -441,16 +459,17 @@ fun InfoMovieTab(movie: MovieDetail) {
 }
 
 @Composable
-fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?) {
+fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?, language: String) {
     if (movieProvider != null) {
         val mxProviders = movieProvider["MX"]
         val usProviders = movieProvider["US"]
+        val provider = if (language != "es-MX") usProviders else mxProviders
 
         Column {
-            if (mxProviders?.flatrate?.isNotEmpty() == true) {
+            if (provider?.flatrate?.isNotEmpty() == true) {
                 LazyRow {
-                    items(mxProviders.flatrate.size) { index ->
-                        val provide = mxProviders.flatrate[index]
+                    items(provider.flatrate.size) { index ->
+                        val provide = provider.flatrate[index]
                         val image = if (provide.logoPath.isNullOrEmpty()) {
                             R.drawable.no_image
                         } else {
@@ -469,7 +488,7 @@ fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?) {
                     }
                 }
             } else {
-                Text(text = "No providers available for MX")
+                Text(text = "No providers available")
             }
         }
     } else {

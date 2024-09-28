@@ -16,40 +16,40 @@ import javax.inject.Inject
 
 class MovieRepository @Inject constructor(private val api: TmdbApi) {
 
-    suspend fun getDiscoverMovie(page: Int = 1): MovieResponse {
-        return api.getDiscoverMovie(page)
+    suspend fun getDiscoverMovie(page: Int = 1, language: String): MovieResponse {
+        return api.getDiscoverMovie(page, language)
     }
 
-    suspend fun getNowPlaying(page: Int = 1): MovieNowResponse {
-        return api.getNowPlayingMovie(page)
+    suspend fun getNowPlaying(page: Int = 1, language: String): MovieNowResponse {
+        return api.getNowPlayingMovie(page, language)
     }
 
-    suspend fun getPopularMovie(page: Int = 1): MovieResponse {
-        return api.getPopularMovie(page)
+    suspend fun getPopularMovie(page: Int = 1, language: String): MovieResponse {
+        return api.getPopularMovie(page, language)
     }
 
-    suspend fun getTopRated(page: Int = 1): MovieResponse {
-        return api.getTopRatedMovie(page)
+    suspend fun getTopRated(page: Int = 1, language: String): MovieResponse {
+        return api.getTopRatedMovie(page, language)
     }
 
-    suspend fun getUpcoming(page: Int): MovieNowResponse {
-        return api.getUpcomingMovie(page)
+    suspend fun getUpcoming(page: Int, language: String): MovieNowResponse {
+        return api.getUpcomingMovie(page, language)
     }
 
-    suspend fun getSearchMovie(query:String, page: Int=1):MovieResponse{
+    suspend fun getSearchMovie(query: String, page: Int = 1): MovieResponse {
         return api.getSearchMovie(query, page)
     }
 
-    suspend fun getMovieDetail(movieId: Int): MovieDetail {
-        return api.getMovieDetail(movieId)
+    suspend fun getMovieDetail(movieId: Int, language: String): MovieDetail {
+        return api.getMovieDetail(movieId, language)
     }
 
     suspend fun getMovieRelease(movieId: Int): MovieRelease {
         return api.getMovieRelease(movieId)
     }
 
-    suspend fun getMovieVideos(movieId: Int): MovieVideosResponse {
-        return api.getMovieVideos(movieId)
+    suspend fun getMovieVideos(movieId: Int, language: String): MovieVideosResponse {
+        return api.getMovieVideos(movieId, language)
     }
 
     suspend fun getMovieImages(movieId: Int): MovieImagesResponse {

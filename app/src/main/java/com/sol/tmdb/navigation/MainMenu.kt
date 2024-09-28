@@ -2,7 +2,6 @@ package com.sol.tmdb.navigation
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -57,13 +55,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sol.tmdb.LanguageChangeHelper
 import com.sol.tmdb.R
-import com.sol.tmdb.presentation.main.MainViewModel
+import com.sol.tmdb.SharedViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
+fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -72,7 +70,7 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
     val languageChangeHelper by lazy { LanguageChangeHelper() }
 
     val allLanguages = listOf(
-        Language("en", "English", R.drawable.ic_movie), //TODO:change flag
+        Language("en-US", "English", R.drawable.ic_movie), //TODO:change flag
         Language("es", "Español", R.drawable.ic_person), //TODO:change flag
     )
 
@@ -82,6 +80,7 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
     val onCurrentLanguageChange: (String) -> Unit = { newLanguage ->
         currentLanguage = newLanguage
         languageChangeHelper.changeLanguage(context, newLanguage)
+        sharedViewModel.changeLanguage(newLanguage)
 
         val activity = (context as? Activity)
         activity?.recreate()
@@ -168,7 +167,7 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
                         }
                     },
                     actions = {
-                        IconButton(onClick = { mainViewModel.toggleSearchBar() }) {
+                        IconButton(onClick = { sharedViewModel.toggleSearchBar() }) {
                             Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                         }
                         LanguagesDropdown(
@@ -179,12 +178,11 @@ fun MainMenu(mainViewModel: MainViewModel = hiltViewModel()) {
                             currentLanguage = currentLanguage,
                             onCurrentLanguageChange = onCurrentLanguageChange
                         )
-                        Log.i("LanguageDropdown", "Current language code: $currentLanguage")
                     }
                 )
             }
         ) {
-            TmdbNavHost(navController = navController, mainViewModel = mainViewModel)
+            TmdbNavHost(navController = navController, sharedViewModel = sharedViewModel)
         }
     }
 }

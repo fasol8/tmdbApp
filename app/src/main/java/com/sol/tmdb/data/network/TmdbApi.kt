@@ -52,30 +52,35 @@ interface TmdbApi {
     @GET("discover/movie")
     suspend fun getDiscoverMovie(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieResponse
 
     @GET("movie/now_playing")
     suspend fun getNowPlayingMovie(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieNowResponse
 
     @GET("movie/popular")
     suspend fun getPopularMovie(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieResponse
 
     @GET("movie/top_rated")
     suspend fun getTopRatedMovie(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieResponse
 
     @GET("movie/upcoming")
     suspend fun getUpcomingMovie(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieNowResponse
 
@@ -89,6 +94,7 @@ interface TmdbApi {
     @GET("movie/{movie_id}")
     suspend fun getMovieDetail(
         @Path("movie_id") movieId: Int,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieDetail
 
@@ -107,6 +113,7 @@ interface TmdbApi {
     @GET("movie/{movie_id}/videos")
     suspend fun getMovieVideos(
         @Path("movie_id") movieId: Int,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): MovieVideosResponse
 

@@ -15,32 +15,32 @@ import javax.inject.Inject
 
 class GetMovieUseCase @Inject constructor(private val repository: MovieRepository) {
 
-    suspend operator fun invoke(page: Int): MovieResponse {
-        return repository.getDiscoverMovie(page)
+    suspend operator fun invoke(page: Int, language: String): MovieResponse {
+        return repository.getDiscoverMovie(page, language)
     }
 
-    suspend fun getNowPlaying(page: Int = 1): MovieNowResponse {
-        return repository.getNowPlaying(page)
+    suspend fun getNowPlaying(page: Int = 1, language: String): MovieNowResponse {
+        return repository.getNowPlaying(page, language)
     }
 
-    suspend fun getPopularMovie(page: Int = 1): MovieResponse {
-        return repository.getPopularMovie(page)
+    suspend fun getPopularMovie(page: Int = 1, language: String): MovieResponse {
+        return repository.getPopularMovie(page, language)
     }
 
-    suspend fun getTopRated(page: Int = 1): MovieResponse {
-        return repository.getTopRated(page)
+    suspend fun getTopRated(page: Int = 1, language: String): MovieResponse {
+        return repository.getTopRated(page, language)
     }
 
-    suspend fun getUpcoming(page: Int): MovieNowResponse {
-        return repository.getUpcoming(page)
+    suspend fun getUpcoming(page: Int, language: String): MovieNowResponse {
+        return repository.getUpcoming(page, language)
     }
 
     suspend fun getSearchMovie(query: String, page: Int = 1): MovieResponse {
         return repository.getSearchMovie(query, page)
     }
 
-    suspend fun getMovieDetail(movieId: Int): MovieDetail {
-        return repository.getMovieDetail(movieId)
+    suspend fun getMovieDetail(movieId: Int, language: String): MovieDetail {
+        return repository.getMovieDetail(movieId, language)
     }
 
     suspend fun getMovieReleaseWithCertification(movieId: Int): Map<String?, Certification?> {
@@ -57,8 +57,8 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
         }
     }
 
-    suspend fun getMovieVideos(movieId: Int): MovieVideosResponse {
-        return repository.getMovieVideos(movieId)
+    suspend fun getMovieVideos(movieId: Int, language: String): MovieVideosResponse {
+        return repository.getMovieVideos(movieId, language)
     }
 
     suspend fun getMovieImages(movieId: Int): MovieImagesResponse {

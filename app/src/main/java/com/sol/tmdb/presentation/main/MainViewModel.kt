@@ -1,11 +1,9 @@
 package com.sol.tmdb.presentation.main
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sol.tmdb.domain.model.main.SearchResponse
 import com.sol.tmdb.domain.model.main.SearchResult
 import com.sol.tmdb.domain.model.main.TrendingResult
 import com.sol.tmdb.domain.useCase.GetMainUseCase
@@ -21,9 +19,6 @@ class MainViewModel @Inject constructor(private val getMainUseCase: GetMainUseCa
 
     private val _searchResults = MutableLiveData<List<SearchResult>?>()
     val searchResults: LiveData<List<SearchResult>?> = _searchResults
-
-    private val _isSearchBarVisible = MutableLiveData(false)
-    val isSearchBarVisible: LiveData<Boolean> = _isSearchBarVisible
 
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -77,9 +72,5 @@ class MainViewModel @Inject constructor(private val getMainUseCase: GetMainUseCa
                 isLoading = false
             }
         }
-    }
-
-    fun toggleSearchBar() {
-        _isSearchBarVisible.value = _isSearchBarVisible.value?.not()
     }
 }

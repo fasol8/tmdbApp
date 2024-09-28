@@ -1,10 +1,10 @@
 package com.sol.tmdb.presentation.movie
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
@@ -20,7 +20,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUseCase) :
+class MovieViewModel @Inject constructor(
+    private val getMovieUseCase: GetMovieUseCase,
+) :
     ViewModel() {
 
     //                          MutableStateFlow()
@@ -64,6 +66,9 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         MutableLiveData<List<MovieRecommendationResult?>>(emptyList())
     val movieRecommendation: LiveData<List<MovieRecommendationResult?>> = _movieRecommendation
 
+    private val _language = MutableLiveData<String>("en-US")
+    val language: LiveData<String> = _language
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
@@ -75,10 +80,36 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         loadMovies()
     }
 
-    fun searchAllMovie(movieId: Int) {
-        searchMovieById(movieId)
+    fun observeLanguage(sharedViewModel: SharedViewModel, movieId: Int = 0) {
+        sharedViewModel.selectedLanguage.observeForever { newLanguage ->
+            _language.value = if (newLanguage == "es") "es-MX" else newLanguage
+            currentPage = 1
+            clearDataMovie()
+            loadMoviesForLanguage(_language.value.toString())
+            searchAllMovie(movieId, _language.value.toString())
+        }
+    }
+
+    private fun clearDataMovie() {
+        _movies.value = emptyList()
+        _nowPlaying.value = emptyList()
+        _popularMovies.value = emptyList()
+        _topRatedMovies.value = emptyList()
+        _upcomingMovies.value = emptyList()
+    }
+
+    private fun loadMoviesForLanguage(language: String) {
+        loadMovies(language)
+        loadNowPlaying(language)
+        loadPopularMovies(language)
+        loadTopRatedMovies(language)
+        loadUpcomingMovies(language)
+    }
+
+    private fun searchAllMovie(movieId: Int, language: String) {
+        searchMovieById(movieId, language)
         searchMovieCertification(movieId)
-        searchMovieVideos(movieId)
+        searchMovieVideos(movieId, language)
         searchMovieImages(movieId)
         searchMovieCredits(movieId)
         searchMovieProvidersForMxAndUs(movieId)
@@ -112,40 +143,42 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    fun loadMovies() {
+    fun loadMovies(language: String = _language.toString()) {
         loadMoviesData(
             _movies,
-            fetchMovies = { getMovieUseCase(currentPage) },
+            fetchMovies = { getMovieUseCase(currentPage, language) },
             mapResponse = { it.results })
     }
 
-    fun loadNowPlaying() {
+    fun loadNowPlaying(language: String = _language.value.toString()) {
         loadMoviesData(
             _nowPlaying,
-            fetchMovies = { getMovieUseCase.getNowPlaying(currentPage) },
+            fetchMovies = { getMovieUseCase.getNowPlaying(currentPage, language) },
             mapResponse = { it.results }  // Mapeamos el resultado del tipo MovieNowResponse
         )
     }
 
-    fun loadPopularMovies(page: Int = 1) {
+    fun loadPopularMovies(language: String = _language.value.toString()) {
         loadMoviesData(
             _popularMovies,
-            fetchMovies = { getMovieUseCase.getPopularMovie(currentPage) },
+            fetchMovies = {
+                getMovieUseCase.getPopularMovie(currentPage, language)
+            },
             mapResponse = { it.results }  // Mapeamos el resultado del tipo MovieResponse
         )
     }
 
-    fun loadTopRatedMovies(page: Int = 1) {
+    fun loadTopRatedMovies(language: String = _language.value.toString()) {
         loadMoviesData(_topRatedMovies,
-            fetchMovies = { getMovieUseCase.getTopRated(currentPage) },
+            fetchMovies = { getMovieUseCase.getTopRated(currentPage, language) },
             mapResponse = { it.results }
         )
     }
 
-    fun loadUpcomingMovies(page: Int = 1) {
+    fun loadUpcomingMovies(language: String = _language.value.toString()) {
         loadMoviesData(
             _upcomingMovies,
-            fetchMovies = { getMovieUseCase.getUpcoming(currentPage) },
+            fetchMovies = { getMovieUseCase.getUpcoming(currentPage, language) },
             mapResponse = { it.results })
     }
 
@@ -180,10 +213,10 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    private fun searchMovieById(id: Int) {
+    private fun searchMovieById(id: Int, language: String) {
         viewModelScope.launch {
             try {
-                val response = getMovieUseCase.getMovieDetail(id)
+                val response = getMovieUseCase.getMovieDetail(id, language)
                 _movieById.value = response
             } catch (e: Exception) {
                 _movieById.value = null
@@ -204,12 +237,11 @@ class MovieViewModel @Inject constructor(private val getMovieUseCase: GetMovieUs
         }
     }
 
-    private fun searchMovieVideos(movieId: Int) {
+    private fun searchMovieVideos(movieId: Int, language: String) {
         viewModelScope.launch {
             try {
-                val response = getMovieUseCase.getMovieVideos(movieId)
+                val response = getMovieUseCase.getMovieVideos(movieId, language)
                 _movieVideos.value = response.results
-                Log.i("VM", response.results.toString())
             } catch (e: Exception) {
                 _movieVideos.value = emptyList()
                 _errorMessage.value = "An error occurred: ${e.message}"

@@ -49,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.navigation.TmdbScreen
 import com.sol.tmdb.presentation.main.MainViewModel
@@ -58,10 +59,10 @@ import com.sol.tmdb.presentation.movie.MovieSearchBar
 fun TvScreen(
     category: String,
     navController: NavController,
-    mainViewModel: MainViewModel,
+    sharedViewModel: SharedViewModel,
     viewModel: TvViewModel = hiltViewModel()
 ) {
-    val isSearchIsVisible by mainViewModel.isSearchBarVisible.observeAsState(false)
+    val isSearchIsVisible by sharedViewModel.isSearchBarVisible.observeAsState(false)
     val tvs by if (isSearchIsVisible) {
         viewModel.tvs.observeAsState(emptyList())
     } else {
