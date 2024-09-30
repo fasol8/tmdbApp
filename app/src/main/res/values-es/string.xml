@@ -61,7 +61,7 @@
     <string name="episodes">" Episodios "</string>
     <string name="air_date">Fecha de emisión</string>
     <string name="guest_stars">Estrella invitada</string>
-    <string name="images">Imagenes</string>
+    <string name="images">Imágenes</string>
     <string name="action">Acción</string>
     <string name="adventure">Aventura</string>
     <string name="animation">Animación</string>
@@ -74,7 +74,7 @@
     <string name="music">Musical</string>
     <string name="mystery">Misterio</string>
     <string name="science_fiction">Ciencia Fiction</string>
-    <string name="tv_movie">Pelicula Television</string>
+    <string name="tv_movie">Película Television</string>
     <string name="war">Guerra</string>
     <string name="gender_not_specified">No especificado</string>
     <string name="gender_female">Mujer</string>

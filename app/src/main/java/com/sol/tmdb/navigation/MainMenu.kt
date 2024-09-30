@@ -68,8 +68,8 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
     val languageChangeHelper by lazy { LanguageChangeHelper() }
 
     val allLanguages = listOf(
-        Language("en-US", R.drawable.ic_flag_united_states), //TODO:change flag
-        Language("es", R.drawable.ic_flag_mexico), //TODO:change flag
+        Language("en-US", R.drawable.ic_flag_united_states),
+        Language("es", R.drawable.ic_flag_mexico),
     )
 
     val currentLanguageCode: String = languageChangeHelper.getLanguageCode(context)
