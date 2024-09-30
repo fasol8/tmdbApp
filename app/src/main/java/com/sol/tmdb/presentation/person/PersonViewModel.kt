@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sol.tmdb.SharedViewModel
+import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.person.ImagesProfile
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail

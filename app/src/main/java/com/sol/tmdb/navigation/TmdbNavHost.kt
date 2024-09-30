@@ -8,7 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.sol.tmdb.SharedViewModel
+import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.presentation.main.MainListScreen
 import com.sol.tmdb.presentation.movie.MovieDetail
 import com.sol.tmdb.presentation.movie.MoviesScreen

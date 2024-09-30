@@ -51,7 +51,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
-import com.sol.tmdb.SharedViewModel
+import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.person.Gender
 import com.sol.tmdb.domain.model.person.ImagesProfile
 import com.sol.tmdb.domain.model.person.MovieCast

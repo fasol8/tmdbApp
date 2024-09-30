@@ -3,7 +3,6 @@
 package com.sol.tmdb.presentation.tv
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -70,7 +69,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
-import com.sol.tmdb.SharedViewModel
+import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.domain.model.tv.CountryResult

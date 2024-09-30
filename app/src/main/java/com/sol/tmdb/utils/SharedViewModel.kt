@@ -1,4 +1,4 @@
-package com.sol.tmdb
+package com.sol.tmdb.utils
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

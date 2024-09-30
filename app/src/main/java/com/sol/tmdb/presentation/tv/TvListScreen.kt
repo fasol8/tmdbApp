@@ -49,11 +49,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sol.tmdb.R
-import com.sol.tmdb.SharedViewModel
+import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.tv.TvResult
 import com.sol.tmdb.navigation.TmdbScreen
-import com.sol.tmdb.presentation.main.MainViewModel
-import com.sol.tmdb.presentation.movie.MovieSearchBar
 
 @Composable
 fun TvScreen(
