@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -77,7 +78,6 @@ fun TvSeason(
     sharedViewModel: SharedViewModel,
     viewModel: TvViewModel = hiltViewModel()
 ) {
-//    val language by viewModel.language.observeAsState()
     LaunchedEffect(tvId, numberOfSeasons) {
         viewModel.observeLanguage(sharedViewModel, tvId, numberOfSeasons)
     }
@@ -110,7 +110,7 @@ fun TvSeason(
                 )
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "Error message: $errorMessage",
+                    text = stringResource(id = R.string.error_message) + errorMessage,
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -152,7 +152,7 @@ fun SeasonCard(
                     }
                     AsyncImage(
                         model = image,
-                        contentDescription = "Season poster",
+                        contentDescription = stringResource(R.string.season_poster_description),
                         modifier = Modifier
                             .width(100.dp)
                             .fillMaxHeight(),
@@ -166,7 +166,7 @@ fun SeasonCard(
                             .padding(8.dp)
                     ) {
                         Text(
-                            text = season.name ?: "Unknown",
+                            text = season.name ?: stringResource(id = R.string.unknown),
                             style = MaterialTheme.typography.titleLarge
                         )
                         Row(
@@ -177,7 +177,7 @@ fun SeasonCard(
                                     painter = painterResource(id = R.drawable.ic_star),
                                     contentDescription = "Star Icon",
                                     modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFFFD700) // Color dorado
+                                    tint = Color(0xFFFFD700)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -200,13 +200,15 @@ fun SeasonCard(
                                 color = Color.Gray
                             )
                             Text(
-                                text = " • ${season.episodes.size ?: "Unknown"} Episodes",
+                                text = " • ${season.episodes.size ?: stringResource(id = R.string.unknown)}" +
+                                        stringResource(R.string.episodes),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = season.overview ?: "No overview available",
+                            text = season.overview
+                                ?: stringResource(id = R.string.no_overview_available),
                             maxLines = 4,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodyMedium
@@ -266,7 +268,7 @@ fun ItemEpisodes(
                     }
                     AsyncImage(
                         model = image,
-                        contentDescription = "logo provider",
+                        contentDescription = stringResource(id = R.string.logo_provider),
                         modifier = Modifier
                             .width(100.dp)
                             .fillMaxHeight(),
@@ -276,16 +278,20 @@ fun ItemEpisodes(
                     )
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(
-                            text = "Episode ${episode.episodeNumber ?: 0}: ${episode.name ?: "Unknown"}",
+                            text = (stringResource(id = R.string.episodes) + {
+                                episode.episodeNumber ?: 0
+                            }
+                                    + episode.name) ?: stringResource(id = R.string.unknown),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Air Date: ${episode.airDate ?: "Unknown"}",
+                            text = (stringResource(R.string.air_date) + episode.airDate)
+                                ?: "Unknown",
                             style = MaterialTheme.typography.bodySmall
                         )
                         Text(
-                            text = episode.overview ?: "Unknown",
+                            text = episode.overview ?: stringResource(id = R.string.unknown),
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis
@@ -306,7 +312,10 @@ fun InfoGalleryAndGuestStarsTabs(
     images: List<TvImagesStill>
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Crew", "Guest Stars", "Images")
+    val tabs = listOf(
+        stringResource(id = R.string.crew),
+        stringResource(R.string.guest_stars), stringResource(R.string.images)
+    )
 
     Column {
         TabRow(
@@ -379,7 +388,7 @@ fun HeroItemImageEpisode(imageEpisode: TvImagesStill, isHero: Boolean) {
         val image = imageEpisode.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
         AsyncImage(
             model = image,
-            contentDescription = "profile image",
+            contentDescription = stringResource(id = R.string.profile_image),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
             placeholder = painterResource(id = R.drawable.no_image),
@@ -417,7 +426,7 @@ fun EpisodeGuestStar(cast: TvCast, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${cast.profilePath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image, contentDescription = stringResource(id = R.string.profile_image),
                     modifier = Modifier
                         .width(100.dp)
                         .height(100.dp),
@@ -426,12 +435,12 @@ fun EpisodeGuestStar(cast: TvCast, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = cast.name ?: "Unknown",
+                    text = cast.name ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = cast.character ?: "Unknown",
+                    text = cast.character ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
@@ -469,7 +478,7 @@ fun EpisodeItemCrew(crew: TvCrew, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${crew.profilePath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image, contentDescription = stringResource(id = R.string.profile_image),
                     modifier = Modifier
                         .width(100.dp)
                         .height(100.dp),
@@ -478,12 +487,12 @@ fun EpisodeItemCrew(crew: TvCrew, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = crew.name ?: "Unknown",
+                    text = crew.name ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = crew.department ?: "Unknown",
+                    text = crew.department ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )

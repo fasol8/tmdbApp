@@ -39,7 +39,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -115,7 +117,7 @@ fun PersonDetail(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "Error message: $errorMessage",
+                        text = stringResource(id = R.string.error_message) + errorMessage,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -164,14 +166,14 @@ fun PersonCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     BiographyText(person.biography)
                     Text(
-                        text = "Known For",
+                        text = stringResource(R.string.known_for),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     MovieAndTvTabs(movieCredits, tvCredits, navController)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Gallery",
+                        text = stringResource(R.string.gallery),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -182,12 +184,15 @@ fun PersonCard(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BirthDayAndGenre(person: PersonDetail) {
+    val context = LocalContext.current
+
     Row {
         if (person.birthday != null) {
             Text(
-                text = "(${calculateAge(person.birthday)} years old) " + person.birthday + if (person.deathDay != null) "-${person.deathDay}" else "",
+                text = "(" + calculateAge(person.birthday) + stringResource(R.string.years_old) + person.birthday + if (person.deathDay != null) "-${person.deathDay}" else "",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Light,
                 modifier = Modifier
@@ -196,7 +201,7 @@ fun BirthDayAndGenre(person: PersonDetail) {
             )
         } else {
             Text(
-                text = "(?? years old)",
+                text = stringResource(R.string.no_years_old),
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Light,
                 modifier = Modifier
@@ -204,13 +209,14 @@ fun BirthDayAndGenre(person: PersonDetail) {
                     .weight(1f)
             )
         }
+
+        val gender = Gender.fromValue(person.gender)
+        val genderName = context.getString(gender.genderResId)
         Text(
-            text = Gender.fromValue(person.gender).name.replace("_", "  "),
+            text = genderName,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .border(1.dp, MaterialTheme.colorScheme.primary)
-                .padding(horizontal = 4.dp, vertical = 2.dp)
+            fontWeight = FontWeight.Light,
+            modifier = Modifier.padding(2.dp)
         )
     }
 }
@@ -271,7 +277,7 @@ fun BiographyText(biography: String) {
             ) {
                 TextButton(onClick = { expand = !expand }) {
                     Text(
-                        text = if (expand) "< Read less" else "Read more >",
+                        text = if (expand) stringResource(R.string.read_less) else stringResource(R.string.read_more),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
@@ -290,7 +296,7 @@ fun MovieAndTvTabs(
     navController: NavController
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
-    val tabs = listOf("Movie", "Tv Series")
+    val tabs = listOf(stringResource(R.string.movie), stringResource(R.string.tv_series))
 
     Column {
         TabRow(selectedTabIndex = selectedTabIndex, modifier = Modifier.fillMaxWidth()) {

@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -101,14 +102,12 @@ fun MovieDetail(
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
     val movieRecommendation by viewModel.movieRecommendation.observeAsState(emptyList())
     val language by viewModel.language.observeAsState()
-//    var language: String = "en-US"
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     LaunchedEffect(true) {
         viewModel.observeLanguage(sharedViewModel, movieId)
     }
-//    LaunchedEffect(movieId) { viewModel.searchAllMovie(movieId, language) }
 
     when {
         movie != null -> {
@@ -143,7 +142,7 @@ fun MovieDetail(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "Error message: ${errorMessage}",
+                        text = stringResource(R.string.error_message) + errorMessage,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -202,7 +201,7 @@ fun MovieCard(
                 ) {
                     AsyncImage(
                         model = imagePoster,
-                        contentDescription = "Poster movie",
+                        contentDescription = stringResource(id = R.string.poster_movie_description),
                         modifier = Modifier
                             .height(300.dp)
                             .aspectRatio(0.66f) // Mantiene la relación de aspecto típica de un póster
@@ -289,6 +288,7 @@ fun CertificationAndGenresMovie(
     language: String?
 ) {
     val countryRegion = if (language != "es-MX") "US" else "MX"
+    val context = LocalContext.current
 
     Row {
         movieCertification?.let { certs ->
@@ -305,8 +305,9 @@ fun CertificationAndGenresMovie(
                 }
             }
         }
-        val genreNames =
-            movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
+
+        val genreResIds = movie.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreResId }
+        val genreNames = genreResIds.map { context.getString(it) }
         Text(
             text = genreNames.joinToString(", "),
             style = MaterialTheme.typography.bodySmall,
@@ -329,11 +330,10 @@ fun TrailerButton(movieVideos: List<MovieVideosResult>) {
                 tint = Color.White
             )
             Spacer(modifier = Modifier.width(2.dp))
-            Text(text = "Play Trailer")
+            Text(text = stringResource(R.string.play_trailer))
         }
     } else {
-        Text(text = "Trailer not available")
-//        Toast.makeText(context, "Trailer not available", Toast.LENGTH_SHORT).show()
+        Text(text = stringResource(R.string.trailer_not_available))
     }
 }
 
@@ -363,7 +363,7 @@ fun InfoAndProvidersMovieTabs(
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
-    val tabs = listOf("Facts", "Providers")
+    val tabs = listOf(stringResource(R.string.facts), stringResource(R.string.providers))
 
     Column {
         TabRow(
@@ -398,7 +398,7 @@ fun InfoAndProvidersMovieTabs(
 fun InfoMovieTab(movie: MovieDetail) {
     Row {
         Text(
-            text = "Status \n" + movie.status,
+            text = stringResource(R.string.status) + movie.status,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
                 .padding(2.dp)
@@ -406,19 +406,19 @@ fun InfoMovieTab(movie: MovieDetail) {
         )
         Column(Modifier.weight(1.2f)) {
             Text(
-                text = "Budget: $" + movie.budget,
+                text = stringResource(R.string.budget) + movie.budget,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
             Text(
-                text = "Revenue: $" + movie.revenue,
+                text = stringResource(R.string.revenue) + movie.revenue,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
             Text(
-                text = "Origin country: " + movie.originCountry.joinToString {
+                text = stringResource(R.string.origin_country) + movie.originCountry.joinToString {
                     CountryFlag.getFlagByCode(it)
                 },
                 style = MaterialTheme.typography.bodySmall,
@@ -427,7 +427,10 @@ fun InfoMovieTab(movie: MovieDetail) {
             )
         }
         Column(Modifier.weight(1f)) {
-            Text(text = "Companies", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = stringResource(R.string.companies),
+                style = MaterialTheme.typography.bodySmall
+            )
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.height(60.dp)
@@ -442,7 +445,7 @@ fun InfoMovieTab(movie: MovieDetail) {
                         }
                         AsyncImage(
                             model = image,
-                            contentDescription = "logo provider",
+                            contentDescription = stringResource(id = R.string.logo_provider),
                             modifier = Modifier
                                 .width(50.dp)
                                 .height(50.dp)
@@ -477,7 +480,7 @@ fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?, language: Str
                         }
                         AsyncImage(
                             model = image,
-                            contentDescription = "logo provider",
+                            contentDescription = stringResource(R.string.logo_provider),
                             modifier = Modifier
                                 .width(60.dp)
                                 .height(60.dp)
@@ -488,7 +491,7 @@ fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?, language: Str
                     }
                 }
             } else {
-                Text(text = "No providers available")
+                Text(text = stringResource(R.string.no_providers_available))
             }
         }
     } else {
@@ -504,7 +507,7 @@ fun CastAndCrewMovieTabs(
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
-    val tabs = listOf("Cast", "Crew")
+    val tabs = listOf(stringResource(R.string.cast), stringResource(R.string.crew))
 
     Column {
         TabRow(
@@ -529,13 +532,13 @@ fun CastAndCrewMovieTabs(
 
         when (selectedTabIndex) {
             0 -> if (movieCast.isNullOrEmpty()) {
-                Text(text = "No cast available")
+                Text(text = stringResource(R.string.no_cast_available))
             } else {
                 CastMovieTab(movieCast = movieCast, navController = navController)
             }
 
             1 -> if (movieCrew.isNullOrEmpty()) {
-                Text(text = "No crew available")
+                Text(text = stringResource(R.string.no_crew_available))
             } else {
                 CrewMovieTab(movieCrew = movieCrew, navController = navController)
             }
@@ -584,7 +587,8 @@ fun CastMovieItem(cast: Cast, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${cast.profilePath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image,
+                    contentDescription = stringResource(id = R.string.poster_movie_description),
                     modifier = Modifier
                         .width(120.dp)
                         .height(180.dp),
@@ -624,7 +628,8 @@ fun CrewMovieItem(crew: Crew, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${crew.profilePath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image,
+                    contentDescription = stringResource(id = R.string.poster_movie_description),
                     modifier = Modifier
                         .width(100.dp)
                         .height(100.dp),
@@ -651,7 +656,11 @@ fun CrewMovieItem(crew: Crew, onClick: () -> Unit) {
 fun MediaMovieTabs(movieImages: MovieImagesResponse?, movieVideos: List<MovieVideosResult>) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
-    val tabs = listOf("Poster", "Back Drop", "Video")
+    val tabs = listOf(
+        stringResource(R.string.poster),
+        stringResource(R.string.back_drop),
+        stringResource(R.string.video)
+    )
 
     Column {
         TabRow(
@@ -687,7 +696,7 @@ fun PostersMovieTab(posters: List<MovieImagesPoster>?) {
     val pagerState = rememberPagerState(initialPage = 0)
 
     if (posters!!.isEmpty()) {
-        Text(text = "No posters available")
+        Text(text = stringResource(R.string.no_posters_available))
         return
     }
 
@@ -728,7 +737,7 @@ fun PosterMovieItem(poster: MovieImagesPoster, isHero: Boolean) {
         val image = poster.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
         AsyncImage(
             model = image,
-            contentDescription = "profile image",
+            contentDescription = stringResource(R.string.profile_image),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -740,7 +749,7 @@ fun BackdropMovieTab(backdrops: List<MovieImagesBackdrop>?) {
     val pagerState = rememberPagerState(initialPage = 0)
 
     if (backdrops!!.isEmpty()) {
-        Text(text = "No backdrops available")
+        Text(text = stringResource(R.string.no_backdrops_available))
         return
     }
 
@@ -781,7 +790,7 @@ fun BackDropMovieItem(backdrop: MovieImagesBackdrop, isHero: Boolean) {
         val image = backdrop.filePath.let { "https://image.tmdb.org/t/p/w500$it" } ?: ""
         AsyncImage(
             model = image,
-            contentDescription = "profile image",
+            contentDescription = stringResource(id = R.string.profile_image),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -794,7 +803,7 @@ fun VideosMovieTab(videos: List<MovieVideosResult>) {
     val videosYoutube = getYoutubeVideos(videos)
 
     if (videosYoutube.isEmpty()) {
-        Text(text = "No YouTube videos available")
+        Text(text = stringResource(R.string.no_youtube_videos))
     } else {
         LazyRow {
             items(videosYoutube.size) { index ->
@@ -836,7 +845,7 @@ fun RecommendationAndSimilarMovieTabs(
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
-    val tabs = listOf("Recommendation", "Similar")
+    val tabs = listOf(stringResource(R.string.recommendation), stringResource(R.string.similar))
 
     Column {
         TabRow(
@@ -887,7 +896,7 @@ fun SimilarMovieTab(
                     navController.navigate(TmdbScreen.MovieDetail.route + "/${movieSim?.id}")
                 }
             } else {
-                Text(text = "Invalid movie data")
+                Text(text = stringResource(R.string.no_movie_data))
             }
         }
     }
@@ -906,7 +915,7 @@ fun RecommendationMovieTab(
                     navController.navigate(TmdbScreen.MovieDetail.route + "/${movie?.id}")
                 }
             } else {
-                Text(text = "Invalid movie data")
+                Text(text = stringResource(id = R.string.no_movie_data))
             }
         }
     }
@@ -929,7 +938,8 @@ fun SimilarMovieItem(movieSim: MovieSimilarResult?, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${movieSim?.posterPath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image,
+                    contentDescription = stringResource(id = R.string.poster_movie_description),
                     modifier = Modifier
                         .width(120.dp)
                         .height(170.dp),
@@ -959,7 +969,8 @@ fun RecommendationMovieItem(movieRec: MovieRecommendationResult?, onClick: () ->
                     "https://image.tmdb.org/t/p/w500${movieRec?.posterPath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image,
+                    contentDescription = stringResource(id = R.string.poster_movie_description),
                     modifier = Modifier
                         .width(120.dp)
                         .height(170.dp),

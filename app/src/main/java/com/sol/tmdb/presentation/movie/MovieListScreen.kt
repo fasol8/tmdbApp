@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,7 +77,6 @@ fun MoviesScreen(
 
     LaunchedEffect(true) {
         viewModel.observeLanguage(sharedViewModel)
-//        whenCategoryMovie(category, viewModel)
     }
 
     Box(
@@ -106,7 +106,6 @@ fun MoviesScreen(
                             if (isSearchIsVisible) {
                                 viewModel.searchMovie(query)
                             } else {
-//                                viewModel.loadPopularMovies()
                                 whenCategoryMovie(category, viewModel)
                             }
                         }
@@ -135,7 +134,7 @@ fun MovieSearchBar(query: String, onQueryChange: (String) -> Unit, onSearch: (St
         },
         active = activate,
         onActiveChange = { activate = true },
-        placeholder = { Text(text = "Search Movie") },
+        placeholder = { Text(text = stringResource(R.string.search_movie_placeholder)) },
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
@@ -173,7 +172,7 @@ fun ItemMovie(movie: MovieResult, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${movie.posterPath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image, contentDescription = stringResource(R.string.poster_movie_description),
                     modifier = Modifier.fillMaxWidth(),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(id = R.drawable.no_image),

@@ -1,10 +1,12 @@
 package com.sol.tmdb.domain.model.person
 
-enum class Gender(val value: Int) {
-    NOT_SPECIFIED(0),
-    FEMALE(1),
-    MALE(2),
-    NON_BINARY(3);
+import com.sol.tmdb.R
+
+enum class Gender(val value: Int, val genderResId: Int) {
+    NOT_SPECIFIED(0, R.string.gender_not_specified),
+    FEMALE(1, R.string.gender_female),
+    MALE(2, R.string.gender_male),
+    NON_BINARY(3, R.string.gender_non_binary);
 
     companion object {
         fun fromValue(value: Int): Gender {

@@ -1,25 +1,32 @@
 package com.sol.tmdb.domain.model.movie
 
-enum class MovieGenre(val id: Int, val genreName:String) {
-    ACTION(28,"Action"),
-    ADVENTURE(12, "Adventure"),
-    ANIMATION(16,"Animation"),
-    COMEDY(35,"Comedy"),
-    CRIME(80,"Crime"),
-    DOCUMENTARY(99,"Documentary"),
-    DRAMA(18,"Drama"),
-    FAMILY(10751,"Family"),
-    FANTASY(14,"Fantasy"),
-    HISTORY(36,"History"),
-    HORROR(27,"Horror"),
-    MUSIC(10402,"Music"),
-    MYSTERY(9648,"Mystery"),
-    ROMANCE(10749,"Romance"),
-    SCIENCE_FICTION(878,"Science Fiction"),
-    TV_MOVIE(10770,"TV Movie"),
-    THRILLER(53,"Thriller"),
-    WAR(10752,"War"),
-    WESTERN(37,"Western");
+import android.content.Context
+import com.sol.tmdb.R
+
+enum class MovieGenre(val id: Int, val genreResId: Int) {
+    ACTION(28, R.string.action),
+    ADVENTURE(12, R.string.adventure),
+    ANIMATION(16, R.string.animation),
+    COMEDY(35, R.string.comedy),
+    CRIME(80, R.string.crime),
+    DOCUMENTARY(99, R.string.documentary),
+    DRAMA(18, R.string.drama),
+    FAMILY(10751, R.string.family),
+    FANTASY(14, R.string.fantasy),
+    HISTORY(36, R.string.history),
+    HORROR(27, R.string.horror),
+    MUSIC(10402, R.string.music),
+    MYSTERY(9648, R.string.mystery),
+    ROMANCE(10749, R.string.romance),
+    SCIENCE_FICTION(878, R.string.science_fiction),
+    TV_MOVIE(10770, R.string.tv_movie),
+    THRILLER(53, R.string.thriller),
+    WAR(10752, R.string.war),
+    WESTERN(37, R.string.western);
+
+    fun getGenreName(context: Context): String {
+        return context.getString(genreResId)
+    }
 
     companion object {
         fun fromId(id: Int): MovieGenre? {

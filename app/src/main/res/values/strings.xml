@@ -1,8 +1,104 @@
 <resources>
-    <string name="app_name">tmdb</string>
+    <string name="app_name" translatable="false">TMDB</string>
     <string name="text_presentation">Welcome \nMillions of movies, Tv shows and people to discover, Explore now</string>
     <string name="trending">Trending</string>
     <string name="search_multi">Search movie or tv or person …</string>
     <string name="today_tab">Today</string>
     <string name="this_week_tab">This Week</string>
+    <string name="now_playing_title">Now Playing</string>
+    <string name="popular_title" translatable="false">Popular</string>
+    <string name="top_rated_movies_title">Top Rated Movies</string>
+    <string name="upcoming_title">Upcoming</string>
+    <string name="airing_tv_title">Airing Tv</string>
+    <string name="on_the_air_title">On the Air</string>
+    <string name="popular_tv_title" translatable="false">Popular TV</string>
+    <string name="top_rated_tv_title">Top Rated TV</string>
+    <string name="person_title">Person</string>
+    <string name="menu" translatable="false">Menu</string>
+    <string name="search_movie_placeholder">Search Movie</string>
+    <string name="poster_movie_description">poster movie</string>
+    <string name="error_message">"Error message: "</string>
+    <string name="trailer_not_available">Trailer not available</string>
+    <string name="status">Status \n</string>
+    <string name="budget">Budget: $</string>
+    <string name="revenue">Revenue: $</string>
+    <string name="origin_country">"Origin country: "</string>
+    <string name="companies">Companies</string>
+    <string name="logo_provider">logo provider</string>
+    <string name="no_providers_available">No providers available</string>
+    <string name="cast">Cast</string>
+    <string name="crew">Crew</string>
+    <string name="no_cast_available">No cast available</string>
+    <string name="no_crew_available">No crew available</string>
+    <string name="poster" translatable="false">Poster</string>
+    <string name="back_drop">Back Drop</string>
+    <string name="video" translatable="false">Video</string>
+    <string name="no_posters_available">No posters available</string>
+    <string name="profile_image">profile image</string>
+    <string name="no_backdrops_available">No backdrops available</string>
+    <string name="recommendation">Recommendation</string>
+    <string name="similar">Similar</string>
+    <string name="no_movie_data">No movie data</string>
+    <string name="play_trailer">Play Trailer</string>
+    <string name="search_person_placeholder">Search Person</string>
+    <string name="known_for">Known For</string>
+    <string name="gallery">Gallery</string>
+    <string name="no_years_old">(?? years old)</string>
+    <string name="read_less"><![CDATA[< Read less]]></string>
+    <string name="read_more"><![CDATA[Read more >]]></string>
+    <string name="years_old">" years old) "</string>
+    <string name="search_tv_placeholder">Search TV</string>
+    <string name="no_title_available">No title available</string>
+    <string name="no_overview_available">No Overview Available</string>
+    <string name="facts">Facts</string>
+    <string name="providers">Providers</string>
+    <string name="no_youtube_videos">No YouTube videos available</string>
+    <string name="last_season">Last Season</string>
+    <string name="view_all_seasons">View All Seasons</string>
+    <string name="no_genres_available">No Genres Available</string>
+    <string name="unknown">Unknown</string>
+    <string name="created_by">Created by:</string>
+    <string name="total_season">"Total season: "</string>
+    <string name="total_episodes">"Total episodes: "</string>
+    <string name="networks">Networks</string>
+    <string name="n_a" translatable="false">N/A</string>
+    <string name="no_episode_name_available">No episode name available</string>
+    <string name="season_finale">Season Finale</string>
+    <string name="season_poster_description">Season poster</string>
+    <string name="episodes">" Episodes "</string>
+    <string name="air_date">"Air Date: "</string>
+    <string name="guest_stars">Guest Stars</string>
+    <string name="images">Images</string>
+    <string name="action">Action</string>
+    <string name="adventure">Adventure</string>
+    <string name="animation">Animation</string>
+    <string name="comedy">Comedy</string>
+    <string name="crime">Crime</string>
+    <string name="documentary">Documentary</string>
+    <string name="drama" translatable="false">Drama</string>
+    <string name="family">Family</string>
+    <string name="fantasy">Fantasy</string>
+    <string name="history">History</string>
+    <string name="horror" translatable="false">Horror</string>
+    <string name="music">Music</string>
+    <string name="mystery">Mystery</string>
+    <string name="romance" translatable="false">Romance</string>
+    <string name="science_fiction">Science Fiction</string>
+    <string name="tv_movie">TV Movie</string>
+    <string name="thriller" translatable="false">Thriller</string>
+    <string name="war">War</string>
+    <string name="western" translatable="false">Western</string>
+    <string name="gender_not_specified">Not Specified</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_non_binary">Non-binary</string>
+    <string name="movie">Movies</string>
+    <string name="tv_series">Tv Series</string>
+    <string name="mainscreen_title">MainScreen</string>
+    <string name="movies_title">Movies</string>
+    <string name="movies_detail_title" translatable="false">Movie Detail</string>
+    <string name="tvs_title">Tvs</string>
+    <string name="tv_detail_title" translatable="false">TvDetail</string>
+    <string name="tv_season_detail" translatable="false">TvSeason</string>
+    <string name="person_detail_title" translatable="false">PersonDetail</string>
 </resources>

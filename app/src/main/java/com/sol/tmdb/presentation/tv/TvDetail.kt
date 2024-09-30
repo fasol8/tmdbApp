@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -145,7 +146,7 @@ fun TvDetail(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = "Error message: $errorMessage",
+                        text = stringResource(id = R.string.error_message) + errorMessage,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -221,14 +222,14 @@ fun TvCard(
                     Column(Modifier.padding(horizontal = 8.dp)) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = tv.name ?: "No title available",
+                            text = tv.name ?: stringResource(R.string.no_title_available),
                             style = MaterialTheme.typography.titleMedium,
                             fontSize = 24.sp
                         )
                         TvRatingAndGenre(tv, tvRatings, language)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = tv.overview ?: "No Overview Available",
+                            text = tv.overview ?: stringResource(R.string.no_overview_available),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -238,9 +239,9 @@ fun TvCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         TvCastAndCrewTabs(cast, crew, navController)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = "Last Season")
+                        Text(text = stringResource(R.string.last_season))
                         LastSeason(tv.seasons.last(), tv.lastEpisodeToAir)
-                        Text(text = "View All Seasons",
+                        Text(text = stringResource(R.string.view_all_seasons),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Blue,
                             modifier = Modifier
@@ -294,6 +295,8 @@ fun TvCard(
 @Composable
 fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?, language: String?) {
     val countryRegion = if (language.toString() == "es-MX") "MX" else "US"
+    val context = LocalContext.current
+
     Row {
         tvRatings?.let { rati ->
             rati.forEach { (country, rating) ->
@@ -309,9 +312,9 @@ fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?, la
                 }
             }
         }
-        val genreNames =
-            tv.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreName }
-                ?: listOf("No Genres Available")
+
+        val genreResIds = tv.genres.mapNotNull { MovieGenre.fromId(it.id)?.genreResId }
+        val genreNames = genreResIds.map { context.getString(it) }
         Text(
             text = genreNames.joinToString(", "),
             style = MaterialTheme.typography.bodySmall,
@@ -325,7 +328,7 @@ fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?, la
 fun TvCreatedByPerson(tv: TvDetail, navController: NavController) {
     if (tv.createdBy.isNotEmpty()) {
         Text(
-            text = "Created by:",
+            text = stringResource(R.string.created_by),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 8.dp)
@@ -333,7 +336,7 @@ fun TvCreatedByPerson(tv: TvDetail, navController: NavController) {
         Row {
             tv.createdBy.forEach { creator ->
                 Text(
-                    text = creator.name ?: "Unknown",
+                    text = creator.name ?: stringResource(R.string.unknown),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Blue,
                     modifier = Modifier
@@ -351,7 +354,7 @@ fun TvCreatedByPerson(tv: TvDetail, navController: NavController) {
 fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?, language: String?) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
-    val tabs = listOf("Facts", "Providers")
+    val tabs = listOf(stringResource(id = R.string.facts), stringResource(id = R.string.providers))
 
     Column {
         TabRow(
@@ -412,7 +415,7 @@ fun TvProviderTab(tvProviders: Map<String, CountryResult?>, language: String) {
                     }
                 }
             }
-        } else Text(text = "No providers available")
+        } else Text(text = stringResource(id = R.string.no_providers_available))
     }
 }
 
@@ -420,7 +423,8 @@ fun TvProviderTab(tvProviders: Map<String, CountryResult?>, language: String) {
 fun TvFactsTab(tv: TvDetail) {
     Row {
         Text(
-            text = "Status \n" + (tv.status ?: "Unknown"),
+            text = stringResource(id = R.string.status) + (tv.status
+                ?: stringResource(id = R.string.unknown)),
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier
                 .padding(2.dp)
@@ -428,28 +432,31 @@ fun TvFactsTab(tv: TvDetail) {
         )
         Column(Modifier.weight(1.2f)) {
             Text(
-                text = "Total season: " + (tv.numberOfSeasons ?: 0),
+                text = stringResource(R.string.total_season) + (tv.numberOfSeasons ?: 0),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
             Text(
-                text = "Total episodes: " + (tv.numberOfEpisodes ?: 0),
+                text = stringResource(R.string.total_episodes) + (tv.numberOfEpisodes ?: 0),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
             Text(
-                text = "Origin country: " + (tv.originCountry.joinToString {
+                text = stringResource(id = R.string.origin_country) + (tv.originCountry.joinToString {
                     CountryFlag.getFlagByCode(it)
-                } ?: "Unknown"),
+                } ?: stringResource(id = R.string.unknown)),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(2.dp)
             )
         }
         Column(Modifier.weight(1f)) {
-            Text(text = "Networks", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = stringResource(R.string.networks),
+                style = MaterialTheme.typography.bodySmall
+            )
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.height(60.dp)
@@ -464,7 +471,7 @@ fun TvFactsTab(tv: TvDetail) {
                         }
                         AsyncImage(
                             model = image,
-                            contentDescription = "logo provider",
+                            contentDescription = stringResource(id = R.string.logo_provider),
                             modifier = Modifier
                                 .width(50.dp)
                                 .height(50.dp)
@@ -486,7 +493,7 @@ fun TvCastAndCrewTabs(
 ) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
-    val tabs = listOf("Cast", "Crew")
+    val tabs = listOf(stringResource(id = R.string.cast), stringResource(id = R.string.crew))
 
     Column {
         TabRow(
@@ -511,13 +518,13 @@ fun TvCastAndCrewTabs(
 
         when (selectedTabIndex) {
             0 -> if (tvCast.isNullOrEmpty()) {
-                Text(text = "No cast available")
+                Text(text = stringResource(id = R.string.no_cast_available))
             } else {
                 CastTvTab(cast = tvCast, navController = navController)
             }
 
             1 -> if (tvCrew.isNullOrEmpty()) {
-                Text(text = "No crew available")
+                Text(text = stringResource(id = R.string.no_crew_available))
             } else {
                 CrewTvTab(crew = tvCrew, navController = navController)
             }
@@ -566,7 +573,8 @@ fun ItemTvCast(cast: TvCast, onClick: () -> Unit) {
                     "https://image.tmdb.org/t/p/w500${cast.profilePath}"
                 }
                 AsyncImage(
-                    model = image, contentDescription = "poster movie",
+                    model = image,
+                    contentDescription = stringResource(id = R.string.poster_movie_description),
                     modifier = Modifier
                         .width(120.dp)
                         .height(180.dp),
@@ -575,12 +583,12 @@ fun ItemTvCast(cast: TvCast, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = cast.name ?: "Unknown",
+                    text = cast.name ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = cast.character ?: "Unknown",
+                    text = cast.character ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
@@ -615,12 +623,12 @@ fun ItemTvCrew(crew: TvCrew, onClick: () -> Unit) {
                     error = painterResource(id = R.drawable.profile_no_image)
                 )
                 Text(
-                    text = crew.name ?: "Unknown",
+                    text = crew.name ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(top = 8.dp, start = 2.dp)
                 )
                 Text(
-                    text = crew.department ?: "Unknown",
+                    text = crew.department ?: stringResource(id = R.string.unknown),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 2.dp, start = 8.dp)
                 )
@@ -660,7 +668,7 @@ fun LastSeason(last: Season?, lastEpisodeToAir: LastEpisodeToAir?) {
                     )
                     Column(Modifier.padding(start = 16.dp, top = 16.dp)) {
                         Text(
-                            text = last.name ?: "Unknown",
+                            text = last.name ?: stringResource(id = R.string.unknown),
                             style = MaterialTheme.typography.titleLarge
                         )
                         Row(
@@ -671,7 +679,7 @@ fun LastSeason(last: Season?, lastEpisodeToAir: LastEpisodeToAir?) {
                                     painter = painterResource(id = R.drawable.ic_star),
                                     contentDescription = "Star Icon",
                                     modifier = Modifier.size(16.dp),
-                                    tint = Color(0xFFFFD700) // Color dorado
+                                    tint = Color(0xFFFFD700)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
@@ -687,7 +695,7 @@ fun LastSeason(last: Season?, lastEpisodeToAir: LastEpisodeToAir?) {
                                 } catch (e: Exception) {
                                     "N/A"
                                 }
-                            } ?: "N/A"
+                            } ?: stringResource(R.string.n_a)
                             Text(
                                 text = year,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -700,14 +708,16 @@ fun LastSeason(last: Season?, lastEpisodeToAir: LastEpisodeToAir?) {
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = last.overview ?: "No overview available",
+                            text = last.overview
+                                ?: stringResource(id = R.string.no_overview_available),
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = lastEpisodeToAir.name ?: "No episode name available",
+                            text = lastEpisodeToAir.name
+                                ?: stringResource(R.string.no_episode_name_available),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -725,7 +735,7 @@ fun LastSeason(last: Season?, lastEpisodeToAir: LastEpisodeToAir?) {
                             Spacer(modifier = Modifier.width(8.dp))
                             if (lastEpisodeToAir.episodeType == "finale") {
                                 Text(
-                                    text = "Season Finale",
+                                    text = stringResource(R.string.season_finale),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier

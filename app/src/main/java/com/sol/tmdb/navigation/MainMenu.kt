@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -96,20 +97,20 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
     )
 
     val titles = mapOf(
-        TmdbScreen.NowPlaying.route to "Now Playing",
-        TmdbScreen.PopularMovies.route to "Popular",
-        TmdbScreen.TopRatedMovies.route to "Top Rated Movies",
-        TmdbScreen.UpcomingMovies.route to "Upcoming",
-        TmdbScreen.AirToday.route to "Airing Tv",
-        TmdbScreen.OnAir.route to "On the Air",
-        TmdbScreen.PopularTv.route to "Popular TV",
-        TmdbScreen.TopRatedTv.route to "Top Rated TV",
-        TmdbScreen.Person.route to "Person",
+        TmdbScreen.NowPlaying.route to stringResource(R.string.now_playing_title),
+        TmdbScreen.PopularMovies.route to stringResource(R.string.popular_title),
+        TmdbScreen.TopRatedMovies.route to stringResource(R.string.top_rated_movies_title),
+        TmdbScreen.UpcomingMovies.route to stringResource(R.string.upcoming_title),
+        TmdbScreen.AirToday.route to stringResource(R.string.airing_tv_title),
+        TmdbScreen.OnAir.route to stringResource(R.string.on_the_air_title),
+        TmdbScreen.PopularTv.route to stringResource(R.string.popular_tv_title),
+        TmdbScreen.TopRatedTv.route to stringResource(R.string.top_rated_tv_title),
+        TmdbScreen.Person.route to stringResource(R.string.person_title),
     )
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
-    val currentTitle = titles[currentRoute] ?: "TMDB App"
+    val currentTitle = titles[currentRoute] ?: stringResource(id = R.string.app_name)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -122,7 +123,7 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
             ) {
                 Column {
                     Text(
-                        text = "TMDB App",
+                        text = stringResource(id = R.string.app_name),
                         style = MaterialTheme.typography.titleLarge,
                         fontSize = 24.sp,
                         modifier = Modifier
@@ -145,10 +146,10 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
                             }) {
                             Icon(
                                 painter = painterResource(id = icon),
-                                contentDescription = screen.title
+                                contentDescription =""
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text(text = screen.title)
+                            Text(text = stringResource(id = screen.titleResId))
                         }
                     }
                 }
@@ -168,7 +169,7 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
                     },
                     navigationIcon = {
                         IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
                         }
                     },
                     actions = {
