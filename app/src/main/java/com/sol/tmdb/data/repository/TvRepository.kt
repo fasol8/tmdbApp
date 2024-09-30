@@ -16,32 +16,32 @@ import javax.inject.Inject
 
 class TvRepository @Inject constructor(private val api: TmdbApi) {
 
-    suspend fun getDiscoverTv(page: Int = 1): TvResponse {
-        return api.getDiscoverTv(page)
+    suspend fun getDiscoverTv(page: Int = 1, language: String): TvResponse {
+        return api.getDiscoverTv(page, language)
     }
 
-    suspend fun getAirTodayTv(page: Int = 1): TvResponse {
-        return api.getAirTodayTv(page)
+    suspend fun getAirTodayTv(page: Int = 1, language: String): TvResponse {
+        return api.getAirTodayTv(page, language)
     }
 
-    suspend fun getOnAirTv(page: Int = 1): TvResponse {
-        return api.getOnAirTv(page)
+    suspend fun getOnAirTv(page: Int = 1, language: String): TvResponse {
+        return api.getOnAirTv(page, language)
     }
 
-    suspend fun getPopularTv(page: Int = 1): TvResponse {
-        return api.getPopularTv(page)
+    suspend fun getPopularTv(page: Int = 1, language: String): TvResponse {
+        return api.getPopularTv(page, language)
     }
 
-    suspend fun getTopRatedTv(page: Int = 1): TvResponse {
-        return api.getTopRatedTv(page)
+    suspend fun getTopRatedTv(page: Int = 1, language: String): TvResponse {
+        return api.getTopRatedTv(page, language)
     }
 
     suspend fun getSearchTv(query: String, page: Int = 1): TvResponse {
         return api.getSearchTv(query, page)
     }
 
-    suspend fun getTvDetail(tvId: Int): TvDetail {
-        return api.getTvDetail(tvId)
+    suspend fun getTvDetail(tvId: Int, language: String): TvDetail {
+        return api.getTvDetail(tvId, language)
     }
 
     suspend fun getRatings(tvId: Int): TvRatingsResponse {
@@ -73,8 +73,12 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
         return api.getTvRecommendations(tvId)
     }
 
-    suspend fun getSeasonDetails(tvId: Int, seasonNumber: Int): TvSeasonDetailResponse {
-        return api.getTvSeasonDetails(tvId, seasonNumber)
+    suspend fun getSeasonDetails(
+        tvId: Int,
+        seasonNumber: Int,
+        language: String
+    ): TvSeasonDetailResponse {
+        return api.getTvSeasonDetails(tvId, seasonNumber, language)
     }
 
     suspend fun getImagesEpisode(

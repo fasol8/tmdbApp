@@ -18,8 +18,8 @@ class PersonRepository @Inject constructor(private val api: TmdbApi) {
         return api.getSearchPerson(query, page)
     }
 
-    suspend fun getPersonDetail(personId: Int): PersonDetail {
-        return api.getPersonDetail(personId)
+    suspend fun getPersonDetail(personId: Int, language: String): PersonDetail {
+        return api.getPersonDetail(personId, language)
     }
 
     suspend fun getCreditsMovies(personId: Int): MovieCreditsResponse {

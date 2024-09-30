@@ -58,6 +58,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.tv.TvCast
 import com.sol.tmdb.domain.model.tv.TvCrew
 import com.sol.tmdb.domain.model.tv.TvImagesStill
@@ -73,11 +74,12 @@ fun TvSeason(
     tvId: Int,
     numberOfSeasons: Int,
     navController: NavController,
+    sharedViewModel: SharedViewModel,
     viewModel: TvViewModel = hiltViewModel()
 ) {
-
+//    val language by viewModel.language.observeAsState()
     LaunchedEffect(tvId, numberOfSeasons) {
-        viewModel.loadAllSeasons(tvId, numberOfSeasons)
+        viewModel.observeLanguage(sharedViewModel, tvId, numberOfSeasons)
     }
 
     val seasonDetails by viewModel.seasonDetails.observeAsState(emptyList())

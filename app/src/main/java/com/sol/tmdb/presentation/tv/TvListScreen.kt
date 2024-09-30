@@ -77,6 +77,7 @@ fun TvScreen(
     var query by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(true) {
+        viewModel.observeLanguage(sharedViewModel)
         whenCategoryTv(category, viewModel)
     }
 

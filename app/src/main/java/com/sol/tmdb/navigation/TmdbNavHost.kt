@@ -47,7 +47,7 @@ fun TmdbNavHost(navController: NavHostController, sharedViewModel: SharedViewMod
             arguments = listOf(navArgument("tvId") { type = NavType.IntType })
         ) { navBackStackEntry ->
             val tvId = navBackStackEntry.arguments?.getInt("tvId") ?: return@composable
-            TvDetail(tvId = tvId, navController)
+            TvDetail(tvId = tvId, navController, sharedViewModel)
         }
         composable(
             route = TmdbScreen.TvSeason.route + "/{tvSeasons}/{numberOfSeasons}",
@@ -59,7 +59,7 @@ fun TmdbNavHost(navController: NavHostController, sharedViewModel: SharedViewMod
             val tvId = navBackStackEntry.arguments?.getInt("tvSeasons") ?: return@composable
             val numberOfSeasons =
                 navBackStackEntry.arguments?.getInt("numberOfSeasons") ?: return@composable
-            TvSeason(tvId, numberOfSeasons, navController)
+            TvSeason(tvId, numberOfSeasons, navController, sharedViewModel)
         }
 
         composable(TmdbScreen.Person.route) { PersonScreen(navController, sharedViewModel) }
@@ -68,7 +68,7 @@ fun TmdbNavHost(navController: NavHostController, sharedViewModel: SharedViewMod
             arguments = listOf(navArgument("personId") { type = NavType.IntType })
         ) { navBackStackEntry ->
             val personId = navBackStackEntry.arguments?.getInt("personId") ?: return@composable
-            PersonDetail(personId = personId, navController)
+            PersonDetail(personId = personId, navController, sharedViewModel)
         }
     }
 }

@@ -144,30 +144,35 @@ interface TmdbApi {
     @GET("discover/tv")
     suspend fun getDiscoverTv(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
 
     @GET("tv/airing_today")
     suspend fun getAirTodayTv(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
 
     @GET("tv/on_the_air")
     suspend fun getOnAirTv(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
 
     @GET("tv/popular")
     suspend fun getPopularTv(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
 
     @GET("tv/top_rated")
     suspend fun getTopRatedTv(
         @Query("page") page: Int = 1,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvResponse
 
@@ -181,6 +186,7 @@ interface TmdbApi {
     @GET("tv/{tv_id}")
     suspend fun getTvDetail(
         @Path("tv_id") tvId: Int,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvDetail
 
@@ -230,6 +236,7 @@ interface TmdbApi {
     suspend fun getTvSeasonDetails(
         @Path("tv_id") tvId: Int,
         @Path("season_number") seasonId: Int,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): TvSeasonDetailResponse
 
@@ -257,6 +264,7 @@ interface TmdbApi {
     @GET("person/{person_id}")
     suspend fun getPersonDetail(
         @Path("person_id") page: Int,
+        @Query("language") language: String,
         @Query("api_key") apikey: String = BuildConfig.TMDB_API_KEY
     ): PersonDetail
 

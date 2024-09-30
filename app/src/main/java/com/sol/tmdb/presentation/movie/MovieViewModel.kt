@@ -76,10 +76,6 @@ class MovieViewModel @Inject constructor(
     private var lastQuery: String? = null
     private var isLoading = false
 
-    init {
-        loadMovies()
-    }
-
     fun observeLanguage(sharedViewModel: SharedViewModel, movieId: Int = 0) {
         sharedViewModel.selectedLanguage.observeForever { newLanguage ->
             _language.value = if (newLanguage == "es") "es-MX" else newLanguage

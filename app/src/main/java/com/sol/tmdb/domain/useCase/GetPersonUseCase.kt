@@ -18,8 +18,8 @@ class GetPersonUseCase @Inject constructor(private val repository: PersonReposit
         return repository.getSearchPerson(query, page)
     }
 
-    suspend fun getPersonDetail(personId: Int): PersonDetail {
-        return repository.getPersonDetail(personId)
+    suspend fun getPersonDetail(personId: Int, language: String): PersonDetail {
+        return repository.getPersonDetail(personId, language)
     }
 
     suspend fun getCreditsMovies(personId: Int): MovieCreditsResponse {

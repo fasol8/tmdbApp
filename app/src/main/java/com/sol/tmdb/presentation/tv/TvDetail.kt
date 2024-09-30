@@ -3,6 +3,7 @@
 package com.sol.tmdb.presentation.tv
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -69,6 +70,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.domain.model.tv.CountryResult
@@ -92,7 +94,12 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = hiltViewModel()) {
+fun TvDetail(
+    tvId: Int,
+    navController: NavController,
+    sharedViewModel: SharedViewModel,
+    viewModel: TvViewModel = hiltViewModel()
+) {
     val tv by viewModel.tvById.observeAsState()
     val tvRatings by viewModel.tvRatings.observeAsState(emptyMap())
     val tvCredits by viewModel.tvCredits.observeAsState()
@@ -101,9 +108,10 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
     val tvVideos by viewModel.tvVideos.observeAsState(emptyList())
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
     val tvRecommendations by viewModel.tvRecommendations.observeAsState(emptyList())
+    val language by viewModel.language.observeAsState()
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    LaunchedEffect(tvId) { viewModel.searchAll(tvId) }
+    LaunchedEffect(tvId) { viewModel.observeLanguage(sharedViewModel, tvId) }
 
     when {
         tv != null -> {
@@ -119,6 +127,7 @@ fun TvDetail(tvId: Int, navController: NavController, viewModel: TvViewModel = h
                             tvVideos,
                             tvSimilar,
                             tvRecommendations,
+                            language,
                             navController
                         )
                     }
@@ -157,6 +166,7 @@ fun TvCard(
     tvVideos: List<TvVideosResult>?,
     tvSimilar: List<SimilarResult?>,
     tvRecommendations: List<TvRecommendationsResult?>,
+    language: String?,
     navController: NavController
 ) {
     val imageBackground = ("https://image.tmdb.org/t/p/w500" + tv?.backdropPath)
@@ -216,7 +226,7 @@ fun TvCard(
                             style = MaterialTheme.typography.titleMedium,
                             fontSize = 24.sp
                         )
-                        TvRatingAndGenre(tv, tvRatings)
+                        TvRatingAndGenre(tv, tvRatings, language)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = tv.overview ?: "No Overview Available",
@@ -225,7 +235,7 @@ fun TvCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         TvCreatedByPerson(tv, navController)
                         Spacer(modifier = Modifier.height(6.dp))
-                        TvInfoTabs(tv, tvProviders)
+                        TvInfoTabs(tv, tvProviders, language)
                         Spacer(modifier = Modifier.height(4.dp))
                         TvCastAndCrewTabs(cast, crew, navController)
                         Spacer(modifier = Modifier.height(4.dp))
@@ -283,11 +293,12 @@ fun TvCard(
 }
 
 @Composable
-fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?) {
+fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?, language: String?) {
+    val countryRegion = if (language.toString() == "es-MX") "MX" else "US"
     Row {
         tvRatings?.let { rati ->
             rati.forEach { (country, rating) ->
-                if (country == "MX" && rating?.certification != null) {
+                if (country == countryRegion && rating?.certification != null) {
                     Text(
                         text = rating.certification,
                         style = MaterialTheme.typography.bodySmall,
@@ -338,7 +349,7 @@ fun TvCreatedByPerson(tv: TvDetail, navController: NavController) {
 }
 
 @Composable
-fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
+fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?, language: String?) {
     var selectedTabIndex by rememberSaveable { mutableStateOf(0) }
 
     val tabs = listOf("Facts", "Providers")
@@ -367,21 +378,22 @@ fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?) {
         when (selectedTabIndex) {
             0 -> TvFactsTab(tv = tv)
 
-            1 -> TvProviderTab(tvProviders = tvProviders ?: emptyMap())
+            1 -> TvProviderTab(tvProviders = tvProviders ?: emptyMap(), language.toString())
         }
     }
 }
 
 @Composable
-fun TvProviderTab(tvProviders: Map<String, CountryResult?>) {
+fun TvProviderTab(tvProviders: Map<String, CountryResult?>, language: String) {
     val mxProviders = tvProviders["MX"]
     val usProviders = tvProviders["US"]
+    val provider = if (language != "es-MX") usProviders else mxProviders
 
     Column {
-        if (mxProviders != null) {
+        if (provider != null) {
             LazyRow {
-                items(mxProviders.flatrate.size) { index ->
-                    val provide = mxProviders.flatrate[index]
+                items(provider.flatrate.size) { index ->
+                    val provide = provider.flatrate[index]
                     provide.let {
                         val image = if (it.logoPath.isNullOrEmpty()) {
                             R.drawable.no_image
@@ -401,7 +413,7 @@ fun TvProviderTab(tvProviders: Map<String, CountryResult?>) {
                     }
                 }
             }
-        } else Text(text = "No providers available for MX")
+        } else Text(text = "No providers available")
     }
 }
 

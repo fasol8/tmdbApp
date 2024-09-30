@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.person.ImagesProfile
 import com.sol.tmdb.domain.model.person.MovieCreditsResponse
 import com.sol.tmdb.domain.model.person.PersonDetail
@@ -33,6 +34,9 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
     private val _personImages = MutableLiveData<List<ImagesProfile>>(emptyList())
     val personImages: LiveData<List<ImagesProfile>> = _personImages
 
+    private val _language = MutableLiveData<String>("en-US")
+    val language: LiveData<String> = _language
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
@@ -44,8 +48,16 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         loadPerson()
     }
 
-    fun searchAll(personId: Int) {
-        searchPersonById(personId)
+    fun observeLanguage(sharedViewModel: SharedViewModel, personId: Int) {
+        sharedViewModel.selectedLanguage.observeForever { newLanguage ->
+            _language.value = if (newLanguage == "es") "es-MX" else newLanguage
+            currentPage = 1
+            searchAll(personId, language.value.toString())
+        }
+    }
+
+    fun searchAll(personId: Int, language: String) {
+        searchPersonById(personId, language)
         searchCreditsMovies(personId)
         searchCreditsTv(personId)
         searchImagesProfile(personId)
@@ -102,10 +114,10 @@ class PersonViewModel @Inject constructor(private val getPersonUseCase: GetPerso
         }
     }
 
-    private fun searchPersonById(personId: Int) {
+    private fun searchPersonById(personId: Int, language: String) {
         viewModelScope.launch {
             try {
-                val response = getPersonUseCase.getPersonDetail(personId)
+                val response = getPersonUseCase.getPersonDetail(personId, language)
                 _personById.value = response
             } catch (e: Exception) {
                 _personById.value = null

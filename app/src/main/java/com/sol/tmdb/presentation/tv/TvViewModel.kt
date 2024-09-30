@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResult
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
+import kotlin.reflect.KSuspendFunction2
 
 @HiltViewModel
 class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : ViewModel() {
@@ -71,6 +73,9 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private val _episodeImages = MutableLiveData<Map<Int, List<TvImagesStill>>>()
     val episodeImages: LiveData<Map<Int, List<TvImagesStill>>> = _episodeImages
 
+    private val _language = MutableLiveData<String>("en-US")
+    val language: LiveData<String> = _language
+
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
 
@@ -79,8 +84,36 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private var isLoading = false
     private val seasonDetailsList = mutableListOf<TvSeasonDetailResponse>()
 
-    fun searchAll(tvId: Int) {
-        searchTvById(tvId)
+    fun observeLanguage(sharedViewModel: SharedViewModel, tvId: Int = 0, numberOfSeasons: Int = 0) {
+        sharedViewModel.selectedLanguage.observeForever { newLanguage ->
+            _language.value = if (newLanguage == "es") "es-MX" else newLanguage
+            currentPage = 1
+            clearDataTv()
+            loadTvsForLanguage(_language.value.toString())
+            searchAllTv(tvId, _language.value.toString())
+            loadAllSeasons(tvId, numberOfSeasons, _language.value.toString())
+        }
+    }
+
+    private fun clearDataTv() {
+        _tvs.value = emptyList()
+        _airToday.value = emptyList()
+        _onAir.value = emptyList()
+        _popularTv.value = emptyList()
+        _topRatedTv.value = emptyList()
+        _seasonDetails.value= emptyList()
+    }
+
+    private fun loadTvsForLanguage(language: String) {
+        loadTv(language)
+        loadAirToday(language)
+        loadOnAir(language)
+        loadPopularTv(language)
+        loadTopRatedTv(language)
+    }
+
+    fun searchAllTv(tvId: Int, language: String) {
+        searchTvById(tvId, language)
         searchTvRatings(tvId)
         searchTvCredits(tvId)
         searchTvProvidersForMXAndUs(tvId)
@@ -91,12 +124,13 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     }
 
     private fun loadTvShows(
-        loader: suspend (Int) -> TvResponse,
-        liveData: MutableLiveData<List<TvResult>>
+        loader: KSuspendFunction2<Int, String, TvResponse>,
+        liveData: MutableLiveData<List<TvResult>>,
+        language: String
     ) {
         viewModelScope.launch {
             try {
-                val response = loader(currentPage)
+                val response = loader(currentPage, language)
                 val newTvs = response.results.orEmpty()
                 if (newTvs.isNotEmpty()) {
                     val updatedTvs = liveData.value.orEmpty() + newTvs
@@ -115,33 +149,33 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun loadTv() {
-        loadTvShows(getTvUseCase::invoke, _tvs)
+    fun loadTv(language: String = _language.value.toString()) {
+        loadTvShows(getTvUseCase::invoke, _tvs, language)
     }
 
-    fun loadAirToday() {
-        loadTvShows(getTvUseCase::getAirToday, _airToday)
+    fun loadAirToday(language: String = _language.value.toString()) {
+        loadTvShows(getTvUseCase::getAirToday, _airToday, language)
     }
 
-    fun loadOnAir() {
-        loadTvShows(getTvUseCase::getOnAir, _onAir)
+    fun loadOnAir(language: String = _language.value.toString()) {
+        loadTvShows(getTvUseCase::getOnAir, _onAir, language)
     }
 
-    fun loadPopularTv() {
-        loadTvShows(getTvUseCase::getPopularTv, _popularTv)
+    fun loadPopularTv(language: String = _language.value.toString()) {
+        loadTvShows(getTvUseCase::getPopularTv, _popularTv, language)
     }
 
-    fun loadTopRatedTv() {
-        loadTvShows(getTvUseCase::getTopRatedTv, _topRatedTv)
+    fun loadTopRatedTv(language: String = _language.value.toString()) {
+        loadTvShows(getTvUseCase::getTopRatedTv, _topRatedTv, language)
     }
 
-    fun searchTv(query: String) {
+    fun searchTv(query: String, language: String = _language.value.toString()) {
         if (isLoading) return
         viewModelScope.launch {
             try {
                 isLoading = true
                 if (query.isBlank()) {
-                    loadTv()
+                    loadTv(language)
                 } else {
                     if (query != lastQuery) {
                         lastQuery = query
@@ -166,10 +200,10 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    private fun searchTvById(tvId: Int) {
+    private fun searchTvById(tvId: Int, language: String) {
         viewModelScope.launch {
             try {
-                val response = getTvUseCase.getTvDetail(tvId)
+                val response = getTvUseCase.getTvDetail(tvId, language)
                 _tvById.value = response
             } catch (e: Exception) {
                 _tvById.value = null
@@ -258,10 +292,10 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         }
     }
 
-    fun loadAllSeasons(tvId: Int, numberOfSeasons: Int) {
+    fun loadAllSeasons(tvId: Int, numberOfSeasons: Int, language: String) {
         viewModelScope.launch {
             try {
-                val seasonZero = getTvUseCase.getTvSeasonDetails(tvId, 0)
+                val seasonZero = getTvUseCase.getTvSeasonDetails(tvId, 0, language)
                 seasonDetailsList.add(seasonZero)
                 _seasonDetails.value = seasonDetailsList.toList()
             } catch (e: Exception) {
@@ -269,7 +303,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
             }
             for (seasonNumber in 1..numberOfSeasons) {
                 try {
-                    val response = getTvUseCase.getTvSeasonDetails(tvId, seasonNumber)
+                    val response = getTvUseCase.getTvSeasonDetails(tvId, seasonNumber, language)
                     seasonDetailsList.add(response)
                     _seasonDetails.value = seasonDetailsList.toList()
 

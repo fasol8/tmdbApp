@@ -51,6 +51,7 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
+import com.sol.tmdb.SharedViewModel
 import com.sol.tmdb.domain.model.person.Gender
 import com.sol.tmdb.domain.model.person.ImagesProfile
 import com.sol.tmdb.domain.model.person.MovieCast
@@ -68,6 +69,7 @@ import java.time.format.DateTimeFormatter
 fun PersonDetail(
     personId: Int,
     navController: NavController,
+    sharedViewModel: SharedViewModel,
     viewModel: PersonViewModel = hiltViewModel()
 ) {
     val person by viewModel.personById.observeAsState()
@@ -76,8 +78,8 @@ fun PersonDetail(
     val imagesProfile by viewModel.personImages.observeAsState(emptyList())
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    LaunchedEffect(key1 = personId) {
-        viewModel.searchAll(personId)
+    LaunchedEffect(key1 = personId, sharedViewModel) {
+        viewModel.observeLanguage(sharedViewModel, personId)
     }
 
     when {
