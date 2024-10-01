@@ -1,6 +1,7 @@
 package com.sol.tmdb.data.repository
 
 import com.sol.tmdb.data.network.TmdbApi
+import com.sol.tmdb.data.repository.db.MovieDao
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
@@ -14,7 +15,7 @@ import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
 import com.sol.tmdb.domain.model.movie.MovieVideosResponse
 import javax.inject.Inject
 
-class MovieRepository @Inject constructor(private val api: TmdbApi) {
+class MovieRepository @Inject constructor(private val api: TmdbApi, private val movieDao: MovieDao) {
 
     suspend fun getDiscoverMovie(page: Int = 1, language: String): MovieResponse {
         return api.getDiscoverMovie(page, language)
@@ -71,5 +72,12 @@ class MovieRepository @Inject constructor(private val api: TmdbApi) {
 
     suspend fun getMovieRecommendation(movieId: Int): MovieRecommendationResponse {
         return api.getMovieRecommendation(movieId)
+    }
+
+    suspend fun addMovieToFavorites(movieId: Int) {
+        val movie = movieDao.getMovieById(movieId)
+        if (movie != null) {
+            movieDao.insertMovie(movie.copy(isFavorite = true))
+        }
     }
 }

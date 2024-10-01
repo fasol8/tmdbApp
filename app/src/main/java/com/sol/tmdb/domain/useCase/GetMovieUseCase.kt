@@ -84,4 +84,8 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
     suspend fun getMovieRecommendation(movieId: Int): MovieRecommendationResponse {
         return repository.getMovieRecommendation(movieId)
     }
+
+    suspend fun getAddMovieToFavorite(movieId: Int){
+        return repository.addMovieToFavorites(movieId)
+    }
 }

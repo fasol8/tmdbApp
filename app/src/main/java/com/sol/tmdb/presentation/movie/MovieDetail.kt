@@ -32,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -124,6 +125,7 @@ fun MovieDetail(
                             movieSimilar,
                             movieRecommendation,
                             language,
+                            viewModel,
                             navController
                         )
                     }
@@ -162,6 +164,7 @@ fun MovieCard(
     movieSimilar: List<MovieSimilarResult?>,
     movieRecommendation: List<MovieRecommendationResult?>,
     language: String?,
+    viewModel: MovieViewModel,
     navController: NavController
 ) {
     val imageBackground = ("https://image.tmdb.org/t/p/w500" + movie?.backdropPath)
@@ -225,6 +228,14 @@ fun MovieCard(
                         Spacer(modifier = Modifier.height(4.dp))
                         Row {
 //                        TODO: Favorite - List - Watchlist
+                            IconButton(onClick = {
+                                viewModel.addMovieToFavorites(movie.id)
+                            }) {
+                                Icon(
+                                    painterResource(id = R.drawable.ic_favorite_border),
+                                    contentDescription = stringResource(R.string.add_to_favorites)
+                                )
+                            }
                             TrailerButton(movieVideos)
                         }
                         Spacer(modifier = Modifier.height(4.dp))

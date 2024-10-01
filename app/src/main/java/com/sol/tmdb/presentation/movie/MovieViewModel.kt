@@ -303,4 +303,10 @@ class MovieViewModel @Inject constructor(
             }
         }
     }
+
+    fun addMovieToFavorites(movieId: Int) {
+        viewModelScope.launch {
+            getMovieUseCase.getAddMovieToFavorite(movieId)
+        }
+    }
 }
