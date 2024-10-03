@@ -85,4 +85,9 @@
     <string name="mainscreen_title">Principal</string>
     <string name="movies_title">Peliculas</string>
     <string name="tvs_title">Series Tv</string>
+    <string name="my_space_title">Mi espacio</string>
+    <string name="movie_favorites_title">Favoritos</string>
+    <string name="add_to_favorites">Agregar a Favoritos</string>
+    <string name="add_to_watch_list">Agregar a Mi lista</string>
+    <string name="movie_watch_list_title">Mi lista</string>
 </resources>
