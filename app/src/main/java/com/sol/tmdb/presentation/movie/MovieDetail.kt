@@ -9,6 +9,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -86,6 +87,8 @@ import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.navigation.TmdbScreen
+import com.sol.tmdb.utils.openProvider
+import com.sol.tmdb.utils.openYoutubeVideo
 
 @Composable
 fun MovieDetail(
@@ -379,20 +382,6 @@ fun TrailerButton(movieVideos: List<MovieVideosResult>) {
     }
 }
 
-fun openYoutubeVideo(context: Context, videoKey: String) {
-    val videoUrl = "https://www.youtube.com/watch?v=$videoKey"
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
-    intent.setPackage("com.google.android.youtube") // Intenta abrir la app de YouTube
-
-    try {
-        context.startActivity(intent)
-    } catch (e: Exception) {
-        // Si no puede abrir la app de YouTube, abre el navegador
-        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
-        context.startActivity(webIntent)
-    }
-}
-
 fun getTrailerVideo(movieVideos: List<MovieVideosResult>): MovieVideosResult? {
     return movieVideos.firstOrNull { it.type == "Trailer" && it.site == "YouTube" }
 }
@@ -505,6 +494,7 @@ fun InfoMovieTab(movie: MovieDetail) {
 
 @Composable
 fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?, language: String) {
+    val context = LocalContext.current
     if (movieProvider != null) {
         val mxProviders = movieProvider["MX"]
         val usProviders = movieProvider["US"]
@@ -526,10 +516,12 @@ fun ProvidersMovieTab(movieProvider: Map<String, CountryResult?>?, language: Str
                             modifier = Modifier
                                 .width(60.dp)
                                 .height(60.dp)
-                                .padding(4.dp),
+                                .padding(4.dp)
+                                .clickable { openProvider(provide.providerName, context) },
                             placeholder = painterResource(id = R.drawable.no_image),
                             error = painterResource(id = R.drawable.no_image)
                         )
+
                     }
                 }
             } else {

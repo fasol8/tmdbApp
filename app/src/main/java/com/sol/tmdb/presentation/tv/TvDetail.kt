@@ -71,7 +71,6 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.sol.tmdb.R
-import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.movie.MovieGenre
 import com.sol.tmdb.domain.model.tv.CountryFlag
 import com.sol.tmdb.domain.model.tv.CountryResult
@@ -89,8 +88,9 @@ import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.navigation.TmdbScreen
-import com.sol.tmdb.presentation.movie.TrailerButton
-import com.sol.tmdb.presentation.movie.openYoutubeVideo
+import com.sol.tmdb.utils.SharedViewModel
+import com.sol.tmdb.utils.openProvider
+import com.sol.tmdb.utils.openYoutubeVideo
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -429,6 +429,7 @@ fun TvInfoTabs(tv: TvDetail, tvProviders: Map<String, CountryResult?>?, language
 
 @Composable
 fun TvProviderTab(tvProviders: Map<String, CountryResult?>, language: String) {
+    val context = LocalContext.current
     val mxProviders = tvProviders["MX"]
     val usProviders = tvProviders["US"]
     val provider = if (language != "es-MX") usProviders else mxProviders
@@ -450,7 +451,8 @@ fun TvProviderTab(tvProviders: Map<String, CountryResult?>, language: String) {
                             modifier = Modifier
                                 .width(60.dp)
                                 .height(60.dp)
-                                .padding(4.dp),
+                                .padding(4.dp)
+                                .clickable { openProvider(provide.providerName, context) },
                             placeholder = painterResource(id = R.drawable.no_image),
                             error = painterResource(id = R.drawable.no_image)
                         )
