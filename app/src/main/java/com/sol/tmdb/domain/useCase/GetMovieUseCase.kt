@@ -1,6 +1,7 @@
 package com.sol.tmdb.domain.useCase
 
 import com.sol.tmdb.data.repository.MovieRepository
+import com.sol.tmdb.data.repository.db.movie.MovieEntity
 import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
@@ -85,7 +86,23 @@ class GetMovieUseCase @Inject constructor(private val repository: MovieRepositor
         return repository.getMovieRecommendation(movieId)
     }
 
-    suspend fun getAddMovieToFavorite(movieId: Int){
-        return repository.addMovieToFavorites(movieId)
+    suspend fun getFavoriteMovies(): List<MovieEntity> {
+        return repository.getFavoriteMovies()
+    }
+
+    suspend fun getMovieById(movieId: Int): MovieEntity? {
+        return repository.getMovieById(movieId)
+    }
+
+    suspend fun getWatchListMovies(): List<MovieEntity> {
+        return repository.getWatchListMovies()
+    }
+
+    suspend fun updateMovie(movie: MovieEntity) {
+        repository.updateMovie(movie)
+    }
+
+    suspend fun insertMovie(movie: MovieEntity) {
+        repository.insertMovie(movie)
     }
 }

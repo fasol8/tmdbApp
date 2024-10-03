@@ -32,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -88,6 +89,7 @@ import com.sol.tmdb.domain.model.tv.TvImagesResponse
 import com.sol.tmdb.domain.model.tv.TvRecommendationsResult
 import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.navigation.TmdbScreen
+import com.sol.tmdb.presentation.movie.TrailerButton
 import com.sol.tmdb.presentation.movie.openYoutubeVideo
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -109,9 +111,14 @@ fun TvDetail(
     val tvSimilar by viewModel.tvSimilar.observeAsState(emptyList())
     val tvRecommendations by viewModel.tvRecommendations.observeAsState(emptyList())
     val language by viewModel.language.observeAsState()
+    val tvMySpace by viewModel.tvDaoById.observeAsState()
+
     val errorMessage by viewModel.errorMessage.observeAsState()
 
     LaunchedEffect(tvId) { viewModel.observeLanguage(sharedViewModel, tvId) }
+
+    val isFavorite by viewModel.tvFavoriteState.observeAsState(tvMySpace?.isFavorite ?: false)
+    val isWatchList by viewModel.tvWatchListState.observeAsState(tvMySpace?.isInWatchlist ?: false)
 
     when {
         tv != null -> {
@@ -128,6 +135,9 @@ fun TvDetail(
                             tvSimilar,
                             tvRecommendations,
                             language,
+                            isFavorite,
+                            isWatchList,
+                            viewModel,
                             navController
                         )
                     }
@@ -167,6 +177,9 @@ fun TvCard(
     tvSimilar: List<SimilarResult?>,
     tvRecommendations: List<TvRecommendationsResult?>,
     language: String?,
+    isFavorite: Boolean,
+    isWatchList: Boolean,
+    viewModel: TvViewModel,
     navController: NavController
 ) {
     val imageBackground = ("https://image.tmdb.org/t/p/w500" + tv?.backdropPath)
@@ -226,7 +239,12 @@ fun TvCard(
                             style = MaterialTheme.typography.titleMedium,
                             fontSize = 24.sp
                         )
-                        TvRatingAndGenre(tv, tvRatings, language)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                TvRatingAndGenre(tv, tvRatings, language)
+                            }
+                            TvFavAndWatch(tv, isFavorite, isWatchList, viewModel)
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = tv.overview ?: stringResource(R.string.no_overview_available),
@@ -321,6 +339,30 @@ fun TvRatingAndGenre(tv: TvDetail, tvRatings: Map<String, TvCertification?>?, la
             fontWeight = FontWeight.Light,
             modifier = Modifier.padding(2.dp)
         )
+    }
+}
+
+@Composable
+fun TvFavAndWatch(tv: TvDetail, isFavorite: Boolean, isWatchList: Boolean, viewModel: TvViewModel) {
+    Row {
+        IconButton(onClick = {
+            viewModel.toggleFavoriteTv(tv, isFavorite)
+        }) {
+            Icon(
+                painterResource(if (isFavorite) R.drawable.ic_favorite_fill else R.drawable.ic_favorite_border),
+                contentDescription = stringResource(R.string.add_to_favorites),
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else Color.Gray
+            )
+        }
+        IconButton(onClick = {
+            viewModel.toggleWatchListTv(tv, isWatchList)
+        }) {
+            Icon(
+                painterResource(if (isWatchList) R.drawable.ic_bookmark_fill else R.drawable.ic_bookmark_border),
+                contentDescription = stringResource(R.string.add_to_watch_list),
+                tint = if (isWatchList) MaterialTheme.colorScheme.primary else Color.Gray
+            )
+        }
     }
 }
 

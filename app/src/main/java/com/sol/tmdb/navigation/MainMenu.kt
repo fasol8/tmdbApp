@@ -94,6 +94,7 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
         TmdbScreen.PopularTv to R.drawable.ic_tv,
         TmdbScreen.TopRatedTv to R.drawable.ic_tv,
         TmdbScreen.Person to R.drawable.ic_person,
+        TmdbScreen.MySpace to R.drawable.ic_collections_bookmark
     )
 
     val titles = mapOf(
@@ -106,6 +107,7 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
         TmdbScreen.PopularTv.route to stringResource(R.string.popular_tv_title),
         TmdbScreen.TopRatedTv.route to stringResource(R.string.top_rated_tv_title),
         TmdbScreen.Person.route to stringResource(R.string.person_title),
+        TmdbScreen.MySpace.route to stringResource(R.string.my_space_title)
     )
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
@@ -125,9 +127,9 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
                     Text(
                         text = stringResource(id = R.string.app_name),
                         style = MaterialTheme.typography.titleLarge,
-                        fontSize = 24.sp,
+                        fontSize = 22.sp,
                         modifier = Modifier
-                            .padding(18.dp)
+                            .padding(10.dp)
                             .clickable { navController.navigate(TmdbScreen.MainScreen.route) }
                     )
                     HorizontalDivider(thickness = 2.dp, modifier = Modifier.width(220.dp))
@@ -146,7 +148,7 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
                             }) {
                             Icon(
                                 painter = painterResource(id = icon),
-                                contentDescription =""
+                                contentDescription = ""
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Text(text = stringResource(id = screen.titleResId))
@@ -169,7 +171,10 @@ fun MainMenu(sharedViewModel: SharedViewModel = hiltViewModel()) {
                     },
                     navigationIcon = {
                         IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.menu))
+                            Icon(
+                                Icons.Default.Menu,
+                                contentDescription = stringResource(R.string.menu)
+                            )
                         }
                     },
                     actions = {

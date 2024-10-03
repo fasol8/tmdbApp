@@ -103,12 +103,16 @@ fun MovieDetail(
     val movieSimilar by viewModel.movieSimilar.observeAsState(emptyList())
     val movieRecommendation by viewModel.movieRecommendation.observeAsState(emptyList())
     val language by viewModel.language.observeAsState()
+    val movieMySpace by viewModel.movieDaoById.observeAsState()
 
     val errorMessage by viewModel.errorMessage.observeAsState()
 
-    LaunchedEffect(true) {
-        viewModel.observeLanguage(sharedViewModel, movieId)
-    }
+    LaunchedEffect(movieId) { viewModel.observeLanguage(sharedViewModel, movieId) }
+
+    val isFavorite by viewModel.movieFavoriteState.observeAsState(movieMySpace?.isFavorite ?: false)
+    val isWatchList by viewModel.movieWatchListState.observeAsState(
+        movieMySpace?.isInWatchlist ?: false
+    )
 
     when {
         movie != null -> {
@@ -125,6 +129,8 @@ fun MovieDetail(
                             movieSimilar,
                             movieRecommendation,
                             language,
+                            isWatchList,
+                            isFavorite,
                             viewModel,
                             navController
                         )
@@ -164,6 +170,8 @@ fun MovieCard(
     movieSimilar: List<MovieSimilarResult?>,
     movieRecommendation: List<MovieRecommendationResult?>,
     language: String?,
+    isWatchList: Boolean,
+    isFavorite: Boolean,
     viewModel: MovieViewModel,
     navController: NavController
 ) {
@@ -226,18 +234,7 @@ fun MovieCard(
                         )
                         CertificationAndGenresMovie(movie, movieCertification, language)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Row {
-//                        TODO: Favorite - List - Watchlist
-                            IconButton(onClick = {
-                                viewModel.addMovieToFavorites(movie.id)
-                            }) {
-                                Icon(
-                                    painterResource(id = R.drawable.ic_favorite_border),
-                                    contentDescription = stringResource(R.string.add_to_favorites)
-                                )
-                            }
-                            TrailerButton(movieVideos)
-                        }
+                        FavWatchTrailerMovie(movie, isFavorite, isWatchList, movieVideos, viewModel)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(text = movie.overview, style = MaterialTheme.typography.bodyMedium)
                         Spacer(modifier = Modifier.height(4.dp))
@@ -325,6 +322,40 @@ fun CertificationAndGenresMovie(
             fontWeight = FontWeight.Light,
             modifier = Modifier.padding(2.dp)
         )
+    }
+}
+
+@Composable
+fun FavWatchTrailerMovie(
+    movie: MovieDetail,
+    isFavorite: Boolean,
+    isWatchList: Boolean,
+    movieVideos: List<MovieVideosResult>,
+    viewModel: MovieViewModel
+) {
+    Row {
+        IconButton(onClick = {
+            viewModel.toggleFavoriteMovie(movie, isFavorite)
+        }) {
+            Icon(
+                painterResource(if (isFavorite) R.drawable.ic_favorite_fill else R.drawable.ic_favorite_border),
+                contentDescription = stringResource(R.string.add_to_favorites),
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else Color.Gray
+            )
+        }
+        IconButton(onClick = {
+            viewModel.toggleWatchListMovie(
+                movie,
+                isWatchList
+            )
+        }) {
+            Icon(
+                painterResource(if (isWatchList) R.drawable.ic_bookmark_fill else R.drawable.ic_bookmark_border),
+                contentDescription = stringResource(R.string.add_to_watch_list),
+                tint = if (isWatchList) MaterialTheme.colorScheme.primary else Color.Gray
+            )
+        }
+        TrailerButton(movieVideos)
     }
 }
 

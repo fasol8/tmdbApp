@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.data.repository.db.movie.MovieEntity
+import com.sol.tmdb.data.repository.db.tv.TvEntity
 import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
@@ -19,6 +21,7 @@ import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import com.sol.tmdb.domain.model.tv.TvVideosResult
 import com.sol.tmdb.domain.useCase.GetTvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -76,6 +79,15 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
     private val _language = MutableLiveData<String>("en-US")
     val language: LiveData<String> = _language
 
+    private val _tvDaoById = MutableLiveData<TvEntity?>()
+    val tvDaoById: LiveData<TvEntity?> = _tvDaoById
+
+    private val _tvFavoriteState = MutableLiveData<Boolean>()
+    val tvFavoriteState: LiveData<Boolean> = _tvFavoriteState
+
+    private val _tvWatchListState = MutableLiveData<Boolean>()
+    val tvWatchListState: LiveData<Boolean> = _tvWatchListState
+
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
 
@@ -92,6 +104,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
             loadTvsForLanguage(_language.value.toString())
             searchAllTv(tvId, _language.value.toString())
             loadAllSeasons(tvId, numberOfSeasons, _language.value.toString())
+            getTvById(tvId)
         }
     }
 
@@ -101,7 +114,7 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
         _onAir.value = emptyList()
         _popularTv.value = emptyList()
         _topRatedTv.value = emptyList()
-        _seasonDetails.value= emptyList()
+        _seasonDetails.value = emptyList()
     }
 
     private fun loadTvsForLanguage(language: String) {
@@ -326,6 +339,62 @@ class TvViewModel @Inject constructor(private val getTvUseCase: GetTvUseCase) : 
                 _episodeImages.value = imagesMap
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading episode images: ${e.message}"
+            }
+        }
+    }
+
+    private fun getTvById(tvId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val tv = getTvUseCase.getTvById(tvId)
+            _tvDaoById.postValue(tv)
+
+            tv?.let {
+                _tvFavoriteState.postValue(it.isFavorite)
+                _tvWatchListState.postValue(it.isInWatchlist)
+            }
+        }
+    }
+
+    fun toggleFavoriteTv(tv: TvDetail, isCurrentlyFavorite: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val tvId = getTvUseCase.getTvById(tv.id)
+
+            if (tvId != null) {
+                val updatedTv = tvId.copy(isFavorite = !isCurrentlyFavorite)
+                getTvUseCase.updateTv(updatedTv)
+                _tvFavoriteState.postValue(updatedTv.isFavorite)
+            } else {
+                val newTv = TvEntity(
+                    id = tv.id,
+                    title = tv.name,
+                    posterPath = tv.posterPath,
+                    isFavorite = true,
+                    isInWatchlist = false,
+                )
+                getTvUseCase.insertTv(newTv)
+                _tvFavoriteState.postValue(newTv.isFavorite)
+            }
+        }
+    }
+
+    fun toggleWatchListTv(tv: TvDetail, isCurrentlyWatchList: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val tvId = getTvUseCase.getTvById(tv.id)
+
+            if (tvId != null) {
+                val updatedTv = tvId.copy(isInWatchlist = !isCurrentlyWatchList)
+                getTvUseCase.updateTv(updatedTv)
+                _tvWatchListState.postValue(updatedTv.isInWatchlist)
+            } else {
+                val newTv = TvEntity(
+                    id = tv.id,
+                    title = tv.name,
+                    posterPath = tv.posterPath,
+                    isFavorite = false,
+                    isInWatchlist = true,
+                )
+                getTvUseCase.insertTv(newTv)
+                _tvWatchListState.postValue(newTv.isInWatchlist)
             }
         }
     }

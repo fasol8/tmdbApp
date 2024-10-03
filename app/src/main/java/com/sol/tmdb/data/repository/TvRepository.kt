@@ -1,6 +1,9 @@
 package com.sol.tmdb.data.repository
 
 import com.sol.tmdb.data.network.TmdbApi
+import com.sol.tmdb.data.repository.db.movie.MovieEntity
+import com.sol.tmdb.data.repository.db.tv.TvDao
+import com.sol.tmdb.data.repository.db.tv.TvEntity
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
@@ -12,9 +15,11 @@ import com.sol.tmdb.domain.model.tv.TvRecommendationsResponse
 import com.sol.tmdb.domain.model.tv.TvResponse
 import com.sol.tmdb.domain.model.tv.TvSeasonDetailResponse
 import com.sol.tmdb.domain.model.tv.TvVideosResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class TvRepository @Inject constructor(private val api: TmdbApi) {
+class TvRepository @Inject constructor(private val api: TmdbApi, private val tvDao: TvDao) {
 
     suspend fun getDiscoverTv(page: Int = 1, language: String): TvResponse {
         return api.getDiscoverTv(page, language)
@@ -87,5 +92,31 @@ class TvRepository @Inject constructor(private val api: TmdbApi) {
         episodeNumber: Int
     ): EpisodesImagesResponse {
         return api.getTvImagesEpisode(tvId, seasonNumber, episodeNumber)
+    }
+
+    suspend fun getTvById(tvId: Int): TvEntity? {
+        return withContext(Dispatchers.IO) {
+            tvDao.getTvById(tvId)
+        }
+    }
+
+    suspend fun getFavoriteTvs(): List<TvEntity> {
+        return withContext(Dispatchers.IO) {
+            tvDao.getFavoriteTvs()
+        }
+    }
+
+    suspend fun getWatchListTvs(): List<TvEntity> {
+        return withContext(Dispatchers.IO) {
+            tvDao.getWatchListTvs()
+        }
+    }
+
+    suspend fun updateTv(tv: TvEntity) {
+        tvDao.updateTv(tv)
+    }
+
+    suspend fun insertTv(tv: TvEntity) {
+        tvDao.insertTv(tv)
     }
 }

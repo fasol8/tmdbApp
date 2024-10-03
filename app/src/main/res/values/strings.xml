@@ -101,5 +101,9 @@
     <string name="tv_detail_title" translatable="false">TvDetail</string>
     <string name="tv_season_detail" translatable="false">TvSeason</string>
     <string name="person_detail_title" translatable="false">PersonDetail</string>
+    <string name="my_space_title">My Space</string>
+    <string name="movie_favorites_title">Favorite</string>
+    <string name="movie_watch_list_title">Watch List</string>
     <string name="add_to_favorites">Add to Favorites</string>
+    <string name="add_to_watch_list">Add to WatchList</string>
 </resources>

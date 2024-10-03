@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sol.tmdb.data.repository.db.movie.MovieEntity
 import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.domain.model.movie.Certification
 import com.sol.tmdb.domain.model.movie.CountryResult
@@ -16,6 +17,7 @@ import com.sol.tmdb.domain.model.movie.MovieSimilarResult
 import com.sol.tmdb.domain.model.movie.MovieVideosResult
 import com.sol.tmdb.domain.useCase.GetMovieUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -69,6 +71,15 @@ class MovieViewModel @Inject constructor(
     private val _language = MutableLiveData<String>("en-US")
     val language: LiveData<String> = _language
 
+    private val _movieDaoById = MutableLiveData<MovieEntity?>()
+    val movieDaoById: LiveData<MovieEntity?> = _movieDaoById
+
+    private val _movieFavoriteState = MutableLiveData<Boolean>()
+    val movieFavoriteState: LiveData<Boolean> = _movieFavoriteState
+
+    private val _movieWatchListState = MutableLiveData<Boolean>()
+    val movieWatchListState: LiveData<Boolean> = _movieWatchListState
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
@@ -83,6 +94,7 @@ class MovieViewModel @Inject constructor(
             clearDataMovie()
             loadMoviesForLanguage(_language.value.toString())
             searchAllMovie(movieId, _language.value.toString())
+            getMovieById(movieId)
         }
     }
 
@@ -304,9 +316,59 @@ class MovieViewModel @Inject constructor(
         }
     }
 
-    fun addMovieToFavorites(movieId: Int) {
-        viewModelScope.launch {
-            getMovieUseCase.getAddMovieToFavorite(movieId)
+    private fun getMovieById(movieId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val movie = getMovieUseCase.getMovieById(movieId)
+            _movieDaoById.postValue(movie)
+
+            movie?.let {
+                _movieFavoriteState.postValue(it.isFavorite)
+                _movieWatchListState.postValue(it.isInWatchlist)
+            }
+        }
+    }
+
+    fun toggleFavoriteMovie(movie: MovieDetail, isCurrentlyFavorite: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val movieId = getMovieUseCase.getMovieById(movie.id)
+
+            if (movieId != null) {
+                val updatedMovie = movieId.copy(isFavorite = !isCurrentlyFavorite)
+                getMovieUseCase.updateMovie(updatedMovie)
+                _movieFavoriteState.postValue(updatedMovie.isFavorite)
+            } else {
+                val newMovie = MovieEntity(
+                    id = movie.id,
+                    title = movie.title,
+                    posterPath = movie.posterPath,
+                    isFavorite = true,
+                    isInWatchlist = false,
+                )
+                getMovieUseCase.insertMovie(newMovie)
+                _movieFavoriteState.postValue(newMovie.isFavorite)
+            }
+        }
+    }
+
+    fun toggleWatchListMovie(movie: MovieDetail, isCurrentlyWatchList: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val movieId = getMovieUseCase.getMovieById(movie.id)
+
+            if (movieId != null) {
+                val updatedMovie = movieId.copy(isInWatchlist = !isCurrentlyWatchList)
+                getMovieUseCase.updateMovie(updatedMovie)
+                _movieWatchListState.postValue(updatedMovie.isInWatchlist)
+            } else {
+                val newMovie = MovieEntity(
+                    id = movie.id,
+                    title = movie.title,
+                    posterPath = movie.posterPath,
+                    isFavorite = false,
+                    isInWatchlist = true,
+                )
+                getMovieUseCase.insertMovie(newMovie)
+                _movieWatchListState.postValue(newMovie.isInWatchlist)
+            }
         }
     }
 }

@@ -22,4 +22,6 @@ sealed class TmdbScreen(val route: String, val titleResId: Int) {
 
     object Person : TmdbScreen("persons", R.string.person_title)
     object PersonDetail : TmdbScreen("personDetail", R.string.person_detail_title)
+
+    object MySpace : TmdbScreen("my_space", R.string.my_space_title)
 }

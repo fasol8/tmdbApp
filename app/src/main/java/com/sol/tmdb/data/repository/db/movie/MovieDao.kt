@@ -1,4 +1,4 @@
-package com.sol.tmdb.data.repository.db
+package com.sol.tmdb.data.repository.db.movie
 
 import androidx.room.*
 
@@ -12,7 +12,10 @@ interface MovieDao {
     suspend fun getMovieById(movieId: Int): MovieEntity?
 
     @Query("SELECT * FROM movies WHERE isFavorite = 1")
-    fun getFavoriteMovies(): List<MovieEntity>
+    suspend fun getFavoriteMovies(): List<MovieEntity>
+
+    @Query("SELECT * FROM movies WHERE isInWatchlist = 1")
+    suspend fun getWatchListMovies(): List<MovieEntity>
 
     @Update
     suspend fun updateMovie(movie: MovieEntity)

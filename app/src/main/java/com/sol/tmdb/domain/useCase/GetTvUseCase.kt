@@ -1,6 +1,8 @@
 package com.sol.tmdb.domain.useCase
 
 import com.sol.tmdb.data.repository.TvRepository
+import com.sol.tmdb.data.repository.db.movie.MovieEntity
+import com.sol.tmdb.data.repository.db.tv.TvEntity
 import com.sol.tmdb.domain.model.tv.CountryResult
 import com.sol.tmdb.domain.model.tv.CreditsResponse
 import com.sol.tmdb.domain.model.tv.SimilarResponse
@@ -97,5 +99,25 @@ class GetTvUseCase @Inject constructor(private val repository: TvRepository) {
         episodeNumber: Int
     ): EpisodesImagesResponse {
         return repository.getImagesEpisode(tvId, seasonNumber, episodeNumber)
+    }
+
+    suspend fun getFavoriteTvs(): List<TvEntity> {
+        return repository.getFavoriteTvs()
+    }
+
+    suspend fun getTvById(tvId: Int): TvEntity? {
+        return repository.getTvById(tvId)
+    }
+
+    suspend fun getWatchListTvs(): List<TvEntity> {
+        return repository.getWatchListTvs()
+    }
+
+    suspend fun updateTv(tv: TvEntity) {
+        repository.updateTv(tv)
+    }
+
+    suspend fun insertTv(tv: TvEntity) {
+        repository.insertTv(tv)
     }
 }

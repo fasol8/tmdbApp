@@ -1,21 +1,26 @@
 package com.sol.tmdb.data.repository
 
 import com.sol.tmdb.data.network.TmdbApi
-import com.sol.tmdb.data.repository.db.MovieDao
+import com.sol.tmdb.data.repository.db.movie.MovieDao
+import com.sol.tmdb.data.repository.db.movie.MovieEntity
 import com.sol.tmdb.domain.model.movie.CountryResult
 import com.sol.tmdb.domain.model.movie.MovieCredits
 import com.sol.tmdb.domain.model.movie.MovieDetail
 import com.sol.tmdb.domain.model.movie.MovieImagesResponse
 import com.sol.tmdb.domain.model.movie.MovieNowResponse
-import com.sol.tmdb.domain.model.movie.MovieProviderResponse
 import com.sol.tmdb.domain.model.movie.MovieRecommendationResponse
 import com.sol.tmdb.domain.model.movie.MovieRelease
 import com.sol.tmdb.domain.model.movie.MovieResponse
 import com.sol.tmdb.domain.model.movie.MovieSimilarResponse
 import com.sol.tmdb.domain.model.movie.MovieVideosResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class MovieRepository @Inject constructor(private val api: TmdbApi, private val movieDao: MovieDao) {
+class MovieRepository @Inject constructor(
+    private val api: TmdbApi,
+    private val movieDao: MovieDao
+) {
 
     suspend fun getDiscoverMovie(page: Int = 1, language: String): MovieResponse {
         return api.getDiscoverMovie(page, language)
@@ -74,10 +79,29 @@ class MovieRepository @Inject constructor(private val api: TmdbApi, private val 
         return api.getMovieRecommendation(movieId)
     }
 
-    suspend fun addMovieToFavorites(movieId: Int) {
-        val movie = movieDao.getMovieById(movieId)
-        if (movie != null) {
-            movieDao.insertMovie(movie.copy(isFavorite = true))
+    suspend fun getMovieById(movieId: Int): MovieEntity? {
+        return withContext(Dispatchers.IO) {
+            movieDao.getMovieById(movieId)
         }
+    }
+
+    suspend fun getFavoriteMovies(): List<MovieEntity> {
+        return withContext(Dispatchers.IO) {
+            movieDao.getFavoriteMovies()
+        }
+    }
+
+    suspend fun getWatchListMovies(): List<MovieEntity> {
+        return withContext(Dispatchers.IO) {
+            movieDao.getWatchListMovies()
+        }
+    }
+
+    suspend fun updateMovie(movie: MovieEntity) {
+        movieDao.updateMovie(movie)
+    }
+
+    suspend fun insertMovie(movie: MovieEntity) {
+        movieDao.insertMovie(movie)
     }
 }
