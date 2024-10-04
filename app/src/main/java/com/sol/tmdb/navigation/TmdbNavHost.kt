@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.sol.tmdb.utils.SharedViewModel
 import com.sol.tmdb.presentation.main.MainListScreen
+import com.sol.tmdb.presentation.main.splashScreen
 import com.sol.tmdb.presentation.movie.MovieDetail
 import com.sol.tmdb.presentation.movie.MoviesScreen
 import com.sol.tmdb.presentation.mySpace.MySpaceScreen
@@ -22,7 +23,8 @@ import com.sol.tmdb.presentation.tv.TvSeason
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TmdbNavHost(navController: NavHostController, sharedViewModel: SharedViewModel) {
-    NavHost(navController = navController, startDestination = TmdbScreen.MainScreen.route) {
+    NavHost(navController = navController, startDestination = TmdbScreen.SplashScreen.route) {
+        composable(TmdbScreen.SplashScreen.route) { splashScreen(navController = navController) }
         composable(TmdbScreen.MainScreen.route) { MainListScreen(navController = navController) }
 
         composable(TmdbScreen.Movie.route) { MoviesScreen("movie", navController, sharedViewModel) }

@@ -98,6 +98,7 @@ dependencies {
 //    implementation(libs.androidx.navigation.compose.v270)
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
 
     implementation(libs.androidx.room.runtime)
     kapt(libs.androidx.room.compiler)

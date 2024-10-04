@@ -94,7 +94,8 @@
     <string name="gender_non_binary">Non-binary</string>
     <string name="movie">Movies</string>
     <string name="tv_series">Tv Series</string>
-    <string name="mainscreen_title">MainScreen</string>
+    <string name="main_screen_title">MainScreen</string>
+    <string name="splash_screen_title" translatable="false">SplashScreen</string>
     <string name="movies_title">Movies</string>
     <string name="movies_detail_title" translatable="false">Movie Detail</string>
     <string name="tvs_title">Tvs</string>

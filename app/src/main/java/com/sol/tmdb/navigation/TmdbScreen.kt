@@ -3,7 +3,8 @@ package com.sol.tmdb.navigation
 import com.sol.tmdb.R
 
 sealed class TmdbScreen(val route: String, val titleResId: Int) {
-    object MainScreen : TmdbScreen("mainScreen", R.string.mainscreen_title)
+    object SplashScreen :TmdbScreen("splashScreen", R.string.splash_screen_title)
+    object MainScreen : TmdbScreen("mainScreen", R.string.main_screen_title)
 
     object Movie : TmdbScreen("movies", R.string.movies_title)
     object NowPlaying : TmdbScreen("now_playing", R.string.now_playing_title)
